@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}物资入库与发票管理系统{% endblock %}</title>
+    <script>
+      (function () {
+        var savedTheme = localStorage.getItem("panic-theme");
+        if (savedTheme === "light") {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <img class="team-logo" src="{{ url_for('static', filename='team-logo.jpg') }}" alt="贵州大学机甲大师战队队徽">
+          <div>
+            <p class="eyebrow">RoboMaster Panic Team</p>
+            <h1>物资入库与发票管理系统</h1>
+          </div>
+        </div>
+        <nav class="topnav">
+          <a href="{{ url_for('upload_page') }}">成员上传</a>
+          {% if admin_authenticated %}
+          <a href="{{ url_for('admin_dashboard') }}">管理后台</a>
+          <form action="{{ url_for('admin_logout') }}" method="post" class="inline-form">
+            <button class="nav-btn" type="submit">退出管理</button>
+          </form>
+          {% else %}
+          <a href="{{ url_for('admin_login') }}">管理后台</a>
+          {% endif %}
+          <button class="theme-toggle" type="button" aria-label="切换亮色主题" title="切换亮色主题" data-theme-toggle>
+            <span aria-hidden="true">☀</span>
+          </button>
+        </nav>
+      </header>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <section class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </section>
+        {% endif %}
+      {% endwith %}
+
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+    <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  </body>
+</html>

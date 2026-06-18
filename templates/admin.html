@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}管理后台{% endblock %}
+
+{% block content %}
+<section class="stats-grid">
+  <article class="stat-card">
+    <p>未入库待审批次</p>
+    <strong>{{ counts.unregistered }}</strong>
+  </article>
+  <article class="stat-card">
+    <p>待人工复核批次</p>
+    <strong>{{ counts.pending_review }}</strong>
+  </article>
+  <article class="stat-card">
+    <p>当前库内明细</p>
+    <strong>{{ counts.in_stock }}</strong>
+  </article>
+  <article class="stat-card">
+    <p>历史出库明细</p>
+    <strong>{{ counts.out_stock }}</strong>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Review Script</p>
+      <h3>审核控制台</h3>
+    </div>
+    <form action="{{ url_for('admin_run_agent') }}" method="post">
+      <button class="secondary-btn" type="submit">立即执行审核脚本</button>
+    </form>
+  </div>
+  <p class="muted">后台线程会按固定周期扫描未入库文件夹，手动执行用于立刻触发审核。</p>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Pending Review</p>
+      <h3>待入库批次</h3>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>批次编号</th>
+          <th>团队</th>
+          <th>提交人</th>
+          <th>待处理</th>
+          <th>已确认</th>
+          <th>已打回</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in pending_batches %}
+        <tr>
+          <td>{{ batch.id }}</td>
+          <td>{{ batch.team_name }}</td>
+          <td>{{ batch.submitter_name }}</td>
+          <td>{{ batch.pending_rows or 0 }}</td>
+          <td>{{ batch.confirmed_rows or 0 }}</td>
+          <td>{{ batch.rejected_rows or 0 }}</td>
+          <td><a class="text-link" href="{{ url_for('admin_batch_detail', batch_id=batch.id) }}">进入复核</a></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="empty-cell">当前没有待入库批次</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">In Stock</p>
+      <h3>库内明细提取</h3>
+    </div>
+  </div>
+  <form action="{{ url_for('admin_reimburse') }}" method="post">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>选择</th>
+            <th>批次编号</th>
+            <th>行号</th>
+            <th>物资名称</th>
+            <th>金额</th>
+            <th>发票号码</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in in_stock_rows %}
+          <tr>
+            <td><input type="checkbox" name="record_ids" value="{{ row.id }}"></td>
+            <td>{{ row.batch_id }}</td>
+            <td>{{ row.row_no }}</td>
+            <td>{{ row.item_name }}</td>
+            <td>{{ "%.2f"|format(row.amount) }}</td>
+            <td>{{ row.invoice_number }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="empty-cell">当前没有可出库明细</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="action-row">
+      <button class="primary-btn" type="submit">提取选中明细并出库</button>
+    </div>
+  </form>
+</section>
+
+<section class="two-column">
+  <article class="panel">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow">Exports</p>
+        <h3>最近出库批次</h3>
+      </div>
+    </div>
+    <ul class="list-board">
+      {% for batch in reimbursement_batches %}
+      <li>
+        <div>
+          <strong>{{ batch.id }}</strong>
+          <p>{{ batch.record_count }} 条，合计 {{ "%.2f"|format(batch.total_amount) }}</p>
+        </div>
+        <a class="text-link" href="{{ url_for('download_reimbursement', reimbursement_id=batch.id) }}">下载</a>
+      </li>
+      {% else %}
+      <li class="empty-cell">当前没有出库批次</li>
+      {% endfor %}
+    </ul>
+  </article>
+
+  <article class="panel">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow">Logs</p>
+        <h3>最近处理日志</h3>
+      </div>
+    </div>
+    <ul class="log-board">
+      {% for log in logs %}
+      <li>
+        <span class="log-time">{{ log.created_at }}</span>
+        <strong>[{{ log.level|upper }}]</strong>
+        <span>{{ log.message }}</span>
+      </li>
+      {% else %}
+      <li class="empty-cell">当前没有日志</li>
+      {% endfor %}
+    </ul>
+  </article>
+</section>
+{% endblock %}

@@ -1,0 +1,1 @@
+Place the team logo image as static/team-logo.jpg.

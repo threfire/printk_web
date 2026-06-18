@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}批次复核{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Batch Review</p>
+      <h3>{{ batch.id }}</h3>
+      <p class="muted">团队：{{ batch.team_name }} ｜ 提交人：{{ batch.submitter_name }} ｜ 当前状态：{{ batch.status }}</p>
+    </div>
+    <a class="secondary-link" href="{{ url_for('download_form', batch_id=batch.id) }}">下载原始表格</a>
+  </div>
+</section>
+
+<section class="panel">
+  <form action="{{ url_for('confirm_selected', batch_id=batch.id) }}" method="post">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>选择</th>
+            <th>行号</th>
+            <th>物资名称</th>
+            <th>金额</th>
+            <th>发票号码</th>
+            <th>状态</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>
+              {% if row.review_status == "pending_review" %}
+              <input type="checkbox" name="row_ids" value="{{ row.id }}">
+              {% endif %}
+            </td>
+            <td>{{ row.row_no }}</td>
+            <td>{{ row.item_name }}</td>
+            <td>{{ "%.2f"|format(row.amount) }}</td>
+            <td>{{ row.invoice_number }}</td>
+            <td>{{ row.review_status }}</td>
+            <td>{{ row.review_note }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="empty-cell">当前批次没有待复核明细</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="action-row split-row">
+      <button class="primary-btn" type="submit">确认选中明细入库</button>
+      <button class="secondary-btn" type="submit" formaction="{{ url_for('confirm_all', batch_id=batch.id) }}">整批确认入库</button>
+    </div>
+    <div class="action-row reject-row">
+      <input type="text" name="note" placeholder="填写打回原因">
+      <button class="danger-btn" type="submit" formaction="{{ url_for('reject_selected', batch_id=batch.id) }}">打回选中明细</button>
+    </div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Finalize</p>
+      <h3>完成复核</h3>
+      <p class="muted">当批次没有待处理明细时，系统会将已确认内容正式转为库内状态。</p>
+    </div>
+    <form action="{{ url_for('complete_batch_review', batch_id=batch.id) }}" method="post">
+      <button class="primary-btn" type="submit">完成当前批次复核</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

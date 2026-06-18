@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}成员上传{% endblock %}
+
+{% block content %}
+<section class="hero-card">
+  <div class="hero-copy">
+    <p class="eyebrow">Intake Portal</p>
+    <h2>成员只上传采购表格，发票信息从表格字段读取</h2>
+    <p>上传完成后，系统会将表格写入未入库文件夹，本地审核脚本会按周期检查并推入待入库队列。</p>
+    <div class="hero-actions">
+      <a class="primary-link" href="{{ url_for('download_template') }}">下载采购表格模板</a>
+      <a class="secondary-link" href="{{ url_for('admin_login') }}">管理员入口</a>
+    </div>
+  </div>
+  <div class="hero-meta">
+    <span>格式 .xlsx</span>
+    <span>上限 50MB</span>
+    <span>发票信息写入表格</span>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Template Guide</p>
+      <h3>模板填写要求</h3>
+    </div>
+  </div>
+  <div class="guide-grid">
+    <article class="guide-card">
+      <strong>必填列</strong>
+      <p>采购日期、物资名称、单位、数量、单价、金额、发票号码。</p>
+    </article>
+    <article class="guide-card">
+      <strong>填写规则</strong>
+      <p>一行对应一条物资明细，一张发票只对应一条明细，发票信息直接写在表格列里。</p>
+    </article>
+    <article class="guide-card">
+      <strong>审核结果</strong>
+      <p>上传成功只代表文件已到服务器，本地审核脚本检查后才会进入待入库或异常目录。</p>
+    </article>
+  </div>
+</section>
+
+<section class="panel">
+  <h3>提交采购表格</h3>
+  <form class="form-grid" action="{{ url_for('upload_page') }}" method="post" enctype="multipart/form-data">
+    <label>
+      <span>团队名称</span>
+      <input type="text" name="team_name" required>
+    </label>
+    <label>
+      <span>提交人姓名</span>
+      <input type="text" name="submitter_name" required>
+    </label>
+    <label>
+      <span>提交人编号</span>
+      <input type="text" name="submitter_id" required>
+    </label>
+    <label class="full">
+      <span>采购表格</span>
+      <input type="file" name="form_file" accept=".xlsx" required>
+    </label>
+    <label class="full">
+      <span>备注</span>
+      <textarea name="remark" rows="4" placeholder="填写本次采购说明"></textarea>
+    </label>
+    <div class="full action-row">
+      <button class="primary-btn" type="submit">提交表格</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
