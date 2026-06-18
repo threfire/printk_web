@@ -1,89 +1,67 @@
-# 物资入库与发票管理系统
+# PRINTK 团队门户与发票管理系统
 
-本系统提供以下闭环：
+本项目正在从单体 Flask 系统迁移为 `Next.js + FastAPI` 架构。
 
-1. 成员通过网页上传采购表格。
-2. 本地审核脚本定期审核未入库批次并推入待入库队列。
-3. 管理员通过密码登录后台后确认入库、查看库内结果、提取出库报销。
-
-## 运行方式
-
-```powershell
-python app.py
-```
-
-一键启动：
+## 当前结构
 
 ```text
-双击 启动服务.bat
+frontend/     Next.js 前端，负责团队门户、发票上传、管理后台页面
+backend/      FastAPI 后端，负责接口、SQLite、本地文件和审核脚本
+storage/      本地数据目录，不提交 Git
+scripts/      一键启动和停止脚本
+app.py        迁移前 Flask 版本，作为基线参考保留
 ```
 
-首次启动会自动创建 `.venv` 并安装依赖，耗时会比后续启动更长。
+## 一键启动
 
-停止服务：
-
-```text
-双击 停止服务.bat
-```
-
-启动失败时查看日志：
+双击：
 
 ```text
-storage/logs/server_stdout.log
-storage/logs/server_stderr.log
+启动全栈服务.bat
 ```
 
 默认地址：
 
 ```text
-http://本机局域网IP:5000
+前端：http://127.0.0.1:3000
+后端：http://127.0.0.1:8000/api/health
 ```
 
-上传模板下载：
+停止服务：
 
 ```text
-http://本机局域网IP:5000/downloads/template
+停止全栈服务.bat
 ```
 
-管理员后台登录地址：
+## 密码配置
 
-```text
-http://本机局域网IP:5000/admin/login
-```
-
-默认管理员密码：
-
-```text
-admin123
-```
-
-如需修改管理员密码：
+管理员密码：
 
 ```powershell
-$env:ADMIN_PASSWORD="你的新密码"
-python app.py
+$env:ADMIN_PASSWORD="你的管理员密码"
 ```
 
-默认监听地址：
-
-```text
-0.0.0.0:5000
-```
-
-如需改端口或地址：
+组长密码：
 
 ```powershell
-$env:APP_HOST="0.0.0.0"
-$env:APP_PORT="5000"
-python app.py
+$env:GROUP_LEADER_PASSWORD="你的组长密码"
 ```
 
-## 当前实现范围
+## 当前功能
 
-- 上传 `xlsx` 表格
-- 本地脚本自动审核
-- 发票号码重复校验
-- 管理员按批次或按明细确认入库
-- 管理员按明细提取出库
+- 团队门户首页
+- 发票表格模板下载
+- 成员上传 `.xlsx` 采购表格
+- 后端本地审核脚本
+- 管理员登录
+- 待入库批次确认
+- 库内明细提取出库
 - SQLite 本地数据库
-- 库内总表与出库总表自动导出
+
+## 后续开发目标
+
+- 赛季月度规划数据表和管理后台
+- 机器人展示按赛季归档
+- 队员风采真实姓名和照片管理
+- 近期动态富文本编辑
+- 外网访问加固

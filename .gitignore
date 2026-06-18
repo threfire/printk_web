@@ -1,6 +1,11 @@
 storage/
 .venv/
+.venv-fastapi/
 __pycache__/
 *.pyc
 .agents/
 skills-lock.json
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+!frontend/next-env.d.ts
