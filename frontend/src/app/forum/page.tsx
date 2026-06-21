@@ -53,7 +53,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
       <section className="section-hero forum-hero">
         <span className="eyebrow">FORUM</span>
         <h1>队内论坛</h1>
-        <p>用于沉淀调试经验、赛季问题、物资讨论和训练复盘，登录后可发帖与回复。</p>
+        <p>用于沉淀调试经验、赛季问题、物资讨论和训练复盘，提交内容经管理员审核后展示。</p>
         {ok ? <div className="message">{ok}</div> : null}
         {error ? <div className="message error">{error}</div> : null}
         {forumState.loadError ? <div className="message error">{forumState.loadError}</div> : null}
@@ -115,7 +115,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                 />
               </div>
               <button className="button" type="submit">
-                发布帖子
+                提交审核
               </button>
             </form>
           ) : (

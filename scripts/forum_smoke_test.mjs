@@ -1,5 +1,8 @@
 const inputBase = process.argv[2] ?? "http://127.0.0.1:3000";
 const base = inputBase.replace(/\/+$/, "");
+const inputApiBase = process.argv[3] ?? "http://127.0.0.1:8000";
+const apiBase = inputApiBase.replace(/\/+$/, "");
+const adminPassword = process.env.ADMIN_PASSWORD ?? "weareprintk";
 const account = `forumtest${Date.now()}`;
 let cookieJar = "";
 
@@ -80,6 +83,73 @@ function requireMatch(value, pattern, label) {
   return match;
 }
 
+async function apiJson(path, options = {}) {
+  const response = await fetch(`${apiBase}${path}`, options);
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`接口请求失败：${path} ${response.status} ${message}`);
+  }
+  return response.json();
+}
+
+async function adminToken() {
+  const result = await apiJson("/api/auth/login", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      password: adminPassword,
+      role: "admin",
+    }),
+  });
+  return result.token;
+}
+
+async function moderatePost(token, title, status) {
+  const data = await apiJson("/api/admin/forum", {
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+  const post = data.posts.find((item) => item.author_account === account && item.title === title);
+  if (!post) {
+    throw new Error("管理员列表未找到待审核帖子");
+  }
+  await apiJson(`/api/admin/forum/posts/${encodeURIComponent(post.id)}`, {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+  return post.id;
+}
+
+async function moderateReply(token, postId, content, status) {
+  const data = await apiJson("/api/admin/forum", {
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+  const reply = data.replies.find(
+    (item) => item.post_id === postId && item.author_account === account && item.content === content,
+  );
+  if (!reply) {
+    throw new Error("管理员列表未找到待审核回复");
+  }
+  await apiJson(`/api/admin/forum/replies/${encodeURIComponent(reply.id)}`, {
+    method: "PUT",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+  return reply.id;
+}
+
 await formPost(
   "/account/register",
   {
@@ -110,7 +180,12 @@ const postResponse = await formPost(
 );
 requireStatus(postResponse, [303, 307], "发帖");
 const postLocation = postResponse.headers.get("location") ?? "";
-const postId = requireMatch(postLocation, /\/forum\/([^?]+)/, "帖子跳转")[1];
+if (!postLocation.includes("/forum")) {
+  throw new Error(`发帖跳转异常：${postLocation}`);
+}
+
+const token = await adminToken();
+const postId = await moderatePost(token, "联调发帖测试", "approved");
 
 const postHtml = await getText(`/forum/${postId}`);
 if (!postHtml.includes("联调发帖测试")) {
@@ -126,14 +201,24 @@ const replyResponse = await formPost(
 );
 requireStatus(replyResponse, [303, 307], "回复");
 
+await moderateReply(token, postId, "链路验证：回复成功。", "approved");
+
 const replyHtml = await getText(`/forum/${postId}`);
 if (!replyHtml.includes("链路验证：回复成功。")) {
   throw new Error("帖子详情未包含回复");
 }
 
+await apiJson(`/api/admin/forum/posts/${encodeURIComponent(postId)}`, {
+  method: "DELETE",
+  headers: {
+    authorization: `Bearer ${token}`,
+  },
+});
+
 console.log(
   JSON.stringify({
     base,
+    apiBase,
     account,
     postId,
     result: "ok",

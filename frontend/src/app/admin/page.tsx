@@ -1,11 +1,28 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { API_BASE, DashboardData } from "@/lib/api";
+import { API_BASE, DashboardData, type ForumManagementData } from "@/lib/api";
+import {
+  departmentOptions,
+  genderOptions,
+  gradeOptions,
+  memberStatusOptions,
+  type SiteAccountProfile,
+} from "@/lib/account-profile";
 import { firstParam } from "@/lib/admin-feedback";
 
 type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+type AccountManagementData = {
+  accounts: SiteAccountProfile[];
+  summary: {
+    total: number;
+    enabled: number;
+    disabled: number;
+    image2_allowed: number;
+  };
 };
 
 async function fetchDashboard(token: string): Promise<DashboardData | null> {
@@ -19,6 +36,55 @@ async function fetchDashboard(token: string): Promise<DashboardData | null> {
     return null;
   }
   return response.json() as Promise<DashboardData>;
+}
+
+async function fetchAccounts(token: string, filters: Record<string, string>): Promise<AccountManagementData | null> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) {
+      params.set(key, value);
+    }
+  }
+  const response = await fetch(`${API_BASE}/api/admin/site-accounts?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json() as Promise<AccountManagementData>;
+}
+
+async function fetchForumManagement(token: string): Promise<ForumManagementData | null> {
+  const response = await fetch(`${API_BASE}/api/admin/forum`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json() as Promise<ForumManagementData>;
+}
+
+function param(params: Record<string, string | string[] | undefined>, key: string) {
+  return firstParam(params[key]) ?? "";
+}
+
+function OptionList({ options }: { options: readonly string[] }) {
+  return (
+    <>
+      <option value="">全部</option>
+      {options.map((option) => (
+        <option value={option} key={option}>
+          {option}
+        </option>
+      ))}
+    </>
+  );
 }
 
 function text(value: unknown) {
@@ -46,19 +112,38 @@ function formatDateTime(value: unknown) {
   });
 }
 
+function forumStatusText(value: string) {
+  const labels: Record<string, string> = {
+    pending: "待审核",
+    approved: "已通过",
+    rejected: "已驳回",
+    hidden: "已隐藏",
+  };
+  return labels[value] ?? value;
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const cookieStore = await cookies();
   const token = cookieStore.get("printk-admin-token")?.value ?? "";
-  const dashboard = token ? await fetchDashboard(token) : null;
   const params = (await searchParams) ?? {};
+  const accountFilters = {
+    keyword: param(params, "keyword"),
+    member_status: param(params, "member_status"),
+    department: param(params, "department"),
+    state: param(params, "state"),
+    image2: param(params, "image2"),
+  };
+  const dashboard = token ? await fetchDashboard(token) : null;
+  const accountData = token ? await fetchAccounts(token, accountFilters) : null;
+  const forumData = token ? await fetchForumManagement(token) : null;
   const ok = firstParam(params.ok);
   const error = firstParam(params.error);
 
-  if (token && !dashboard) {
+  if (token && (!dashboard || !accountData || !forumData)) {
     redirect("/api/admin/logout");
   }
 
-  if (!dashboard) {
+  if (!dashboard || !accountData || !forumData) {
     return (
       <div className="page">
         <section className="section-hero">
@@ -119,6 +204,340 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="stat">
             <strong>{dashboard.counts.out_stock}</strong>出库明细
           </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <span className="eyebrow">ACCOUNTS</span>
+          <h2>账号管理</h2>
+        </div>
+        <div className="stats">
+          <div className="stat">
+            <strong>{accountData.summary.total}</strong>注册账号
+          </div>
+          <div className="stat">
+            <strong>{accountData.summary.enabled}</strong>启用账号
+          </div>
+          <div className="stat">
+            <strong>{accountData.summary.disabled}</strong>停用账号
+          </div>
+          <div className="stat">
+            <strong>{accountData.summary.image2_allowed}</strong>图片权限
+          </div>
+        </div>
+        <form className="form" action="/admin" method="get">
+          <div className="form-grid">
+            <div className="field">
+              <label htmlFor="account-keyword">关键词</label>
+              <input id="account-keyword" name="keyword" defaultValue={accountFilters.keyword} placeholder="账号、姓名、电话、邮箱" />
+            </div>
+            <div className="field">
+              <label htmlFor="account-member-status">身份</label>
+              <select id="account-member-status" name="member_status" defaultValue={accountFilters.member_status}>
+                <OptionList options={memberStatusOptions} />
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="account-department">部门</label>
+              <select id="account-department" name="department" defaultValue={accountFilters.department}>
+                <OptionList options={departmentOptions} />
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="account-state">状态</label>
+              <select id="account-state" name="state" defaultValue={accountFilters.state || "all"}>
+                <option value="all">全部</option>
+                <option value="enabled">启用</option>
+                <option value="disabled">停用</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="account-image2">图片权限</label>
+              <select id="account-image2" name="image2" defaultValue={accountFilters.image2 || "all"}>
+                <option value="all">全部</option>
+                <option value="allowed">已添加</option>
+                <option value="denied">未添加</option>
+              </select>
+            </div>
+          </div>
+          <div className="form-actions">
+            <button className="button" type="submit">
+              筛选
+            </button>
+            <Link className="ghost-button" href="/admin">
+              清空
+            </Link>
+          </div>
+        </form>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>账号</th>
+                <th>资料</th>
+                <th>状态</th>
+                <th>图片工具</th>
+                <th>后台备注</th>
+                <th>密码</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accountData.accounts.map((account) => {
+                const editFormId = `account-edit-${encodeURIComponent(account.account)}`;
+                return (
+                  <tr key={account.account}>
+                    <td>
+                      <strong>{text(account.account)}</strong>
+                      <div>{formatDateTime(account.created_at)}</div>
+                      <div>{formatDateTime(account.last_login_at)}</div>
+                      <form id={editFormId} action={`/api/admin/site-accounts/${encodeURIComponent(account.account)}`} method="post" />
+                    </td>
+                    <td>
+                      <div className="form-grid">
+                        <div className="field">
+                          <label htmlFor={`${account.account}-full-name`}>姓名</label>
+                          <input form={editFormId} id={`${account.account}-full-name`} name="full_name" defaultValue={account.full_name} />
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-gender`}>性别</label>
+                          <select form={editFormId} id={`${account.account}-gender`} name="gender" defaultValue={account.gender}>
+                            <OptionList options={genderOptions} />
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-grade`}>年级</label>
+                          <select form={editFormId} id={`${account.account}-grade`} name="grade" defaultValue={account.grade}>
+                            <OptionList options={gradeOptions} />
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-member-status`}>身份</label>
+                          <select form={editFormId} id={`${account.account}-member-status`} name="member_status" defaultValue={account.member_status}>
+                            <OptionList options={memberStatusOptions} />
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-department`}>部门</label>
+                          <select form={editFormId} id={`${account.account}-department`} name="department" defaultValue={account.department}>
+                            <OptionList options={departmentOptions} />
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-phone`}>电话</label>
+                          <input form={editFormId} id={`${account.account}-phone`} name="phone" defaultValue={account.phone} />
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-email`}>邮箱</label>
+                          <input form={editFormId} id={`${account.account}-email`} name="email" defaultValue={account.email} />
+                        </div>
+                      </div>
+                      <input form={editFormId} name="bio" type="hidden" value={account.bio} />
+                    </td>
+                    <td>
+                      <label className="account-switch">
+                        <input form={editFormId} name="is_disabled" type="checkbox" defaultChecked={account.is_disabled} value="true" />
+                        停用
+                      </label>
+                    </td>
+                    <td>
+                      <label className="account-switch">
+                        <input form={editFormId} name="image2_allowed" type="checkbox" defaultChecked={account.image2_allowed} value="true" />
+                        已添加
+                      </label>
+                    </td>
+                    <td>
+                      <textarea form={editFormId} name="admin_note" defaultValue={account.admin_note ?? ""} rows={3} />
+                    </td>
+                    <td>
+                      <form action={`/api/admin/site-accounts/${encodeURIComponent(account.account)}/reset-password`} method="post">
+                        <input name="new_password" type="password" minLength={6} maxLength={72} placeholder="新密码" />
+                        <button className="ghost-button" type="submit">
+                          重置
+                        </button>
+                      </form>
+                    </td>
+                    <td>
+                      <button className="ghost-button" form={editFormId} type="submit">
+                        保存
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {accountData.accounts.length === 0 ? (
+                <tr>
+                  <td className="empty-cell" colSpan={6}>
+                    当前没有匹配账号
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <span className="eyebrow">FORUM</span>
+          <h2>论坛管理</h2>
+        </div>
+        <div className="table-wrap">
+          <table className="admin-forum-table">
+            <thead>
+              <tr>
+                <th>帖子</th>
+                <th>作者</th>
+                <th>状态</th>
+                <th>回复</th>
+                <th>处理说明</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {forumData.posts.map((post) => (
+                <tr key={post.id}>
+                  <td>
+                    <strong>{post.title}</strong>
+                    <p>{post.content}</p>
+                    <div>{formatDateTime(post.created_at)}</div>
+                    <div>
+                      {post.is_pinned ? "已置顶" : "未置顶"} / {post.is_locked ? "已锁定" : "可回复"}
+                    </div>
+                  </td>
+                  <td>{post.author_name}</td>
+                  <td>
+                    <span className="badge">{forumStatusText(post.status)}</span>
+                    {post.deleted_at ? <div>已删除：{formatDateTime(post.deleted_at)}</div> : null}
+                  </td>
+                  <td>{post.reply_count}</td>
+                  <td>{text(post.reject_reason)}</td>
+                  <td>
+                    <div className="row-actions">
+                      <form action={`/api/admin/forum/posts/${encodeURIComponent(post.id)}`} method="post">
+                        <input name="status" type="hidden" value="approved" />
+                        <button className="ghost-button" type="submit">
+                          通过
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/posts/${encodeURIComponent(post.id)}`} method="post">
+                        <input name="status" type="hidden" value="rejected" />
+                        <input name="reject_reason" placeholder="驳回原因" maxLength={500} />
+                        <button className="ghost-button" type="submit">
+                          驳回
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/posts/${encodeURIComponent(post.id)}`} method="post">
+                        <input name="status" type="hidden" value="hidden" />
+                        <button className="ghost-button" type="submit">
+                          隐藏
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/posts/${encodeURIComponent(post.id)}`} method="post">
+                        <input name="status" type="hidden" value={post.status} />
+                        <input name="is_pinned" type="hidden" value={post.is_pinned ? "false" : "true"} />
+                        <button className="ghost-button" type="submit">
+                          {post.is_pinned ? "取消置顶" : "置顶"}
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/posts/${encodeURIComponent(post.id)}`} method="post">
+                        <input name="status" type="hidden" value={post.status} />
+                        <input name="is_locked" type="hidden" value={post.is_locked ? "false" : "true"} />
+                        <button className="ghost-button" type="submit">
+                          {post.is_locked ? "解锁" : "锁定"}
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/posts/${encodeURIComponent(post.id)}`} method="post">
+                        <input name="intent" type="hidden" value="delete" />
+                        <button className="ghost-button" type="submit">
+                          删除
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {forumData.posts.length === 0 ? (
+                <tr>
+                  <td className="empty-cell" colSpan={6}>
+                    当前没有论坛帖子
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+        <div className="section-heading">
+          <span className="eyebrow">REPLIES</span>
+          <h2>回复审核</h2>
+        </div>
+        <div className="table-wrap">
+          <table className="admin-forum-reply-table">
+            <thead>
+              <tr>
+                <th>所属帖子</th>
+                <th>回复</th>
+                <th>作者</th>
+                <th>状态</th>
+                <th>处理说明</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {forumData.replies.map((reply) => (
+                <tr key={reply.id}>
+                  <td>{reply.post_title}</td>
+                  <td>
+                    <p>{reply.content}</p>
+                    <div>{formatDateTime(reply.created_at)}</div>
+                  </td>
+                  <td>{reply.author_name}</td>
+                  <td>
+                    <span className="badge">{forumStatusText(reply.status)}</span>
+                    {reply.deleted_at ? <div>已删除：{formatDateTime(reply.deleted_at)}</div> : null}
+                  </td>
+                  <td>{text(reply.reject_reason)}</td>
+                  <td>
+                    <div className="row-actions">
+                      <form action={`/api/admin/forum/replies/${encodeURIComponent(reply.id)}`} method="post">
+                        <input name="status" type="hidden" value="approved" />
+                        <button className="ghost-button" type="submit">
+                          通过
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/replies/${encodeURIComponent(reply.id)}`} method="post">
+                        <input name="status" type="hidden" value="rejected" />
+                        <input name="reject_reason" placeholder="驳回原因" maxLength={500} />
+                        <button className="ghost-button" type="submit">
+                          驳回
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/replies/${encodeURIComponent(reply.id)}`} method="post">
+                        <input name="status" type="hidden" value="hidden" />
+                        <button className="ghost-button" type="submit">
+                          隐藏
+                        </button>
+                      </form>
+                      <form action={`/api/admin/forum/replies/${encodeURIComponent(reply.id)}`} method="post">
+                        <input name="intent" type="hidden" value="delete" />
+                        <button className="ghost-button" type="submit">
+                          删除
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {forumData.replies.length === 0 ? (
+                <tr>
+                  <td className="empty-cell" colSpan={6}>
+                    当前没有论坛回复
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </section>
 

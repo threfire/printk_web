@@ -19,6 +19,8 @@ const emptyProfile: SiteAccountProfile = {
   phone: "",
   email: "",
   bio: "",
+  image2_allowed: false,
+  is_disabled: false,
 };
 
 async function getProfile(account: string): Promise<SiteAccountProfile> {

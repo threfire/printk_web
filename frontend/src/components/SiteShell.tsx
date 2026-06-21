@@ -43,7 +43,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           <Link className="brand" href="/">
             <span className="brand-copy">
               <strong>PRINTK</strong>
-              <small>机器人战队门户</small>
+              <small>贵州大学机甲大师战队</small>
             </span>
           </Link>
           <nav className="nav-links" aria-label="主导航">

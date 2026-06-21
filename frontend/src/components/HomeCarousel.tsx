@@ -8,8 +8,14 @@ type CarouselImage = {
   alt: string;
 };
 
+type CarouselQuote = {
+  text: string;
+  source: string;
+};
+
 type HomeCarouselProps = {
   images: CarouselImage[];
+  quotes?: CarouselQuote[];
 };
 
 const AUTOPLAY_DELAY_MS = 5000;
@@ -49,7 +55,7 @@ function getSlot(index: number, activeIndex: number, direction: 1 | -1, total: n
   return backward < forward ? "hidden-left" : "hidden-right";
 }
 
-export function HomeCarousel({ images }: HomeCarouselProps) {
+export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [paused, setPaused] = useState(false);
@@ -105,32 +111,44 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
     return null;
   }
 
+  const activeQuoteIndex = quotes.length ? activeIndex % quotes.length : -1;
+
   return (
-    <section
-      className="image-carousel"
-      aria-label="战队图片展示"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <button className="carousel-nav carousel-nav-prev" type="button" aria-label="上一张" onClick={goPrev}>
-        <span aria-hidden="true">‹</span>
-      </button>
-      <button className="carousel-nav carousel-nav-next" type="button" aria-label="下一张" onClick={goNext}>
-        <span aria-hidden="true">›</span>
-      </button>
-      {images.map((image, index) => (
-        <div className="carousel-card" data-slot={getSlot(index, activeIndex, direction, images.length)} key={image.src}>
-          <Image
-            className="carousel-image"
-            src={image.src}
-            alt={image.alt}
-            width={1920}
-            height={1080}
-            priority={index === 0}
-            sizes="(max-width: 1180px) 98vw, 1150px"
-          />
-        </div>
-      ))}
-    </section>
+    <div className="home-carousel-stack" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {quotes.length ? (
+        <section className="quote-carousel" aria-label="RoboMaster 赛事文案" aria-live="polite">
+          <div className="quote-carousel-track">
+            {quotes.map((quote, index) => (
+              <figure className="quote-slide" data-active={index === activeQuoteIndex ? "true" : "false"} key={quote.text}>
+                <blockquote>{quote.text}</blockquote>
+                <figcaption>{quote.source}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="image-carousel" aria-label="战队图片展示">
+        <button className="carousel-nav carousel-nav-prev" type="button" aria-label="上一张" onClick={goPrev}>
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button className="carousel-nav carousel-nav-next" type="button" aria-label="下一张" onClick={goNext}>
+          <span aria-hidden="true">›</span>
+        </button>
+        {images.map((image, index) => (
+          <div className="carousel-card" data-slot={getSlot(index, activeIndex, direction, images.length)} key={image.src}>
+            <Image
+              className="carousel-image"
+              src={image.src}
+              alt={image.alt}
+              width={1920}
+              height={1080}
+              priority={index === 0}
+              sizes="(max-width: 1180px) 98vw, 1150px"
+            />
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }

@@ -1,67 +1,208 @@
 # PRINTK 团队门户与发票管理系统
 
-本项目正在从单体 Flask 系统迁移为 `Next.js + FastAPI` 架构。
+本项目已经从单体 Flask 方案推进到 `Next.js + FastAPI + Docker Compose + Nginx` 架构，当前代码与服务器部署链路已经打通。
 
-## 当前结构
+## 当前项目结构
 
 ```text
-frontend/     Next.js 前端，负责团队门户、发票上传、管理后台页面
-backend/      FastAPI 后端，负责接口、SQLite、本地文件和审核脚本
-storage/      本地数据目录，不提交 Git
-scripts/      一键启动和停止脚本
-app.py        迁移前 Flask 版本，作为基线参考保留
+frontend/     Next.js 前端，负责团队门户、图片工具、账号页面、发票管理页面、管理后台页面
+backend/      FastAPI 后端，负责接口、SQLite、本地文件处理、审核逻辑
+deploy/nginx/ Nginx 反向代理配置
+storage/      本地数据目录，存放数据库、上传文件、导出文件、日志
+scripts/      本地开发脚本、服务器初始化脚本、服务器更新脚本
+app.py        迁移前 Flask 版本保留文件，仅作参考
+docker-compose.yml
 ```
 
-## 一键启动
+## 当前功能状态
 
-双击：
+- 团队门户首页
+- 队员账号注册、登录、资料维护
+- 赛季规划页面与接口
+- 发票模板下载
+- 成员上传 `.xlsx` 采购表格
+- 本地审核与入库流程
+- 管理后台批次确认、驳回、出库
+- 图片工具页面
+- GitHub 仓库拉取部署
+- Docker Compose 容器部署
+- Nginx 反向代理入口
+
+## 当前部署状态
+
+当前服务器已经完成首次部署，运行方式如下：
+
+- 云服务器：腾讯云轻量应用服务器
+- 操作系统：Ubuntu 22.04 Docker 镜像
+- 公网 IP：`123.207.16.156`
+- 域名：`gzuprintk.cn`
+- DNS：
+  - `@ -> 123.207.16.156`
+  - `www -> 123.207.16.156`
+
+当前容器：
+
+- `printk-backend`
+- `printk-frontend`
+- `printk-nginx`
+
+当前访问入口：
+
+- IP 入口：`http://123.207.16.156`
+- 域名入口：`http://gzuprintk.cn`
+- 域名入口：`http://www.gzuprintk.cn`
+- 后端健康检查：`http://123.207.16.156:8000/api/health`
+
+当前反向代理链路：
+
+`用户访问 80 端口 -> Nginx -> frontend:3000 / backend:8000`
+
+## 当前部署文件
+
+- `docker-compose.yml`
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `deploy/nginx/default.conf`
+- `scripts/server-init.sh`
+- `scripts/server-update.sh`
+- `.env.server.example`
+
+## 服务器环境变量现状
+
+服务器 `.env` 当前至少包含以下字段：
+
+```env
+FRONTEND_ORIGIN=http://123.207.16.156,http://gzuprintk.cn,http://www.gzuprintk.cn
+INTERNAL_API_BASE_URL=http://backend:8000
+NEXT_PUBLIC_API_BASE_URL=/
+ADMIN_PASSWORD=***
+GROUP_LEADER_PASSWORD=***
+SECRET_KEY=***
+```
+
+说明：
+
+- `NEXT_PUBLIC_API_BASE_URL=/` 表示浏览器通过同域 `/api` 访问接口
+- `INTERNAL_API_BASE_URL=http://backend:8000` 表示前端容器内部走 Docker 网络访问后端
+- `FRONTEND_ORIGIN` 已放行 IP 与域名来源
+
+## 本地开发方式
+
+本地一键启动：
 
 ```text
 启动全栈服务.bat
 ```
 
-默认地址：
+本地默认入口：
 
 ```text
 前端：http://127.0.0.1:3000
 后端：http://127.0.0.1:8000/api/health
 ```
 
-停止服务：
+本地一键停止：
 
 ```text
 停止全栈服务.bat
 ```
 
-## 密码配置
+## 服务器首次部署流程
 
-管理员密码：
+服务器使用 GitHub 仓库部署，当前链路已经验证通过。
 
-```powershell
-$env:ADMIN_PASSWORD="你的管理员密码"
+```bash
+git clone -b master git@github.com:threfire/printk_web.git ~/printk
+cd ~/printk
+bash scripts/server-init.sh
 ```
 
-组长密码：
+第一次执行会生成 `.env`，编辑完成后再次执行：
 
-```powershell
-$env:GROUP_LEADER_PASSWORD="你的组长密码"
+```bash
+cd ~/printk
+bash scripts/server-init.sh
 ```
 
-## 当前功能
+## 后续更新流程
 
-- 团队门户首页
-- 发票表格模板下载
-- 成员上传 `.xlsx` 采购表格
-- 后端本地审核脚本
-- 管理员登录
-- 待入库批次确认
-- 库内明细提取出库
-- SQLite 本地数据库
+当前推荐更新链路：
 
-## 后续开发目标
+`本地改代码 -> git commit -> git push origin master -> 服务器 git pull -> docker compose 重建`
 
-- 赛季月度规划数据表和管理后台
-- 机器人展示按赛季归档
-- 队员风采真实姓名和照片管理
-- 近期动态富文本编辑
-- 外网访问加固
+本地执行：
+
+```bash
+git add .
+git commit -m "写本次更新说明"
+git push origin master
+```
+
+服务器执行：
+
+```bash
+cd ~/printk
+bash scripts/server-update.sh
+```
+
+如果只想手动更新，也可以执行：
+
+```bash
+cd ~/printk
+git pull origin master
+sudo docker compose up -d --build
+```
+
+## 常用运维命令
+
+查看容器状态：
+
+```bash
+cd ~/printk
+sudo docker compose ps
+```
+
+查看前端日志：
+
+```bash
+cd ~/printk
+sudo docker compose logs frontend --tail=100
+```
+
+查看后端日志：
+
+```bash
+cd ~/printk
+sudo docker compose logs backend --tail=100
+```
+
+查看 Nginx 日志：
+
+```bash
+cd ~/printk
+sudo docker compose logs nginx --tail=100
+```
+
+重建全部容器：
+
+```bash
+cd ~/printk
+sudo docker compose up -d --build
+```
+
+## 当前已知事项
+
+- 当前网站已经可以通过公网 IP 和域名访问
+- 当前 `80` 端口已由 Nginx 接管
+- 当前 `3000` 与 `8000` 仍对外开放，便于排错；后续可在稳定后收敛入口
+- 当前域名已完成解析
+- 当前仍应继续推进 ICP 备案
+- 当前尚未接入 HTTPS
+
+## 下一步待办
+
+- 完成 ICP 备案
+- 接入 HTTPS
+- 稳定后收紧安全组，只保留必要端口
+- 持续完善门户页面内容
+- 持续完善发票与后台流程

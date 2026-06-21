@@ -13,6 +13,10 @@ export type SiteAccountProfile = {
   phone: string;
   email: string;
   bio: string;
+  image2_allowed: boolean;
+  is_disabled: boolean;
+  admin_note?: string;
+  last_login_at?: string;
   created_at?: string;
   updated_at?: string;
 };

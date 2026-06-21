@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: ReplyRouteContext) {
       feedbackMessage = await responseError(response, "发布回复失败");
     } else {
       feedbackKey = "ok";
-      feedbackMessage = "回复已发布";
+      feedbackMessage = "回复已提交，管理员审核通过后会展示";
     }
   } catch {
     feedbackMessage = "论坛服务暂时不可用，请稍后重试";

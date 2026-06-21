@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from openpyxl import Workbook, load_workbook
@@ -52,6 +52,8 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "weareprintk")
 GROUP_LEADER_PASSWORD = os.getenv("GROUP_LEADER_PASSWORD", "group123")
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:3000,http://localhost:3000")
 AGENT_LOCK = threading.Lock()
+FORUM_PUBLIC_STATUS = "approved"
+FORUM_CONTENT_STATUSES = {"pending", "approved", "rejected", "hidden"}
 
 HEADER_MAP = {
     "采购日期": "purchase_date",
@@ -280,8 +282,21 @@ def init_db() -> None:
                 phone TEXT DEFAULT '',
                 email TEXT DEFAULT '',
                 bio TEXT DEFAULT '',
+                image2_allowed INTEGER NOT NULL DEFAULT 0,
+                is_disabled INTEGER NOT NULL DEFAULT 0,
+                admin_note TEXT DEFAULT '',
+                last_login_at TEXT DEFAULT '',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS site_account_admin_log (
+                id TEXT PRIMARY KEY,
+                account TEXT NOT NULL,
+                action TEXT NOT NULL,
+                detail TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (account) REFERENCES site_account(account)
             );
 
             CREATE TABLE IF NOT EXISTS forum_post (
@@ -289,6 +304,13 @@ def init_db() -> None:
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 author_account TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'approved',
+                reject_reason TEXT DEFAULT '',
+                reviewed_by TEXT DEFAULT '',
+                reviewed_at TEXT DEFAULT '',
+                deleted_at TEXT DEFAULT '',
+                is_pinned INTEGER NOT NULL DEFAULT 0,
+                is_locked INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (author_account) REFERENCES site_account(account)
@@ -299,6 +321,11 @@ def init_db() -> None:
                 post_id TEXT NOT NULL,
                 content TEXT NOT NULL,
                 author_account TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'approved',
+                reject_reason TEXT DEFAULT '',
+                reviewed_by TEXT DEFAULT '',
+                reviewed_at TEXT DEFAULT '',
+                deleted_at TEXT DEFAULT '',
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (post_id) REFERENCES forum_post(id),
                 FOREIGN KEY (author_account) REFERENCES site_account(account)
@@ -312,9 +339,35 @@ def init_db() -> None:
 
             CREATE INDEX IF NOT EXISTS idx_forum_reply_post_created_at
             ON forum_reply (post_id, created_at);
+
             """
         )
         ensure_site_account_profile_columns(conn)
+        ensure_forum_moderation_columns(conn)
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_forum_post_status_created_at
+            ON forum_post (status, deleted_at, is_pinned, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_forum_reply_status_created_at
+            ON forum_reply (status, deleted_at, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_site_account_member_status
+            ON site_account (member_status, image2_allowed, is_disabled)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_site_account_admin_log_account
+            ON site_account_admin_log (account, created_at DESC)
+            """
+        )
         seed_season_plan(conn)
 
 
@@ -380,10 +433,48 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
         "phone": "TEXT DEFAULT ''",
         "email": "TEXT DEFAULT ''",
         "bio": "TEXT DEFAULT ''",
+        "image2_allowed": "INTEGER NOT NULL DEFAULT 0",
+        "is_disabled": "INTEGER NOT NULL DEFAULT 0",
+        "admin_note": "TEXT DEFAULT ''",
+        "last_login_at": "TEXT DEFAULT ''",
     }
     for column, definition in profile_columns.items():
         if column not in existing_columns:
             conn.execute(f"ALTER TABLE site_account ADD COLUMN {column} {definition}")
+
+
+def ensure_forum_moderation_columns(conn: sqlite3.Connection) -> None:
+    post_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(forum_post)").fetchall()
+    }
+    post_definitions = {
+        "status": "TEXT NOT NULL DEFAULT 'approved'",
+        "reject_reason": "TEXT DEFAULT ''",
+        "reviewed_by": "TEXT DEFAULT ''",
+        "reviewed_at": "TEXT DEFAULT ''",
+        "deleted_at": "TEXT DEFAULT ''",
+        "is_pinned": "INTEGER NOT NULL DEFAULT 0",
+        "is_locked": "INTEGER NOT NULL DEFAULT 0",
+    }
+    for column, definition in post_definitions.items():
+        if column not in post_columns:
+            conn.execute(f"ALTER TABLE forum_post ADD COLUMN {column} {definition}")
+
+    reply_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(forum_reply)").fetchall()
+    }
+    reply_definitions = {
+        "status": "TEXT NOT NULL DEFAULT 'approved'",
+        "reject_reason": "TEXT DEFAULT ''",
+        "reviewed_by": "TEXT DEFAULT ''",
+        "reviewed_at": "TEXT DEFAULT ''",
+        "deleted_at": "TEXT DEFAULT ''",
+    }
+    for column, definition in reply_definitions.items():
+        if column not in reply_columns:
+            conn.execute(f"ALTER TABLE forum_reply ADD COLUMN {column} {definition}")
 
 
 GENDER_OPTIONS = {"", "男", "女", "其他"}
@@ -419,8 +510,8 @@ def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
     }
 
 
-def site_account_response(row: sqlite3.Row) -> dict[str, str]:
-    return {
+def site_account_response(row: sqlite3.Row, include_admin: bool = False) -> dict[str, Any]:
+    data = {
         "account": row["account"],
         "full_name": row["full_name"] or "",
         "gender": row["gender"] or "",
@@ -430,9 +521,26 @@ def site_account_response(row: sqlite3.Row) -> dict[str, str]:
         "phone": row["phone"] or "",
         "email": row["email"] or "",
         "bio": row["bio"] or "",
+        "image2_allowed": bool(row["image2_allowed"]),
+        "is_disabled": bool(row["is_disabled"]),
+        "last_login_at": row["last_login_at"] or "",
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
+    if include_admin:
+        data["admin_note"] = row["admin_note"] or ""
+    return data
+
+
+def account_admin_log(conn: sqlite3.Connection, account: str, action: str, detail: str = "") -> None:
+    timestamp = now_iso()
+    conn.execute(
+        """
+        INSERT INTO site_account_admin_log (id, account, action, detail, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (uuid.uuid4().hex, account, action, detail, timestamp),
+    )
 
 
 def forum_author_name(row: sqlite3.Row) -> str:
@@ -446,6 +554,13 @@ def forum_post_response(row: sqlite3.Row) -> dict[str, Any]:
         "content": row["content"],
         "author_account": row["author_account"],
         "author_name": forum_author_name(row),
+        "status": row["status"] if "status" in row.keys() else FORUM_PUBLIC_STATUS,
+        "reject_reason": row["reject_reason"] if "reject_reason" in row.keys() else "",
+        "reviewed_by": row["reviewed_by"] if "reviewed_by" in row.keys() else "",
+        "reviewed_at": row["reviewed_at"] if "reviewed_at" in row.keys() else "",
+        "deleted_at": row["deleted_at"] if "deleted_at" in row.keys() else "",
+        "is_pinned": bool(row["is_pinned"]) if "is_pinned" in row.keys() else False,
+        "is_locked": bool(row["is_locked"]) if "is_locked" in row.keys() else False,
         "reply_count": row["reply_count"] if "reply_count" in row.keys() else 0,
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
@@ -459,6 +574,11 @@ def forum_reply_response(row: sqlite3.Row) -> dict[str, str]:
         "content": row["content"],
         "author_account": row["author_account"],
         "author_name": forum_author_name(row),
+        "status": row["status"] if "status" in row.keys() else FORUM_PUBLIC_STATUS,
+        "reject_reason": row["reject_reason"] if "reject_reason" in row.keys() else "",
+        "reviewed_by": row["reviewed_by"] if "reviewed_by" in row.keys() else "",
+        "reviewed_at": row["reviewed_at"] if "reviewed_at" in row.keys() else "",
+        "deleted_at": row["deleted_at"] if "deleted_at" in row.keys() else "",
         "created_at": row["created_at"],
     }
 
@@ -481,10 +601,19 @@ def normalize_forum_content(value: str, field_name: str = "内容", max_length: 
 
 def ensure_forum_author(conn: sqlite3.Connection, account: str) -> str:
     normalized_account = normalize_account(account)
-    row = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    row = conn.execute("SELECT account, is_disabled FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="账号不存在，请重新登录")
+    if row["is_disabled"]:
+        raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
     return normalized_account
+
+
+def normalize_forum_status(value: str) -> str:
+    status = value.strip()
+    if status not in FORUM_CONTENT_STATUSES:
+        raise HTTPException(status_code=400, detail="论坛状态格式错误")
+    return status
 
 
 def validate_site_password(password: str) -> str:
@@ -1195,6 +1324,20 @@ class SiteAccountRegisterRequest(SiteAccountRequest, SiteAccountProfile):
     pass
 
 
+class Image2AccessRequest(BaseModel):
+    image2_allowed: bool
+
+
+class SiteAccountAdminUpdate(SiteAccountProfile):
+    image2_allowed: bool = False
+    is_disabled: bool = False
+    admin_note: str = ""
+
+
+class SiteAccountPasswordResetRequest(BaseModel):
+    new_password: str
+
+
 class ForumPostCreateRequest(BaseModel):
     title: str
     content: str
@@ -1204,6 +1347,13 @@ class ForumPostCreateRequest(BaseModel):
 class ForumReplyCreateRequest(BaseModel):
     content: str
     author_account: str
+
+
+class ForumModerationRequest(BaseModel):
+    status: str
+    reject_reason: str = ""
+    is_pinned: bool | None = None
+    is_locked: bool | None = None
 
 
 class SeasonPlanItem(BaseModel):
@@ -1304,14 +1454,20 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
 def login_site_account(payload: SiteAccountRequest) -> dict[str, str]:
     account = normalize_account(payload.account)
     with db_connection() as conn:
-        row = conn.execute("SELECT password_hash FROM site_account WHERE account = ?", (account,)).fetchone()
+        row = conn.execute("SELECT * FROM site_account WHERE account = ?", (account,)).fetchone()
+        if row and not row["is_disabled"] and verify_site_password(payload.password, row["password_hash"]):
+            conn.execute(
+                "UPDATE site_account SET last_login_at = ?, updated_at = ? WHERE account = ?",
+                (now_iso(), now_iso(), account),
+            )
+            return {"account": account}
     if not row or not verify_site_password(payload.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="账号或密码错误")
-    return {"account": account}
+    raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
 
 
 @app.get("/api/site-accounts/{account}")
-def get_site_account(account: str) -> dict[str, str]:
+def get_site_account(account: str) -> dict[str, Any]:
     normalized_account = normalize_account(account)
     with db_connection() as conn:
         row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
@@ -1321,14 +1477,16 @@ def get_site_account(account: str) -> dict[str, str]:
 
 
 @app.put("/api/site-accounts/{account}")
-def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, str]:
+def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, Any]:
     normalized_account = normalize_account(account)
     profile = normalize_site_profile(payload)
     timestamp = now_iso()
     with db_connection() as conn:
-        existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        existing = conn.execute("SELECT account, is_disabled FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
         if existing is None:
             raise HTTPException(status_code=404, detail="账号不存在")
+        if existing["is_disabled"]:
+            raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
         conn.execute(
             """
             UPDATE site_account
@@ -1353,6 +1511,370 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
     return site_account_response(row)
 
 
+@app.get("/api/admin/site-accounts")
+def list_site_accounts(
+    keyword: str = Query(default="", max_length=80),
+    member_status: str = Query(default=""),
+    department: str = Query(default=""),
+    state: str = Query(default="all"),
+    image2: str = Query(default="all"),
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_member_status = normalize_choice(member_status, "身份信息", MEMBER_STATUS_OPTIONS)
+    normalized_department = normalize_choice(department, "部门信息", DEPARTMENT_OPTIONS)
+    normalized_keyword = keyword.strip()
+    if state not in {"all", "enabled", "disabled"}:
+        raise HTTPException(status_code=400, detail="账号状态格式错误")
+    if image2 not in {"all", "allowed", "denied"}:
+        raise HTTPException(status_code=400, detail="图片工具权限格式错误")
+
+    where = ["1 = 1"]
+    params: list[Any] = []
+    if normalized_keyword:
+        where.append("(account LIKE ? OR full_name LIKE ? OR phone LIKE ? OR email LIKE ?)")
+        like_value = f"%{normalized_keyword}%"
+        params.extend([like_value, like_value, like_value, like_value])
+    if normalized_member_status:
+        where.append("member_status = ?")
+        params.append(normalized_member_status)
+    if normalized_department:
+        where.append("department = ?")
+        params.append(normalized_department)
+    if state == "enabled":
+        where.append("is_disabled = 0")
+    if state == "disabled":
+        where.append("is_disabled = 1")
+    if image2 == "allowed":
+        where.append("image2_allowed = 1")
+    if image2 == "denied":
+        where.append("image2_allowed = 0")
+
+    with db_connection() as conn:
+        rows = conn.execute(
+            f"""
+            SELECT *
+            FROM site_account
+            WHERE {' AND '.join(where)}
+            ORDER BY is_disabled ASC, updated_at DESC, account ASC
+            LIMIT 200
+            """,
+            params,
+        ).fetchall()
+        summary = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN is_disabled = 0 THEN 1 ELSE 0 END) AS enabled,
+                SUM(CASE WHEN is_disabled = 1 THEN 1 ELSE 0 END) AS disabled,
+                SUM(CASE WHEN image2_allowed = 1 THEN 1 ELSE 0 END) AS image2_allowed
+            FROM site_account
+            """
+        ).fetchone()
+    return {
+        "accounts": [site_account_response(row, include_admin=True) for row in rows],
+        "summary": {
+            "total": summary["total"] or 0,
+            "enabled": summary["enabled"] or 0,
+            "disabled": summary["disabled"] or 0,
+            "image2_allowed": summary["image2_allowed"] or 0,
+        },
+    }
+
+
+@app.put("/api/admin/site-accounts/{account}")
+def update_site_account_by_admin(
+    account: str,
+    payload: SiteAccountAdminUpdate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_account = normalize_account(account)
+    profile = normalize_site_profile(payload)
+    admin_note = normalize_limited_text(payload.admin_note, "后台备注", 200)
+    if payload.image2_allowed and profile["member_status"] != "正式队员":
+        raise HTTPException(status_code=400, detail="图片工具权限只支持正式队员账号")
+    if payload.is_disabled and payload.image2_allowed:
+        raise HTTPException(status_code=400, detail="停用账号不能添加图片工具权限")
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        conn.execute(
+            """
+            UPDATE site_account
+            SET full_name = ?, gender = ?, grade = ?, member_status = ?,
+                department = ?, phone = ?, email = ?, bio = ?,
+                image2_allowed = ?, is_disabled = ?, admin_note = ?, updated_at = ?
+            WHERE account = ?
+            """,
+            (
+                profile["full_name"],
+                profile["gender"],
+                profile["grade"],
+                profile["member_status"],
+                profile["department"],
+                profile["phone"],
+                profile["email"],
+                profile["bio"],
+                1 if payload.image2_allowed else 0,
+                1 if payload.is_disabled else 0,
+                admin_note,
+                timestamp,
+                normalized_account,
+            ),
+        )
+        account_admin_log(conn, normalized_account, "update", "管理员更新账号资料")
+        updated = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    return site_account_response(updated, include_admin=True)
+
+
+@app.post("/api/admin/site-accounts/{account}/reset-password")
+def reset_site_account_password(
+    account: str,
+    payload: SiteAccountPasswordResetRequest,
+    _: str = Depends(require_admin),
+) -> dict[str, str]:
+    normalized_account = normalize_account(account)
+    new_password = validate_site_password(payload.new_password)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        conn.execute(
+            "UPDATE site_account SET password_hash = ?, updated_at = ? WHERE account = ?",
+            (hash_site_password(new_password), timestamp, normalized_account),
+        )
+        account_admin_log(conn, normalized_account, "reset_password", "管理员重置账号密码")
+    return {"account": normalized_account, "message": "密码已重置"}
+
+
+@app.get("/api/admin/site-accounts/image2-access")
+def list_image2_access_accounts(_: str = Depends(require_admin)) -> dict[str, Any]:
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM site_account
+            WHERE member_status = ? AND is_disabled = 0
+            ORDER BY image2_allowed DESC, updated_at DESC, account ASC
+            """,
+            ("正式队员",),
+        ).fetchall()
+    return {"accounts": [site_account_response(row) for row in rows]}
+
+
+@app.put("/api/admin/site-accounts/{account}/image2-access")
+def update_image2_access(
+    account: str,
+    payload: Image2AccessRequest,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_account = normalize_account(account)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        if row["is_disabled"]:
+            raise HTTPException(status_code=400, detail="停用账号不能添加图片工具权限")
+        if payload.image2_allowed and row["member_status"] != "正式队员":
+            raise HTTPException(status_code=400, detail="图片工具权限只支持正式队员账号")
+        conn.execute(
+            """
+            UPDATE site_account
+            SET image2_allowed = ?, updated_at = ?
+            WHERE account = ?
+            """,
+            (1 if payload.image2_allowed else 0, timestamp, normalized_account),
+        )
+        account_admin_log(conn, normalized_account, "image2_access", "管理员更新图片工具权限")
+        updated = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    return site_account_response(updated, include_admin=True)
+
+
+@app.get("/api/admin/forum")
+def list_forum_management(
+    status: str = Query(default="all"),
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    status_filter = status.strip()
+    if status_filter != "all":
+        status_filter = normalize_forum_status(status_filter)
+    where_sql = ""
+    params: list[Any] = [FORUM_PUBLIC_STATUS]
+    if status_filter != "all":
+        where_sql = "WHERE post.status = ?"
+        params.append(status_filter)
+    with db_connection() as conn:
+        posts = conn.execute(
+            f"""
+            SELECT
+                post.*,
+                account.full_name,
+                COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
+            {where_sql}
+            GROUP BY post.id
+            ORDER BY
+                CASE WHEN post.status = 'pending' THEN 0 ELSE 1 END,
+                post.is_pinned DESC,
+                post.created_at DESC
+            LIMIT 200
+            """,
+            params,
+        ).fetchall()
+        replies = conn.execute(
+            """
+            SELECT
+                reply.*,
+                account.full_name,
+                post.title AS post_title
+            FROM forum_reply AS reply
+            LEFT JOIN site_account AS account ON account.account = reply.author_account
+            LEFT JOIN forum_post AS post ON post.id = reply.post_id
+            ORDER BY
+                CASE WHEN reply.status = 'pending' THEN 0 ELSE 1 END,
+                reply.created_at DESC
+            LIMIT 200
+            """
+        ).fetchall()
+    reply_payload = []
+    for row in replies:
+        item = forum_reply_response(row)
+        item["post_title"] = row["post_title"] or ""
+        reply_payload.append(item)
+    return {
+        "posts": [forum_post_response(row) for row in posts],
+        "replies": reply_payload,
+    }
+
+
+@app.put("/api/admin/forum/posts/{post_id}")
+def moderate_forum_post(
+    post_id: str,
+    payload: ForumModerationRequest,
+    reviewer: str = Depends(require_admin),
+) -> dict[str, Any]:
+    status = normalize_forum_status(payload.status)
+    reject_reason = normalize_forum_content(payload.reject_reason, "处理说明", 500) if payload.reject_reason.strip() else ""
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM forum_post WHERE id = ?", (post_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="帖子不存在")
+        conn.execute(
+            """
+            UPDATE forum_post
+            SET status = ?,
+                reject_reason = ?,
+                reviewed_by = ?,
+                reviewed_at = ?,
+                is_pinned = COALESCE(?, is_pinned),
+                is_locked = COALESCE(?, is_locked),
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                status,
+                reject_reason,
+                reviewer,
+                timestamp,
+                None if payload.is_pinned is None else 1 if payload.is_pinned else 0,
+                None if payload.is_locked is None else 1 if payload.is_locked else 0,
+                timestamp,
+                post_id,
+            ),
+        )
+        row = conn.execute(
+            """
+            SELECT post.*, account.full_name, COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
+            WHERE post.id = ?
+            GROUP BY post.id
+            """,
+            (FORUM_PUBLIC_STATUS, post_id),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="帖子不存在")
+    return forum_post_response(row)
+
+
+@app.delete("/api/admin/forum/posts/{post_id}")
+def delete_forum_post(post_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM forum_post WHERE id = ?", (post_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="帖子不存在")
+        conn.execute(
+            """
+            UPDATE forum_post
+            SET deleted_at = ?, status = 'hidden', updated_at = ?
+            WHERE id = ?
+            """,
+            (timestamp, timestamp, post_id),
+        )
+    return {"id": post_id}
+
+
+@app.put("/api/admin/forum/replies/{reply_id}")
+def moderate_forum_reply(
+    reply_id: str,
+    payload: ForumModerationRequest,
+    reviewer: str = Depends(require_admin),
+) -> dict[str, str]:
+    status = normalize_forum_status(payload.status)
+    reject_reason = normalize_forum_content(payload.reject_reason, "处理说明", 500) if payload.reject_reason.strip() else ""
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id, post_id FROM forum_reply WHERE id = ?", (reply_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="回复不存在")
+        conn.execute(
+            """
+            UPDATE forum_reply
+            SET status = ?,
+                reject_reason = ?,
+                reviewed_by = ?,
+                reviewed_at = ?
+            WHERE id = ?
+            """,
+            (status, reject_reason, reviewer, timestamp, reply_id),
+        )
+        conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, existing["post_id"]))
+    return {"id": reply_id}
+
+
+@app.delete("/api/admin/forum/replies/{reply_id}")
+def delete_forum_reply(reply_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id, post_id FROM forum_reply WHERE id = ?", (reply_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="回复不存在")
+        conn.execute(
+            """
+            UPDATE forum_reply
+            SET deleted_at = ?, status = 'hidden'
+            WHERE id = ?
+            """,
+            (timestamp, reply_id),
+        )
+        conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, existing["post_id"]))
+    return {"id": reply_id}
+
+
 @app.get("/api/forum/posts")
 def list_forum_posts() -> dict[str, Any]:
     with db_connection() as conn:
@@ -1364,11 +1886,17 @@ def list_forum_posts() -> dict[str, Any]:
                 COUNT(reply.id) AS reply_count
             FROM forum_post AS post
             LEFT JOIN site_account AS account ON account.account = post.author_account
-            LEFT JOIN forum_reply AS reply ON reply.post_id = post.id
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
+            WHERE post.status = ?
+                AND COALESCE(post.deleted_at, '') = ''
             GROUP BY post.id
-            ORDER BY post.created_at DESC
+            ORDER BY post.is_pinned DESC, post.created_at DESC
             LIMIT 100
-            """
+            """,
+            (FORUM_PUBLIC_STATUS, FORUM_PUBLIC_STATUS),
         ).fetchall()
     return {"posts": [forum_post_response(row) for row in rows]}
 
@@ -1383,8 +1911,10 @@ def create_forum_post(payload: ForumPostCreateRequest) -> dict[str, Any]:
         author_account = ensure_forum_author(conn, payload.author_account)
         conn.execute(
             """
-            INSERT INTO forum_post (id, title, content, author_account, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO forum_post (
+                id, title, content, author_account, status, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, 'pending', ?, ?)
             """,
             (post_id, title, content, author_account, timestamp, timestamp),
         )
@@ -1413,11 +1943,16 @@ def get_forum_post(post_id: str) -> dict[str, Any]:
                 COUNT(reply.id) AS reply_count
             FROM forum_post AS post
             LEFT JOIN site_account AS account ON account.account = post.author_account
-            LEFT JOIN forum_reply AS reply ON reply.post_id = post.id
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
             WHERE post.id = ?
+                AND post.status = ?
+                AND COALESCE(post.deleted_at, '') = ''
             GROUP BY post.id
             """,
-            (post_id,),
+            (FORUM_PUBLIC_STATUS, post_id, FORUM_PUBLIC_STATUS),
         ).fetchone()
         if post is None:
             raise HTTPException(status_code=404, detail="帖子不存在")
@@ -1427,9 +1962,11 @@ def get_forum_post(post_id: str) -> dict[str, Any]:
             FROM forum_reply AS reply
             LEFT JOIN site_account AS account ON account.account = reply.author_account
             WHERE reply.post_id = ?
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
             ORDER BY reply.created_at ASC
             """,
-            (post_id,),
+            (post_id, FORUM_PUBLIC_STATUS),
         ).fetchall()
     return {
         "post": forum_post_response(post),
@@ -1444,13 +1981,24 @@ def create_forum_reply(post_id: str, payload: ForumReplyCreateRequest) -> dict[s
     reply_id = uuid.uuid4().hex
     with db_connection() as conn:
         author_account = ensure_forum_author(conn, payload.author_account)
-        post = conn.execute("SELECT id FROM forum_post WHERE id = ?", (post_id,)).fetchone()
+        post = conn.execute(
+            """
+            SELECT id, is_locked
+            FROM forum_post
+            WHERE id = ?
+                AND status = ?
+                AND COALESCE(deleted_at, '') = ''
+            """,
+            (post_id, FORUM_PUBLIC_STATUS),
+        ).fetchone()
         if post is None:
             raise HTTPException(status_code=404, detail="帖子不存在")
+        if post["is_locked"]:
+            raise HTTPException(status_code=400, detail="帖子已锁定，暂时不能回复")
         conn.execute(
             """
-            INSERT INTO forum_reply (id, post_id, content, author_account, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO forum_reply (id, post_id, content, author_account, status, created_at)
+            VALUES (?, ?, ?, ?, 'pending', ?)
             """,
             (reply_id, post_id, content, author_account, timestamp),
         )

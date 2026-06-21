@@ -543,9 +543,27 @@ button {
   padding: 3rem 0 5rem;
 }
 
+.season-video {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.season-video-player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: min(66vh, 620px);
+  background: #020711;
+  object-fit: cover;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
+  margin-top: 1.25rem;
   gap: 1.25rem;
   align-items: stretch;
 }
@@ -749,11 +767,79 @@ p {
   font-size: clamp(2.45rem, 6vw, 5.2rem);
 }
 
+.home-carousel-stack {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.quote-carousel {
+  position: relative;
+  min-height: 8.5rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 48%),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.quote-carousel::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--bg) 18%, transparent), transparent 52%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 56%, transparent), transparent 72%);
+  pointer-events: none;
+}
+
+.quote-carousel-track {
+  position: relative;
+  min-height: 8.5rem;
+}
+
+.quote-slide {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 1.25rem clamp(1.25rem, 4vw, 2.25rem);
+  opacity: 0;
+  transform: translateY(0.6rem);
+  transition:
+    opacity 420ms ease,
+    transform 520ms cubic-bezier(0.22, 0.64, 0.28, 1);
+}
+
+.quote-slide[data-active="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.quote-slide blockquote {
+  max-width: 30ch;
+  margin: 0;
+  color: var(--text);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.22;
+  letter-spacing: 0;
+}
+
+.quote-slide figcaption {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .image-carousel {
   position: relative;
   width: 100%;
   height: clamp(18rem, 38vw, 34rem);
-  margin-top: 1.25rem;
+  margin-top: 0;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -894,6 +980,19 @@ p {
 }
 
 @media (max-width: 760px) {
+  .quote-carousel,
+  .quote-carousel-track {
+    min-height: 10rem;
+  }
+
+  .quote-slide {
+    padding: 1rem;
+  }
+
+  .quote-slide blockquote {
+    font-size: 1.35rem;
+  }
+
   .image-carousel {
     height: clamp(16rem, 62vw, 24rem);
   }
@@ -1606,6 +1705,29 @@ th {
 
 .review-table {
   min-width: 1280px;
+}
+
+.admin-forum-table,
+.admin-forum-reply-table {
+  min-width: 1180px;
+}
+
+.admin-forum-table p,
+.admin-forum-reply-table p {
+  max-width: 34rem;
+  margin: 0.35rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.admin-forum-table input,
+.admin-forum-reply-table input {
+  min-height: 2.45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.7rem;
+  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
+  color: var(--text);
 }
 
 .admin-batch-table {

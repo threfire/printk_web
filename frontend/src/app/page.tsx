@@ -87,9 +87,46 @@ const carouselImages = [
   },
 ];
 
+const carouselQuotes = [
+  {
+    text: "道阻且长，行则将至",
+    source: "PRINTK 赛季口号",
+  },
+  {
+    text: "为青春赋予荣耀，让思考拥有力量",
+    source: "RoboMaster 赛事理念",
+  },
+  {
+    text: "服务全球青年工程师成为追求极致、有实干精神的梦想家",
+    source: "RoboMaster 高校系列赛",
+  },
+  {
+    text: "崇尚科学与创新，擅于反思，勇于实践，热爱分享",
+    source: "RoboMaster 赛事理念",
+  },
+  {
+    text: "初心高于胜负，每一份努力都值得被肯定",
+    source: "RoboMaster 组织奖文化",
+  },
+  {
+    text: "以学术价值为根基，培养具有工程思维、拥有实干精神的综合素质人才",
+    source: "RoboMaster 赛事愿景",
+  },
+  {
+    text: "勇于创新、追求极致、崇尚实干、具备视野和远见",
+    source: "RoboMaster 专属招聘通道",
+  },
+];
+
 export default function Home() {
   return (
     <div className="page">
+      <section className="season-video" aria-label="赛季宣传视频">
+        <video className="season-video-player" controls muted playsInline preload="metadata">
+          <source src="/season-promo.mp4" type="video/mp4" />
+        </video>
+      </section>
+
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
@@ -135,7 +172,7 @@ export default function Home() {
         </div>
       </section>
 
-      <HomeCarousel images={carouselImages} />
+      <HomeCarousel images={carouselImages} quotes={carouselQuotes} />
 
       <section className="section">
         <div className="section-heading">

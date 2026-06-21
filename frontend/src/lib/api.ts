@@ -86,6 +86,13 @@ export type ForumPost = {
   content: string;
   author_account: string;
   author_name: string;
+  status: "pending" | "approved" | "rejected" | "hidden";
+  reject_reason: string;
+  reviewed_by: string;
+  reviewed_at: string;
+  deleted_at: string;
+  is_pinned: boolean;
+  is_locked: boolean;
   reply_count: number;
   created_at: string;
   updated_at: string;
@@ -97,7 +104,16 @@ export type ForumReply = {
   content: string;
   author_account: string;
   author_name: string;
+  status: "pending" | "approved" | "rejected" | "hidden";
+  reject_reason: string;
+  reviewed_by: string;
+  reviewed_at: string;
+  deleted_at: string;
   created_at: string;
+};
+
+export type AdminForumReply = ForumReply & {
+  post_title: string;
 };
 
 export type ForumPostListData = {
@@ -107,6 +123,11 @@ export type ForumPostListData = {
 export type ForumPostDetailData = {
   post: ForumPost;
   replies: ForumReply[];
+};
+
+export type ForumManagementData = {
+  posts: ForumPost[];
+  replies: AdminForumReply[];
 };
 
 export function token() {

@@ -151,7 +151,7 @@ export default async function ForumPostPage({ params, searchParams }: ForumPostP
                 />
               </div>
               <button className="button" type="submit">
-                发布回复
+                提交审核
               </button>
             </form>
           ) : (

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     redirect(feedbackPath("/forum", "error", "请先登录后再发布帖子"));
   }
 
-  let targetPath = "/forum";
+  const targetPath = "/forum";
   let feedbackKey: "ok" | "error" = "error";
   let feedbackMessage = "论坛服务暂时不可用，请稍后重试";
 
@@ -32,10 +32,9 @@ export async function POST(request: Request) {
     if (!response.ok) {
       feedbackMessage = await responseError(response, "发布帖子失败");
     } else {
-      const result = (await response.json()) as { id: string };
-      targetPath = `/forum/${result.id}`;
+      await response.json();
       feedbackKey = "ok";
-      feedbackMessage = "帖子已发布";
+      feedbackMessage = "帖子已提交，管理员审核通过后会展示";
     }
   } catch {
     feedbackMessage = "论坛服务暂时不可用，请稍后重试";
