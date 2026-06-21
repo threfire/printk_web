@@ -176,13 +176,26 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section">
-        <div className="section-heading">
-          <span className="eyebrow">ACKNOWLEDGEMENT</span>
-          <h2>致谢</h2>
+      <footer className="home-thanks">
+        <p>致谢：感谢队员、指导老师、测试同学和开源社区的支持。</p>
+      </footer>
+
+      <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
+        联系我们
+      </a>
+      <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
+        <a className="home-contact-dismiss" href="#" aria-label="关闭联系我们弹窗" />
+        <div className="home-contact-dialog">
+          <div className="account-modal-heading">
+            <h2 id="home-contact-title">联系我们</h2>
+            <a className="account-modal-close" href="#" aria-label="关闭联系我们弹窗">
+              ×
+            </a>
+          </div>
+          <p>有任何问题请联系微信号</p>
+          <strong className="home-contact-wechat">hy15186081202</strong>
         </div>
-        <p>感谢队员、指导老师、测试同学和开源社区的支持，页面与流程才能持续完善。</p>
-      </section>
+      </div>
     </div>
   );
 }

@@ -58,6 +58,8 @@ FORUM_CONTENT_STATUSES = {"pending", "approved", "rejected", "hidden"}
 HOME_ASSET_KINDS = {"video", "image"}
 HOME_VIDEO_MIME_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
 HOME_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+DANMAKU_TRACKS = 7
+DANMAKU_COLORS = ["#ffffff", "#ffc857", "#37a9ff", "#32d583", "#ff8a9a"]
 
 HEADER_MAP = {
     "采购日期": "purchase_date",
@@ -361,6 +363,18 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS homepage_danmaku (
+                id TEXT PRIMARY KEY,
+                image_src TEXT NOT NULL,
+                text TEXT NOT NULL,
+                track INTEGER NOT NULL,
+                color TEXT NOT NULL,
+                created_at_ms INTEGER NOT NULL,
+                duration REAL NOT NULL,
+                delay REAL NOT NULL,
+                created_at TEXT NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_season_plan_period
             ON season_plan (season_year, month, display_order);
 
@@ -408,6 +422,12 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_homepage_quote_order
             ON homepage_quote (is_enabled, display_order, created_at)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_homepage_danmaku_image_created
+            ON homepage_danmaku (image_src, created_at_ms)
             """
         )
         seed_season_plan(conn)
@@ -1444,6 +1464,19 @@ def homepage_quote_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "imageSrc": row["image_src"],
+        "text": row["text"],
+        "track": row["track"],
+        "color": row["color"],
+        "createdAt": row["created_at_ms"],
+        "duration": row["duration"],
+        "delay": row["delay"],
+    }
+
+
 def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
     enabled_clause = "" if include_disabled else "AND is_enabled = 1"
     with db_connection() as conn:
@@ -1642,6 +1675,89 @@ def delete_homepage_quote(quote_id: str) -> dict[str, str]:
     return {"message": "文案已删除"}
 
 
+def normalize_danmaku_image_src(value: str) -> str:
+    image_src = normalize_limited_text(value, "图片地址", 240)
+    if not image_src.startswith(("/", "http://", "https://")):
+        raise HTTPException(status_code=400, detail="图片地址格式错误")
+    return image_src
+
+
+def list_homepage_danmaku(image_src: str | None = None) -> dict[str, Any]:
+    with db_connection() as conn:
+        if image_src:
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM homepage_danmaku
+                WHERE image_src = ?
+                ORDER BY created_at_ms ASC
+                LIMIT 120
+                """,
+                (normalize_danmaku_image_src(image_src),),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT *
+                FROM homepage_danmaku
+                ORDER BY created_at_ms ASC
+                LIMIT 600
+                """
+            ).fetchall()
+    return {"messages": [homepage_danmaku_response(row) for row in rows]}
+
+
+def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
+    image_src = normalize_danmaku_image_src(payload.imageSrc)
+    text = normalize_limited_text(payload.text, "留言弹幕", 48)
+    if not text:
+        raise HTTPException(status_code=400, detail="留言弹幕不能为空")
+
+    timestamp = now_iso()
+    created_at_ms = int(time.time() * 1000)
+    danmaku_id = uuid.uuid4().hex
+    with db_connection() as conn:
+        message_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM homepage_danmaku WHERE image_src = ?",
+            (image_src,),
+        ).fetchone()["total"]
+        conn.execute(
+            """
+            INSERT INTO homepage_danmaku (
+                id, image_src, text, track, color, created_at_ms, duration, delay, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                danmaku_id,
+                image_src,
+                text,
+                message_count % DANMAKU_TRACKS,
+                DANMAKU_COLORS[message_count % len(DANMAKU_COLORS)],
+                created_at_ms,
+                8 + (message_count % 5),
+                0,
+                timestamp,
+            ),
+        )
+        conn.execute(
+            """
+            DELETE FROM homepage_danmaku
+            WHERE image_src = ?
+              AND id NOT IN (
+                  SELECT id
+                  FROM homepage_danmaku
+                  WHERE image_src = ?
+                  ORDER BY created_at_ms DESC
+                  LIMIT 120
+              )
+            """,
+            (image_src, image_src),
+        )
+        row = conn.execute("SELECT * FROM homepage_danmaku WHERE id = ?", (danmaku_id,)).fetchone()
+    return {"message": homepage_danmaku_response(row)}
+
+
 class LoginRequest(BaseModel):
     password: str
     role: str = "admin"
@@ -1728,6 +1844,11 @@ class HomepageQuoteUpdate(HomepageQuoteCreate):
     pass
 
 
+class HomepageDanmakuCreate(BaseModel):
+    imageSrc: str
+    text: str
+
+
 class RowIdsRequest(BaseModel):
     row_ids: list[str]
     note: str = ""
@@ -1777,6 +1898,16 @@ def health() -> dict[str, str]:
 @app.get("/api/homepage")
 def homepage_content() -> dict[str, Any]:
     return get_homepage_content(include_disabled=False)
+
+
+@app.get("/api/homepage/danmaku")
+def homepage_danmaku(image_src: str | None = Query(default=None)) -> dict[str, Any]:
+    return list_homepage_danmaku(image_src)
+
+
+@app.post("/api/homepage/danmaku")
+def create_homepage_danmaku_route(payload: HomepageDanmakuCreate) -> dict[str, Any]:
+    return create_homepage_danmaku(payload)
 
 
 @app.get("/api/site-media/{filename}")

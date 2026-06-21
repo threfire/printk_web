@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { AccountDialog, AccountModals } from "@/components/AccountDialog";
 import { ThemeRoot, ThemeSwitcher } from "@/components/ThemeRoot";
+import { WelcomeGuestDialog } from "@/components/WelcomeGuestDialog";
 import { robotRoles } from "@/lib/robots";
 
 const navItems = [
@@ -84,6 +85,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <AccountModals />
+        {accountName ? null : <WelcomeGuestDialog />}
         <main>{children}</main>
         <ThemeSwitcher />
       </div>

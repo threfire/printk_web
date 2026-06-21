@@ -242,61 +242,25 @@ button {
 }
 
 .theme-switcher-dark .theme-icon::before {
-  inset: 0.24rem;
+  inset: 0.4rem;
   border-radius: 999px;
   background: #d7e7ff;
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, #d7e7ff 28%, transparent);
 }
 
 .theme-switcher-dark .theme-icon::after {
-  inset: 0.08rem 0.06rem 0.08rem 0.78rem;
-  border-radius: 999px;
-  background: var(--bg);
+  display: none;
 }
 
 .theme-switcher-light .theme-icon::before {
-  z-index: 1;
-  inset: 0.56rem;
+  inset: 0.4rem;
   border-radius: 999px;
   background: #cfd5df;
+  box-shadow: 0 0 0 0.18rem color-mix(in srgb, #cfd5df 28%, transparent);
 }
 
 .theme-switcher-light .theme-icon::after {
-  inset: 0;
-  background: #cfd5df;
-  clip-path: polygon(
-    46% 0,
-    54% 0,
-    57% 24%,
-    43% 24%,
-    80% 9%,
-    87% 16%,
-    67% 31%,
-    57% 21%,
-    100% 46%,
-    100% 54%,
-    76% 57%,
-    76% 43%,
-    87% 84%,
-    80% 91%,
-    57% 79%,
-    67% 69%,
-    54% 100%,
-    46% 100%,
-    43% 76%,
-    57% 76%,
-    20% 91%,
-    13% 84%,
-    33% 69%,
-    43% 79%,
-    0 54%,
-    0 46%,
-    24% 43%,
-    24% 57%,
-    13% 16%,
-    20% 9%,
-    43% 21%,
-    33% 31%
-  );
+  display: none;
 }
 
 .theme-switcher-red .theme-icon::before {
@@ -485,6 +449,91 @@ button {
   font-weight: 800;
 }
 
+.guest-welcome-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.guest-welcome-dialog {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+  width: min(34rem, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 48%),
+    var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.guest-welcome-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: grid;
+  width: 2.25rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  color: var(--muted);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.guest-welcome-close:hover {
+  border-color: color-mix(in srgb, var(--accent) 56%, transparent);
+  color: var(--text);
+}
+
+.guest-welcome-kicker,
+.guest-welcome-tip {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.guest-welcome-dialog h2 {
+  display: grid;
+  gap: 0.18rem;
+  max-width: 18ch;
+  padding-right: 2rem;
+  font-size: clamp(1.65rem, 5vw, 2.45rem);
+  line-height: 1.08;
+}
+
+.guest-welcome-dialog h2 span,
+.guest-welcome-dialog h2 small {
+  display: block;
+}
+
+.guest-welcome-dialog h2 small {
+  color: color-mix(in srgb, var(--text) 82%, var(--accent));
+  font-size: 0.72em;
+  font-weight: 800;
+}
+
+.guest-welcome-dialog p {
+  margin: 0;
+}
+
+.guest-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
 
 .button {
   border: 1px solid color-mix(in srgb, var(--primary) 82%, transparent);
@@ -881,7 +930,7 @@ p {
 .image-carousel {
   position: relative;
   width: 100%;
-  height: clamp(26rem, 50vw, 44rem);
+  height: clamp(30rem, 58vw, 46rem);
   margin-top: 0;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -905,7 +954,7 @@ p {
   top: 50%;
   left: 50%;
   width: min(98%, 1150px);
-  height: 92%;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
   border-radius: var(--radius);
@@ -970,10 +1019,10 @@ p {
 }
 
 .carousel-image {
+  display: block;
   width: 100%;
   height: 100%;
-  background: color-mix(in srgb, var(--bg) 72%, #000);
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .danmaku-stage {
@@ -1079,12 +1128,11 @@ p {
   }
 
   .image-carousel {
-    height: clamp(24rem, 78vw, 34rem);
+    height: clamp(22rem, 82vw, 34rem);
   }
 
   .carousel-card {
     width: min(108%, 760px);
-    height: 88%;
   }
 
   .carousel-card[data-slot="left"] {
@@ -1527,27 +1575,110 @@ p {
   max-width: 18ch;
 }
 
-.forum-new-post-fab {
+.forum-new-post-fab,
+.home-contact-fab {
   position: fixed;
   right: clamp(1rem, 3vw, 1.8rem);
-  bottom: clamp(5rem, 8vw, 6rem);
   z-index: 34;
-  display: inline-grid;
-  width: 3.9rem;
-  height: 3.9rem;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--accent) 72%, transparent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--primary) 82%, transparent);
   border-radius: 999px;
-  background: var(--accent);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, #ffffff 18%, transparent), transparent 42%),
+    linear-gradient(135deg, var(--primary), var(--primary-strong));
   color: #ffffff;
-  box-shadow: var(--shadow);
-  font-size: 2.15rem;
-  font-weight: 700;
+  box-shadow:
+    0 16px 38px color-mix(in srgb, var(--primary) 28%, transparent),
+    0 0 0 0.28rem color-mix(in srgb, var(--surface-strong) 72%, transparent);
+  font-weight: 900;
   line-height: 1;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
-.forum-new-post-fab:hover {
+.forum-new-post-fab {
+  bottom: clamp(5rem, 8vw, 6rem);
+  width: 3.9rem;
+  height: 3.9rem;
+  font-size: 2.15rem;
+}
+
+.home-contact-fab {
+  bottom: clamp(9.7rem, 12vw, 10.8rem);
+  min-width: 5.6rem;
+  min-height: 3.35rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.forum-new-post-fab:hover,
+.home-contact-fab:hover {
+  border-color: color-mix(in srgb, var(--gold) 70%, transparent);
+  box-shadow:
+    0 18px 44px color-mix(in srgb, var(--primary) 34%, transparent),
+    0 0 0 0.28rem color-mix(in srgb, var(--accent) 16%, transparent);
   transform: translateY(-2px);
+}
+
+.forum-new-post-fab:focus-visible,
+.home-contact-fab:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 78%, white);
+  outline-offset: 3px;
+}
+
+.home-contact-popover {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: none;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.52);
+  backdrop-filter: blur(10px);
+}
+
+.home-contact-popover:target {
+  display: grid;
+}
+
+.home-contact-dismiss {
+  position: absolute;
+  inset: 0;
+}
+
+.home-contact-dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.85rem;
+  width: min(24rem, 100%);
+  border: 1px solid color-mix(in srgb, var(--primary) 38%, var(--line));
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--primary) 14%, transparent), transparent 48%),
+    var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.home-contact-dialog p {
+  margin: 0;
+}
+
+.home-contact-wechat {
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--line));
+  border-radius: var(--radius);
+  padding: 0.55rem 0.75rem;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 1.15rem;
+  letter-spacing: 0;
 }
 
 .image2-workbench {
@@ -1903,6 +2034,21 @@ th {
   padding: 0.9rem 1rem;
   color: var(--text);
   background: color-mix(in srgb, var(--success) 16%, transparent);
+}
+
+.home-thanks {
+  margin-top: 1rem;
+  padding: 0.85rem 1.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--bg) 88%, black);
+  color: var(--text);
+}
+
+.home-thanks p {
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 88%, white);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .recent-batch .message {

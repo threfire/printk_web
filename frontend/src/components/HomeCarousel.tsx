@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { type FormEvent, startTransition, useEffect, useEffectEvent, useState } from "react";
+import { type FormEvent, startTransition, useEffect, useState } from "react";
 
 type CarouselImage = {
   src: string;
@@ -29,9 +29,12 @@ type DanmakuMessage = {
 };
 
 type DanmakuStore = Record<string, DanmakuMessage[]>;
+type DanmakuResponse = {
+  messages?: Array<Partial<DanmakuMessage> & { imageSrc?: string }>;
+};
 
 const AUTOPLAY_DELAY_MS = 5000;
-const DANMAKU_STORAGE_KEY = "printk-home-carousel-danmaku";
+const DANMAKU_REFRESH_MS = 4000;
 const DANMAKU_TRACKS = 7;
 const DANMAKU_COLORS = ["#ffffff", "#ffc857", "#37a9ff", "#32d583", "#ff8a9a"];
 
@@ -95,21 +98,18 @@ function messageList(value: unknown): DanmakuMessage[] {
     }));
 }
 
-function readStoredDanmaku(): DanmakuStore {
-  try {
-    const raw = window.localStorage.getItem(DANMAKU_STORAGE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
-
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return {};
-    }
-
-    return Object.fromEntries(
-      Object.entries(parsed as Record<string, unknown>).map(([imageSrc, messages]) => [imageSrc, messageList(messages)]),
-    );
-  } catch {
-    return {};
+async function fetchDanmakuMessages(imageSrc: string) {
+  if (!imageSrc) {
+    return null;
   }
+
+  const response = await fetch(`/api/homepage/danmaku?image_src=${encodeURIComponent(imageSrc)}`, { cache: "no-store" });
+  if (!response.ok) {
+    return null;
+  }
+
+  const body = (await response.json()) as DanmakuResponse;
+  return messageList(body.messages);
 }
 
 export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
@@ -119,7 +119,8 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
   const [danmakuEnabled, setDanmakuEnabled] = useState(true);
   const [danmakuByImage, setDanmakuByImage] = useState<DanmakuStore>({});
   const [danmakuDraft, setDanmakuDraft] = useState("");
-  const [storageReady, setStorageReady] = useState(false);
+  const activeImage = images[activeIndex];
+  const activeImageSrc = activeImage?.src ?? "";
 
   const goNext = () => {
     if (images.length < 2) {
@@ -143,24 +144,16 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
     });
   };
 
-  const autoplayNext = useEffectEvent(() => {
-    if (images.length < 2) {
-      return;
-    }
-
-    startTransition(() => {
-      setDirection(1);
-      setActiveIndex((current) => (current + 1) % images.length);
-    });
-  });
-
   useEffect(() => {
     if (paused || images.length < 2) {
       return undefined;
     }
 
     const timer = window.setInterval(() => {
-      autoplayNext();
+      startTransition(() => {
+        setDirection(1);
+        setActiveIndex((current) => (current + 1) % images.length);
+      });
     }, AUTOPLAY_DELAY_MS);
 
     return () => {
@@ -169,39 +162,46 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
   }, [images.length, paused]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    window.setTimeout(() => {
-      if (cancelled) {
-        return;
-      }
-
-      setDanmakuByImage(readStoredDanmaku());
-      setStorageReady(true);
-    }, 0);
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!storageReady) {
-      return;
+    if (!activeImageSrc) {
+      return undefined;
     }
 
-    window.localStorage.setItem(DANMAKU_STORAGE_KEY, JSON.stringify(danmakuByImage));
-  }, [danmakuByImage, storageReady]);
+    let active = true;
+    const refresh = () => {
+      void fetchDanmakuMessages(activeImageSrc)
+        .then((messages) => {
+          if (!active || !messages) {
+            return;
+          }
+
+          setDanmakuByImage((current) => ({
+            ...current,
+            [activeImageSrc]: messages,
+          }));
+        })
+        .catch(() => null);
+    };
+
+    const firstTimer = window.setTimeout(refresh, 0);
+    const timer = window.setInterval(() => {
+      refresh();
+    }, DANMAKU_REFRESH_MS);
+
+    return () => {
+      active = false;
+      window.clearTimeout(firstTimer);
+      window.clearInterval(timer);
+    };
+  }, [activeImageSrc]);
 
   if (images.length === 0) {
     return null;
   }
 
   const activeQuoteIndex = quotes.length ? activeIndex % quotes.length : -1;
-  const activeImage = images[activeIndex];
-  const activeMessages = danmakuByImage[activeImage.src] ?? [];
+  const activeMessages = danmakuByImage[activeImageSrc] ?? [];
 
-  const sendDanmaku = (event: FormEvent<HTMLFormElement>) => {
+  const sendDanmaku = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const text = danmakuDraft.trim().slice(0, 48);
@@ -210,23 +210,41 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
       return;
     }
 
-    const messageIndex = activeMessages.length;
-    const nextMessage: DanmakuMessage = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      text,
-      track: messageIndex % DANMAKU_TRACKS,
-      color: DANMAKU_COLORS[messageIndex % DANMAKU_COLORS.length],
-      createdAt: Date.now(),
-      duration: 8 + (messageIndex % 5),
-      delay: 0,
-    };
-
-    setDanmakuByImage((current) => ({
-      ...current,
-      [activeImage.src]: [...(current[activeImage.src] ?? []), nextMessage],
-    }));
-    setDanmakuDraft("");
-    setDanmakuEnabled(true);
+    try {
+      const response = await fetch("/api/homepage/danmaku", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageSrc: activeImage.src, text }),
+      });
+      if (!response.ok) {
+        return;
+      }
+      const body = (await response.json()) as { message?: DanmakuMessage };
+      const nextMessage = body.message;
+      if (nextMessage) {
+        setDanmakuByImage((current) => ({
+          ...current,
+          [activeImage.src]: [...(current[activeImage.src] ?? []), nextMessage],
+        }));
+      } else {
+        void fetchDanmakuMessages(activeImage.src)
+          .then((messages) => {
+            if (messages) {
+              setDanmakuByImage((current) => ({
+                ...current,
+                [activeImage.src]: messages,
+              }));
+            }
+          })
+          .catch(() => null);
+      }
+      setDanmakuDraft("");
+      setDanmakuEnabled(true);
+    } catch {
+      return;
+    }
   };
 
   return (
