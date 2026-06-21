@@ -7,7 +7,10 @@ import { robotRoles } from "@/lib/robots";
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/season-plan", label: "赛季规划" },
-  { href: "/forum", label: "队内论坛" },
+  { href: "/forum", label: "论坛" },
+];
+
+const featureNavItems = [
   { href: "/invoices", label: "发票管理" },
   { href: "/image2", label: "图片工具" },
   { href: "/admin", label: "管理后台" },
@@ -38,6 +41,11 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <nav className="nav-links" aria-label="主导航">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
             <details className="nav-dropdown">
               <summary>兵种</summary>
               <div className="nav-dropdown-menu">
@@ -50,7 +58,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
               </div>
             </details>
             <details className="nav-dropdown">
-              <summary>队员风采</summary>
+              <summary>队员</summary>
               <div className="nav-dropdown-menu">
                 {memberNavItems.map((item) => (
                   <Link key={item.href} href={item.href}>
@@ -59,11 +67,16 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details>
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                {item.label}
-              </Link>
-            ))}
+            <details className="nav-dropdown">
+              <summary>功能</summary>
+              <div className="nav-dropdown-menu">
+                {featureNavItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
           </nav>
           <div className="header-actions">
             {accountFeedback ? <span className="account-feedback">{accountFeedback}</span> : null}

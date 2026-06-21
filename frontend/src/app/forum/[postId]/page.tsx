@@ -121,7 +121,7 @@ export default async function ForumPostPage({ params, searchParams }: ForumPostP
             {data.replies.map((reply) => (
               <article className="forum-reply" key={reply.id}>
                 <div className="forum-reply-heading">
-                  <strong>{reply.author_name}</strong>
+                  <strong>姓名：{reply.author_name}</strong>
                   <span>{formatTime(reply.created_at)}</span>
                 </div>
                 <p>{reply.content}</p>

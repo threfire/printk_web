@@ -52,7 +52,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
     <div className="page forum-page">
       <section className="section-hero forum-hero">
         <span className="eyebrow">FORUM</span>
-        <h1>队内论坛</h1>
+        <h1>论坛</h1>
         <p>用于沉淀调试经验、赛季问题、物资讨论和训练复盘，提交内容经管理员审核后展示。</p>
         {ok ? <div className="message">{ok}</div> : null}
         {error ? <div className="message error">{error}</div> : null}
@@ -84,51 +84,55 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
             <div className="message">当前还没有帖子，登录后可以发布第一条讨论。</div>
           )}
         </div>
-
-        <aside className="forum-compose">
-          <div className="section-heading">
-            <span className="eyebrow">POST</span>
-            <h2>发布新帖</h2>
-          </div>
-          {account ? (
-            <form className="form" action="/forum/posts" method="post">
-              <div className="field">
-                <label htmlFor="forum-title">标题</label>
-                <input
-                  id="forum-title"
-                  name="title"
-                  placeholder="例如：英雄机器人底盘调试记录"
-                  required
-                  minLength={2}
-                  maxLength={80}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="forum-content">内容</label>
-                <textarea
-                  id="forum-content"
-                  name="content"
-                  placeholder="写下问题、结论、复盘或协作需求"
-                  required
-                  rows={8}
-                  maxLength={5000}
-                />
-              </div>
-              <button className="button" type="submit">
-                提交审核
-              </button>
-            </form>
-          ) : (
-            <div className="message error">
-              请先
-              <Link className="text-button" href="/#account-login">
-                登录账号
-              </Link>
-              后发布帖子。
-            </div>
-          )}
-        </aside>
       </section>
+
+      <section className="section forum-compose" id="new-post">
+        <div className="section-heading">
+          <span className="eyebrow">POST</span>
+          <h2>发布新帖</h2>
+        </div>
+        {account ? (
+          <form className="form" action="/forum/posts" method="post">
+            <div className="field">
+              <label htmlFor="forum-title">标题</label>
+              <input
+                id="forum-title"
+                name="title"
+                placeholder="例如：英雄机器人底盘调试记录"
+                required
+                minLength={2}
+                maxLength={80}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="forum-content">内容</label>
+              <textarea
+                id="forum-content"
+                name="content"
+                placeholder="写下问题、结论、复盘或协作需求"
+                required
+                rows={8}
+                maxLength={5000}
+              />
+            </div>
+            <button className="button" type="submit">
+              提交审核
+            </button>
+          </form>
+        ) : (
+          <div className="message error">
+            请先
+            <Link className="text-button" href="/#account-login">
+              登录账号
+            </Link>
+            后发布帖子。
+          </div>
+        )}
+      </section>
+
+      <Link className="forum-new-post-fab" href="#new-post" aria-label="发布新帖" title="发布新帖">
+        +
+      </Link>
     </div>
   );
 }

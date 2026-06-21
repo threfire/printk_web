@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://123.207.16.156,http://gzuprintk.cn,http://www.gzuprintk.cn}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-weareprintk}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-wrprintk}
       GROUP_LEADER_PASSWORD: ${GROUP_LEADER_PASSWORD:-group123}
       SECRET_KEY: ${SECRET_KEY:-material-agent-secret}
     ports:

@@ -245,7 +245,7 @@ export default function MembersPage() {
     <div className="page">
       <section className="section-hero" id="all-members">
         <span className="eyebrow">MEMBERS</span>
-        <h1>队员风采</h1>
+        <h1>队员</h1>
         <p>照片墙展示全体队员基础信息；点击照片后进入详细资料，查看队员经历、负责方向和资料沉淀。</p>
       </section>
 

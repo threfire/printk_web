@@ -2,7 +2,7 @@ const inputBase = process.argv[2] ?? "http://127.0.0.1:3000";
 const base = inputBase.replace(/\/+$/, "");
 const inputApiBase = process.argv[3] ?? "http://127.0.0.1:8000";
 const apiBase = inputApiBase.replace(/\/+$/, "");
-const adminPassword = process.env.ADMIN_PASSWORD ?? "weareprintk";
+const adminPassword = process.env.ADMIN_PASSWORD ?? "wrprintk";
 const account = `forumtest${Date.now()}`;
 let cookieJar = "";
 

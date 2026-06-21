@@ -3,120 +3,33 @@ import Link from "next/link";
 import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 
-const featureCards = [
-  {
-    title: "发票管理",
-    desc: "成员提交采购表格，管理员完成复核、入库和报销出库。",
-    href: "/invoices",
-    status: "已接入",
-  },
-  {
-    title: "赛季规划",
-    desc: "按月份和组别拆解电控、机械、算法、视觉和运营任务。",
-    href: "/season-plan",
-    status: "可编辑",
-  },
-  {
-    title: "队内论坛",
-    desc: "沉淀调试经验、训练复盘、物资讨论和赛季协作问题。",
-    href: "/forum",
-    status: "需登录",
-  },
-  {
-    title: "管理后台",
-    desc: "维护发票批次、库存明细、报销批次和处理日志。",
-    href: "/admin",
-    status: "需登录",
-  },
-];
-
 const robots = ["英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种", "无人机兵种", "雷达兵种", "飞镖兵种"];
 const groups = ["电控组", "机械组", "算法组", "视觉组", "运营组"];
 
 const carouselImages = [
-  {
-    src: "/home-carousel/team-01.jpeg",
-    alt: "PRINTK 成员在实验室演示康复机器人设备",
-  },
-  {
-    src: "/home-carousel/team-02.jpeg",
-    alt: "PRINTK 队员在赛事现场交流",
-  },
-  {
-    src: "/home-carousel/team-03.jpeg",
-    alt: "PRINTK 队员在场馆内讨论比赛细节",
-  },
-  {
-    src: "/home-carousel/team-04.jpeg",
-    alt: "PRINTK 成员在赛场调试机器人",
-  },
-  {
-    src: "/home-carousel/team-05.jpeg",
-    alt: "PRINTK 队员在比赛现场观察机器人状态",
-  },
-  {
-    src: "/home-carousel/team-06.jpeg",
-    alt: "PRINTK 队员在场边关注比赛进程",
-  },
-  {
-    src: "/home-carousel/team-07.jpeg",
-    alt: "PRINTK 成员在场馆通道集合",
-  },
-  {
-    src: "/home-carousel/team-08.png",
-    alt: "PRINTK 战队赛季全员合影",
-  },
-  {
-    src: "/home-carousel/team-09.jpg",
-    alt: "PRINTK 战队在 RoboMaster 现场合影",
-  },
-  {
-    src: "/home-carousel/team-10.jpg",
-    alt: "PRINTK 成员围绕机器人开展线下交流",
-  },
-  {
-    src: "/home-carousel/team-11.jpg",
-    alt: "PRINTK 队员围绕电脑集中讨论调试方案",
-  },
-  {
-    src: "/home-carousel/team-12.jpeg",
-    alt: "PRINTK 战队与机器人在赛场内合影留念",
-  },
-  {
-    src: "/home-carousel/team-13.jpeg",
-    alt: "PRINTK 队员在比赛现场近距离调试机器人",
-  },
+  { src: "/home-carousel/team-01.jpeg", alt: "PRINTK 成员在实验室演示康复机器人设备" },
+  { src: "/home-carousel/team-02.jpeg", alt: "PRINTK 队员在赛事实地交流" },
+  { src: "/home-carousel/team-03.jpeg", alt: "PRINTK 队员在场馆内讨论比赛细节" },
+  { src: "/home-carousel/team-04.jpeg", alt: "PRINTK 成员在赛场调试机器人" },
+  { src: "/home-carousel/team-05.jpeg", alt: "PRINTK 队员在比赛现场观察机器人状态" },
+  { src: "/home-carousel/team-06.jpeg", alt: "PRINTK 队员在场边关注比赛进程" },
+  { src: "/home-carousel/team-07.jpeg", alt: "PRINTK 成员在场馆通道集合" },
+  { src: "/home-carousel/team-08.png", alt: "PRINTK 战队赛季全员合影" },
+  { src: "/home-carousel/team-09.jpg", alt: "PRINTK 战队在 RoboMaster 现场合影" },
+  { src: "/home-carousel/team-10.jpg", alt: "PRINTK 成员围绕机器人开展线下交流" },
+  { src: "/home-carousel/team-11.jpg", alt: "PRINTK 队员围绕电脑集中讨论调试方案" },
+  { src: "/home-carousel/team-12.jpeg", alt: "PRINTK 战队与机器人在赛场内合影留念" },
+  { src: "/home-carousel/team-13.jpeg", alt: "PRINTK 队员在比赛现场近距离调试机器人" },
 ];
 
 const carouselQuotes = [
-  {
-    text: "道阻且长，行则将至",
-    source: "PRINTK 赛季口号",
-  },
-  {
-    text: "为青春赋予荣耀，让思考拥有力量",
-    source: "RoboMaster 赛事理念",
-  },
-  {
-    text: "服务全球青年工程师成为追求极致、有实干精神的梦想家",
-    source: "RoboMaster 高校系列赛",
-  },
-  {
-    text: "崇尚科学与创新，擅于反思，勇于实践，热爱分享",
-    source: "RoboMaster 赛事理念",
-  },
-  {
-    text: "初心高于胜负，每一份努力都值得被肯定",
-    source: "RoboMaster 组织奖文化",
-  },
-  {
-    text: "以学术价值为根基，培养具有工程思维、拥有实干精神的综合素质人才",
-    source: "RoboMaster 赛事愿景",
-  },
-  {
-    text: "勇于创新、追求极致、崇尚实干、具备视野和远见",
-    source: "RoboMaster 专属招聘通道",
-  },
+  { text: "道路且长，行则将至。", source: "PRINTK 赛季口号" },
+  { text: "为青春赋予荣光，让思考拥有力量。", source: "RoboMaster 赛事理念" },
+  { text: "服务全球青年工程师成为追求极致、有实干精神的梦想家", source: "RoboMaster 高校系列赛" },
+  { text: "崇尚科学与创新，擅于反思，勇于实践，热爱分享。", source: "RoboMaster 赛事理念" },
+  { text: "初心高于胜负，每一份努力都值得被肯定。", source: "RoboMaster 组织奖文案" },
+  { text: "以学术价值为根基，培养具备工程思维、拥有实干精神的综合素质人才", source: "RoboMaster 赛事愿景" },
+  { text: "勇于创新、追求极致、崇尚实干、具备视野和远见", source: "RoboMaster 专属招聘通道" },
 ];
 
 const fallbackHomepage: HomepageContentData = {
@@ -197,7 +110,7 @@ export default async function Home() {
           <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
           <h1>战队门户与赛季资产中心</h1>
           <p>
-            PRINTK 门户把发票管理、赛季规划、兵种展示和队员风采放在同一入口，成员能快速进入业务系统，管理人员能持续维护战队数据。
+            PRINTK 门户把功能入口、赛季规划、兵种展示和队员资料放在同一个入口，成员能快速进入业务系统，管理人员能持续维护战队数据。
           </p>
           <div className="hero-actions">
             <Link className="button" href="/invoices">
@@ -208,16 +121,9 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        <div className="hero-visual" aria-label="战队队徽展示区">
+        <div className="hero-visual" aria-label="战队徽展示区">
           <div className="emblem-stage">
-            <Image
-              className="emblem-image"
-              src="/team-logo.jpg"
-              alt="PRINTK 战队队徽"
-              width={360}
-              height={360}
-              priority
-            />
+            <Image className="emblem-image" src="/team-logo.jpg" alt="PRINTK 战队徽" width={360} height={360} priority />
             <div className="emblem-ring" />
           </div>
           <div className="hero-stats" aria-label="战队概览">
@@ -239,22 +145,6 @@ export default async function Home() {
 
       <HomeCarousel images={carouselImageItems} quotes={quoteItems} />
 
-      <section className="section">
-        <div className="section-heading">
-          <span className="eyebrow">功能中心</span>
-          <h2>子系统入口</h2>
-        </div>
-        <div className="card-grid">
-          {featureCards.map((card) => (
-            <Link className="card feature-card" href={card.href} key={card.title}>
-              <span className="badge">{card.status}</span>
-              <h3>{card.title}</h3>
-              <p>{card.desc}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       <section className="section split-section">
         <div className="section-heading">
           <span className="eyebrow">赛季资产</span>
@@ -274,7 +164,7 @@ export default async function Home() {
       <section className="section split-section">
         <div className="section-heading">
           <span className="eyebrow">团队结构</span>
-          <h2>队员风采</h2>
+          <h2>队员</h2>
         </div>
         <div className="card-grid">
           {groups.map((group) => (
@@ -284,6 +174,14 @@ export default async function Home() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <span className="eyebrow">ACKNOWLEDGEMENT</span>
+          <h2>致谢</h2>
+        </div>
+        <p>感谢队员、指导老师、测试同学和开源社区的支持，页面与流程才能持续完善。</p>
       </section>
     </div>
   );

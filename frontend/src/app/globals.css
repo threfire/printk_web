@@ -1455,7 +1455,7 @@ p {
 
 .forum-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
 }
@@ -1525,6 +1525,29 @@ p {
 
 .forum-post-hero h1 {
   max-width: 18ch;
+}
+
+.forum-new-post-fab {
+  position: fixed;
+  right: clamp(1rem, 3vw, 1.8rem);
+  bottom: clamp(5rem, 8vw, 6rem);
+  z-index: 34;
+  display: inline-grid;
+  width: 3.9rem;
+  height: 3.9rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 72%, transparent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: var(--shadow);
+  font-size: 2.15rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.forum-new-post-fab:hover {
+  transform: translateY(-2px);
 }
 
 .image2-workbench {
