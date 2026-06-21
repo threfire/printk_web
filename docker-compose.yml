@@ -5,7 +5,7 @@ services:
     container_name: printk-backend
     restart: unless-stopped
     environment:
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://123.207.16.156:3000}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://123.207.16.156,http://gzuprintk.cn,http://www.gzuprintk.cn}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-weareprintk}
       GROUP_LEADER_PASSWORD: ${GROUP_LEADER_PASSWORD:-group123}
       SECRET_KEY: ${SECRET_KEY:-material-agent-secret}
@@ -23,7 +23,18 @@ services:
       - backend
     environment:
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://123.207.16.156:8000}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/}
     ports:
       - "3000:3000"
 
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: printk-nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
