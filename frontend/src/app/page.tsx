@@ -59,6 +59,26 @@ const carouselImages = [
     src: "/home-carousel/team-08.png",
     alt: "PRINTK 战队赛季全员合影",
   },
+  {
+    src: "/home-carousel/team-09.jpg",
+    alt: "PRINTK 战队在 RoboMaster 现场合影",
+  },
+  {
+    src: "/home-carousel/team-10.jpg",
+    alt: "PRINTK 成员围绕机器人开展线下交流",
+  },
+  {
+    src: "/home-carousel/team-11.jpg",
+    alt: "PRINTK 队员围绕电脑集中讨论调试方案",
+  },
+  {
+    src: "/home-carousel/team-12.jpeg",
+    alt: "PRINTK 战队与机器人在赛场内合影留念",
+  },
+  {
+    src: "/home-carousel/team-13.jpeg",
+    alt: "PRINTK 队员在比赛现场近距离调试机器人",
+  },
 ];
 
 export default function Home() {
