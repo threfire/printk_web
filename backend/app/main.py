@@ -284,8 +284,34 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS forum_post (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                author_account TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (author_account) REFERENCES site_account(account)
+            );
+
+            CREATE TABLE IF NOT EXISTS forum_reply (
+                id TEXT PRIMARY KEY,
+                post_id TEXT NOT NULL,
+                content TEXT NOT NULL,
+                author_account TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (post_id) REFERENCES forum_post(id),
+                FOREIGN KEY (author_account) REFERENCES site_account(account)
+            );
+
             CREATE INDEX IF NOT EXISTS idx_season_plan_period
             ON season_plan (season_year, month, display_order);
+
+            CREATE INDEX IF NOT EXISTS idx_forum_post_created_at
+            ON forum_post (created_at DESC);
+
+            CREATE INDEX IF NOT EXISTS idx_forum_reply_post_created_at
+            ON forum_reply (post_id, created_at);
             """
         )
         ensure_site_account_profile_columns(conn)
@@ -407,6 +433,58 @@ def site_account_response(row: sqlite3.Row) -> dict[str, str]:
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
     }
+
+
+def forum_author_name(row: sqlite3.Row) -> str:
+    return row["full_name"] or row["author_account"]
+
+
+def forum_post_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "content": row["content"],
+        "author_account": row["author_account"],
+        "author_name": forum_author_name(row),
+        "reply_count": row["reply_count"] if "reply_count" in row.keys() else 0,
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def forum_reply_response(row: sqlite3.Row) -> dict[str, str]:
+    return {
+        "id": row["id"],
+        "post_id": row["post_id"],
+        "content": row["content"],
+        "author_account": row["author_account"],
+        "author_name": forum_author_name(row),
+        "created_at": row["created_at"],
+    }
+
+
+def normalize_forum_title(value: str) -> str:
+    title = value.strip()
+    if len(title) < 2 or len(title) > 80:
+        raise HTTPException(status_code=400, detail="标题长度需为 2 到 80 个字符")
+    return title
+
+
+def normalize_forum_content(value: str, field_name: str = "内容", max_length: int = 5000) -> str:
+    content = value.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail=f"{field_name}不能为空")
+    if len(content) > max_length:
+        raise HTTPException(status_code=400, detail=f"{field_name}不能超过 {max_length} 个字符")
+    return content
+
+
+def ensure_forum_author(conn: sqlite3.Connection, account: str) -> str:
+    normalized_account = normalize_account(account)
+    row = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="账号不存在，请重新登录")
+    return normalized_account
 
 
 def validate_site_password(password: str) -> str:
@@ -1117,6 +1195,17 @@ class SiteAccountRegisterRequest(SiteAccountRequest, SiteAccountProfile):
     pass
 
 
+class ForumPostCreateRequest(BaseModel):
+    title: str
+    content: str
+    author_account: str
+
+
+class ForumReplyCreateRequest(BaseModel):
+    content: str
+    author_account: str
+
+
 class SeasonPlanItem(BaseModel):
     group_name: str
     status: str
@@ -1262,6 +1351,111 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
         )
         row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
     return site_account_response(row)
+
+
+@app.get("/api/forum/posts")
+def list_forum_posts() -> dict[str, Any]:
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                post.*,
+                account.full_name,
+                COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply ON reply.post_id = post.id
+            GROUP BY post.id
+            ORDER BY post.created_at DESC
+            LIMIT 100
+            """
+        ).fetchall()
+    return {"posts": [forum_post_response(row) for row in rows]}
+
+
+@app.post("/api/forum/posts")
+def create_forum_post(payload: ForumPostCreateRequest) -> dict[str, Any]:
+    title = normalize_forum_title(payload.title)
+    content = normalize_forum_content(payload.content)
+    timestamp = now_iso()
+    post_id = uuid.uuid4().hex
+    with db_connection() as conn:
+        author_account = ensure_forum_author(conn, payload.author_account)
+        conn.execute(
+            """
+            INSERT INTO forum_post (id, title, content, author_account, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (post_id, title, content, author_account, timestamp, timestamp),
+        )
+        row = conn.execute(
+            """
+            SELECT post.*, account.full_name, 0 AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            WHERE post.id = ?
+            """,
+            (post_id,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=500, detail="帖子创建失败")
+    return forum_post_response(row)
+
+
+@app.get("/api/forum/posts/{post_id}")
+def get_forum_post(post_id: str) -> dict[str, Any]:
+    with db_connection() as conn:
+        post = conn.execute(
+            """
+            SELECT
+                post.*,
+                account.full_name,
+                COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply ON reply.post_id = post.id
+            WHERE post.id = ?
+            GROUP BY post.id
+            """,
+            (post_id,),
+        ).fetchone()
+        if post is None:
+            raise HTTPException(status_code=404, detail="帖子不存在")
+        replies = conn.execute(
+            """
+            SELECT reply.*, account.full_name
+            FROM forum_reply AS reply
+            LEFT JOIN site_account AS account ON account.account = reply.author_account
+            WHERE reply.post_id = ?
+            ORDER BY reply.created_at ASC
+            """,
+            (post_id,),
+        ).fetchall()
+    return {
+        "post": forum_post_response(post),
+        "replies": [forum_reply_response(row) for row in replies],
+    }
+
+
+@app.post("/api/forum/posts/{post_id}/replies")
+def create_forum_reply(post_id: str, payload: ForumReplyCreateRequest) -> dict[str, str]:
+    content = normalize_forum_content(payload.content, "回复", 2000)
+    timestamp = now_iso()
+    reply_id = uuid.uuid4().hex
+    with db_connection() as conn:
+        author_account = ensure_forum_author(conn, payload.author_account)
+        post = conn.execute("SELECT id FROM forum_post WHERE id = ?", (post_id,)).fetchone()
+        if post is None:
+            raise HTTPException(status_code=404, detail="帖子不存在")
+        conn.execute(
+            """
+            INSERT INTO forum_reply (id, post_id, content, author_account, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (reply_id, post_id, content, author_account, timestamp),
+        )
+        conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, post_id))
+    return {"id": reply_id, "post_id": post_id}
 
 
 @app.post("/api/auth/login")

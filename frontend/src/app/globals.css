@@ -1022,6 +1022,80 @@ p {
   opacity: 0.58;
 }
 
+.forum-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(19rem, 0.65fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.forum-main,
+.forum-compose,
+.forum-post-body,
+.forum-reply-form {
+  min-width: 0;
+}
+
+.forum-thread-list,
+.forum-reply-list,
+.forum-post-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.forum-thread,
+.forum-reply,
+.forum-post-body,
+.forum-reply-form {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
+}
+
+.forum-thread {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.forum-thread:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  transform: translateY(-2px);
+}
+
+.forum-thread p,
+.forum-post-body p,
+.forum-reply p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.forum-thread p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.forum-meta,
+.forum-reply-heading span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.forum-reply-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.forum-post-hero h1 {
+  max-width: 18ch;
+}
+
 .image2-workbench {
   display: grid;
   grid-template-columns: minmax(20rem, 0.95fr) minmax(22rem, 1.05fr);
@@ -1346,6 +1420,7 @@ th {
 
   .account-layout,
   .account-hero,
+  .forum-layout,
   .image2-workbench {
     grid-template-columns: 1fr;
   }

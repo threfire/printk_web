@@ -2,14 +2,27 @@ function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");
 }
 
-const PUBLIC_API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
-const INTERNAL_API_BASE = (
-  process.env.INTERNAL_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://127.0.0.1:8000"
-).trim();
+function isRelativeApiBase(value: string) {
+  return value.startsWith("/");
+}
 
-const SERVER_API_BASE = trimTrailingSlash(INTERNAL_API_BASE);
+const PUBLIC_API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
+const INTERNAL_API_BASE = (process.env.INTERNAL_API_BASE_URL || "").trim();
+const DEFAULT_SERVER_API_BASE = "http://127.0.0.1:8000";
+
+function serverApiBase() {
+  if (INTERNAL_API_BASE) {
+    return trimTrailingSlash(INTERNAL_API_BASE);
+  }
+
+  if (PUBLIC_API_BASE && !isRelativeApiBase(PUBLIC_API_BASE)) {
+    return trimTrailingSlash(PUBLIC_API_BASE);
+  }
+
+  return DEFAULT_SERVER_API_BASE;
+}
+
+const SERVER_API_BASE = serverApiBase();
 
 function browserApiBase() {
   const configured = PUBLIC_API_BASE;
@@ -65,6 +78,35 @@ export type SeasonPlanData = {
   season_year: number;
   month: number;
   plans: SeasonPlanItem[];
+};
+
+export type ForumPost = {
+  id: string;
+  title: string;
+  content: string;
+  author_account: string;
+  author_name: string;
+  reply_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ForumReply = {
+  id: string;
+  post_id: string;
+  content: string;
+  author_account: string;
+  author_name: string;
+  created_at: string;
+};
+
+export type ForumPostListData = {
+  posts: ForumPost[];
+};
+
+export type ForumPostDetailData = {
+  post: ForumPost;
+  replies: ForumReply[];
 };
 
 export function token() {

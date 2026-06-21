@@ -16,6 +16,12 @@ const featureCards = [
     status: "可编辑",
   },
   {
+    title: "队内论坛",
+    desc: "沉淀调试经验、训练复盘、物资讨论和赛季协作问题。",
+    href: "/forum",
+    status: "需登录",
+  },
+  {
     title: "管理后台",
     desc: "维护发票批次、库存明细、报销批次和处理日志。",
     href: "/admin",

@@ -99,6 +99,7 @@ def main() -> int:
             frontend_env["Path" if os.name == "nt" else key] = value
         else:
             frontend_env[key] = value
+    frontend_env.setdefault("INTERNAL_API_BASE_URL", "http://127.0.0.1:8000")
     frontend_env.setdefault("NEXT_PUBLIC_API_BASE_URL", "http://127.0.0.1:8000")
     frontend = subprocess.Popen(
         [NODE_BIN, str(FRONTEND_DIR / "node_modules" / "next" / "dist" / "bin" / "next"), "dev", "--hostname", "0.0.0.0", "--port", "3000"],

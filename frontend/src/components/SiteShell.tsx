@@ -8,6 +8,7 @@ const navItems = [
   { href: "/robots", label: "机器人" },
   { href: "/members", label: "队员风采" },
   { href: "/season-plan", label: "赛季规划" },
+  { href: "/forum", label: "队内论坛" },
   { href: "/invoices", label: "发票管理" },
   { href: "/image2", label: "图片工具" },
   { href: "/admin", label: "管理后台" },

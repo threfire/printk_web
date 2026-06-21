@@ -1,0 +1,39 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { API_BASE } from "@/lib/api";
+import { feedbackPath, responseError } from "@/lib/admin-feedback";
+
+type ReplyRouteContext = {
+  params: Promise<{ postId: string }>;
+};
+
+export async function POST(request: Request, { params }: ReplyRouteContext) {
+  const [{ postId }, form, cookieStore] = await Promise.all([
+    params,
+    request.formData(),
+    cookies(),
+  ]);
+  const account = cookieStore.get("printk-site-account")?.value ?? "";
+  const postPath = `/forum/${postId}`;
+
+  if (!account) {
+    redirect(feedbackPath(postPath, "error", "请先登录后再回复"));
+  }
+
+  const response = await fetch(`${API_BASE}/api/forum/posts/${encodeURIComponent(postId)}/replies`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      content: String(form.get("content") ?? ""),
+      author_account: account,
+    }),
+  });
+
+  if (!response.ok) {
+    redirect(feedbackPath(postPath, "error", await responseError(response, "发布回复失败")));
+  }
+
+  redirect(feedbackPath(postPath, "ok", "回复已发布"));
+}
