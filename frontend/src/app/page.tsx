@@ -176,8 +176,29 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="home-thanks">
-        <p>致谢：感谢队员、指导老师、测试同学和开源社区的支持。</p>
+      <footer className="home-thanks" aria-labelledby="home-footer-title">
+        <div className="home-footer-main">
+          <div className="home-footer-brand">
+            <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
+            <h2 id="home-footer-title">贵州大学 PRINTK 机器人战队</h2>
+            <p>面向 RoboMaster 赛季训练、工程沉淀和团队协作的统一门户。</p>
+          </div>
+          <nav className="home-footer-nav" aria-label="首页底部导航">
+            <Link href="/season-plan">赛季规划</Link>
+            <Link href="/robots">兵种展示</Link>
+            <Link href="/members">队员资料</Link>
+            <Link href="/forum">论坛交流</Link>
+          </nav>
+          <div className="home-footer-contact">
+            <span>联系我们</span>
+            <strong>微信 hy15186081202</strong>
+            <a href="#home-contact">打开联系窗口</a>
+          </div>
+        </div>
+        <div className="home-footer-bottom">
+          <p>致谢：感谢指导老师、历届队员、测试同学与开源社区的支持。</p>
+          <p>© 2026 PRINTK RoboMaster Team</p>
+        </div>
       </footer>
 
       <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">

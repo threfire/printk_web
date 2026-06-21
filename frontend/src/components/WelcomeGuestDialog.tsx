@@ -33,7 +33,7 @@ export function WelcomeGuestDialog() {
         <p>
           这里收纳了战队展示、赛季规划、队员资料、论坛交流和常用工具入口，方便大家快速找到需要的信息，也能更轻松地参与战队协作。
         </p>
-        <p>还没有账号的小伙伴可以先注册，再登录解锁更多功能喔～</p>
+        <p>非战队成员也欢迎来逛逛，想加入招新群、了解战队日常和赛季方向的小伙伴，可以先注册账号保持联系喔～</p>
         <div className="guest-welcome-actions">
           <a className="button" href="#account-register">
             去注册

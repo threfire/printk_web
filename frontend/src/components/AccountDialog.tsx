@@ -114,16 +114,6 @@ function AccountModal({ mode }: { mode: AccountMode }) {
                     <option value="老师">老师</option>
                   </select>
                 </div>
-                <div>
-                  <label htmlFor="account-register-department">部门信息</label>
-                  <select id="account-register-department" name="department" defaultValue="">
-                    <option value="">请选择</option>
-                    <option value="电控">电控</option>
-                    <option value="机械">机械</option>
-                    <option value="算法">算法</option>
-                    <option value="运营">运营</option>
-                  </select>
-                </div>
               </div>
             </>
           ) : null}
