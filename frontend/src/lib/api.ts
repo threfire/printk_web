@@ -1,5 +1,34 @@
+function trimTrailingSlash(value: string) {
+  return value.replace(/\/+$/, "");
+}
+
+const PUBLIC_API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
+const INTERNAL_API_BASE = (
+  process.env.INTERNAL_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://127.0.0.1:8000"
+).trim();
+
+const SERVER_API_BASE = trimTrailingSlash(INTERNAL_API_BASE);
+
+function browserApiBase() {
+  const configured = PUBLIC_API_BASE;
+  if (!configured || configured === "/") {
+    return window.location.origin;
+  }
+  if (configured.startsWith("/")) {
+    return `${window.location.origin}${configured === "/" ? "" : configured}`;
+  }
+  const isLoopback = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?/i.test(configured);
+  if (configured && !isLoopback) {
+    return trimTrailingSlash(configured);
+  }
+  const port = configured.match(/:(\d+)(?:\/|$)/)?.[1] || "8000";
+  return `${window.location.protocol}//${window.location.hostname}:${port}`;
+}
+
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+  typeof window === "undefined" ? SERVER_API_BASE : browserApiBase();
 
 export type DashboardData = {
   counts: {
@@ -14,11 +43,39 @@ export type DashboardData = {
   logs: Array<Record<string, string | number | null>>;
 };
 
+export type ApiRecord = Record<string, string | number | null>;
+
+export type BatchDetailData = {
+  batch: ApiRecord;
+  rows: ApiRecord[];
+};
+
+export type SeasonPlanItem = {
+  id?: string;
+  season_year?: number;
+  month?: number;
+  group_name: string;
+  status: string;
+  target: string;
+  display_order?: number;
+  updated_at?: string;
+};
+
+export type SeasonPlanData = {
+  season_year: number;
+  month: number;
+  plans: SeasonPlanItem[];
+};
+
 export function token() {
   if (typeof window === "undefined") {
     return "";
   }
-  return window.localStorage.getItem("printk-token") ?? "";
+  try {
+    return window.localStorage.getItem("printk-token") ?? "";
+  } catch {
+    return "";
+  }
 }
 
 export function authHeaders() {

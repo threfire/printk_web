@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HomeCarousel } from "@/components/HomeCarousel";
 
 const featureCards = [
   {
@@ -12,11 +13,11 @@ const featureCards = [
     title: "赛季规划",
     desc: "按月份和组别拆解电控、机械、算法、视觉和运营任务。",
     href: "/season-plan",
-    status: "建设中",
+    status: "可编辑",
   },
   {
     title: "管理后台",
-    desc: "维护发票批次、库存明细和后续团队展示内容。",
+    desc: "维护发票批次、库存明细、报销批次和处理日志。",
     href: "/admin",
     status: "需登录",
   },
@@ -27,16 +28,36 @@ const groups = ["电控组", "机械组", "算法组", "视觉组", "运营组"]
 
 const carouselImages = [
   {
-    src: "/home-carousel/slide-1.jpg",
-    alt: "PRINTK 赛季研发中心宽幅图",
+    src: "/home-carousel/team-01.jpeg",
+    alt: "PRINTK 成员在实验室演示康复机器人设备",
   },
   {
-    src: "/home-carousel/slide-2.jpg",
-    alt: "PRINTK 战队资产看板宽幅图",
+    src: "/home-carousel/team-02.jpeg",
+    alt: "PRINTK 队员在赛事现场交流",
   },
   {
-    src: "/home-carousel/slide-3.jpg",
-    alt: "PRINTK 训练与复盘现场宽幅图",
+    src: "/home-carousel/team-03.jpeg",
+    alt: "PRINTK 队员在场馆内讨论比赛细节",
+  },
+  {
+    src: "/home-carousel/team-04.jpeg",
+    alt: "PRINTK 成员在赛场调试机器人",
+  },
+  {
+    src: "/home-carousel/team-05.jpeg",
+    alt: "PRINTK 队员在比赛现场观察机器人状态",
+  },
+  {
+    src: "/home-carousel/team-06.jpeg",
+    alt: "PRINTK 队员在场边关注比赛进程",
+  },
+  {
+    src: "/home-carousel/team-07.jpeg",
+    alt: "PRINTK 成员在场馆通道集合",
+  },
+  {
+    src: "/home-carousel/team-08.png",
+    alt: "PRINTK 战队赛季全员合影",
   },
 ];
 
@@ -88,23 +109,12 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="image-carousel" aria-label="战队图片展示">
-        {carouselImages.map((image) => (
-          <Image
-            className="carousel-image"
-            src={image.src}
-            alt={image.alt}
-            fill
-            sizes="(max-width: 1180px) calc(100vw - 2rem), 1180px"
-            key={image.src}
-          />
-        ))}
-      </section>
+      <HomeCarousel images={carouselImages} />
 
       <section className="section">
         <div className="section-heading">
           <span className="eyebrow">功能中心</span>
-          <h2>下级系统入口</h2>
+          <h2>子系统入口</h2>
         </div>
         <div className="card-grid">
           {featureCards.map((card) => (
@@ -127,7 +137,7 @@ export default function Home() {
             <article className="card" key={robot}>
               <span className="badge">2026 赛季 #{index + 1}</span>
               <h3>{robot}</h3>
-              <p>资料将按赛季归档，展示定位、负责组别、技术亮点和图片。</p>
+              <p>资料按赛季归档，展示定位、负责组别、当前重点和交付物。</p>
             </article>
           ))}
         </div>
@@ -142,7 +152,7 @@ export default function Home() {
           {groups.map((group) => (
             <article className="card" key={group}>
               <h3>{group}</h3>
-              <p>后续展示真实姓名、照片、职责和简介，并提供展示状态管理。</p>
+              <p>展示组别职责、负责重点和可沉淀资料，方便成员快速找到协作入口。</p>
             </article>
           ))}
         </div>

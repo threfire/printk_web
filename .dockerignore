@@ -1,0 +1,11 @@
+.git
+.gitignore
+.venv
+.venv-fastapi
+__pycache__
+storage/logs
+frontend/.next
+frontend/node_modules
+frontend/tsconfig.tsbuildinfo
+backend/__pycache__
+

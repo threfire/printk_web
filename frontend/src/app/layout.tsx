@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      <body>
+    <html lang="zh-CN" data-theme="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
+      <body data-theme="dark" suppressHydrationWarning>
         <SiteShell>{children}</SiteShell>
       </body>
     </html>

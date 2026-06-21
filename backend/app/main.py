@@ -16,6 +16,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -78,6 +79,10 @@ def normalize_text(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def normalize_header(value: Any) -> str:
+    return "".join(normalize_text(value).lstrip("\ufeff").split())
 
 
 def build_batch_id(submitter_id: str) -> str:
@@ -250,12 +255,75 @@ def init_db() -> None:
                 message TEXT NOT NULL,
                 created_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS season_plan (
+                id TEXT PRIMARY KEY,
+                season_year INTEGER NOT NULL,
+                month INTEGER NOT NULL,
+                group_name TEXT NOT NULL,
+                status TEXT NOT NULL,
+                target TEXT NOT NULL,
+                display_order INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE (season_year, month, group_name)
+            );
+
+            CREATE TABLE IF NOT EXISTS site_account (
+                account TEXT PRIMARY KEY,
+                password_hash TEXT NOT NULL,
+                full_name TEXT DEFAULT '',
+                gender TEXT DEFAULT '',
+                grade TEXT DEFAULT '',
+                member_status TEXT DEFAULT '',
+                department TEXT DEFAULT '',
+                phone TEXT DEFAULT '',
+                email TEXT DEFAULT '',
+                bio TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_season_plan_period
+            ON season_plan (season_year, month, display_order);
             """
         )
+        ensure_site_account_profile_columns(conn)
+        seed_season_plan(conn)
 
 
 def row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     return {key: row[key] for key in row.keys()}
+
+
+def seed_season_plan(conn: sqlite3.Connection) -> None:
+    existing = conn.execute(
+        "SELECT COUNT(*) AS total FROM season_plan WHERE season_year = ? AND month = ?",
+        (2026, 6),
+    ).fetchone()
+    if existing and existing["total"] > 0:
+        return
+    plans = [
+        ("电控组", "准备中", "完成底盘通信、功率管理和基础控制联调。"),
+        ("机械组", "准备中", "完成关键机构方案评审和第一轮装配验证。"),
+        ("算法组", "准备中", "完成自动导航、策略接口和仿真数据整理。"),
+        ("视觉组", "准备中", "完成识别流程、相机标定和目标跟踪测试。"),
+        ("运营组", "准备中", "完成物资清单、预算台账和赛季宣传计划。"),
+    ]
+    timestamp = now_iso()
+    conn.executemany(
+        """
+        INSERT INTO season_plan (
+            id, season_year, month, group_name, status, target,
+            display_order, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            (uuid.uuid4().hex, 2026, 6, group, status, target, index, timestamp, timestamp)
+            for index, (group, status, target) in enumerate(plans, start=1)
+        ],
+    )
 
 
 def make_token(role: str) -> str:
@@ -263,6 +331,105 @@ def make_token(role: str) -> str:
     signature = hmac.new(SECRET_KEY.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
     raw = f"{payload}:{signature}".encode("utf-8")
     return base64.urlsafe_b64encode(raw).decode("utf-8")
+
+
+def normalize_account(value: str) -> str:
+    account = value.strip()
+    if not account or len(account) > 32:
+        raise HTTPException(status_code=400, detail="账号长度需为 1 到 32 个字符")
+    return account
+
+
+def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
+    existing_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(site_account)").fetchall()
+    }
+    profile_columns = {
+        "full_name": "TEXT DEFAULT ''",
+        "gender": "TEXT DEFAULT ''",
+        "grade": "TEXT DEFAULT ''",
+        "member_status": "TEXT DEFAULT ''",
+        "department": "TEXT DEFAULT ''",
+        "phone": "TEXT DEFAULT ''",
+        "email": "TEXT DEFAULT ''",
+        "bio": "TEXT DEFAULT ''",
+    }
+    for column, definition in profile_columns.items():
+        if column not in existing_columns:
+            conn.execute(f"ALTER TABLE site_account ADD COLUMN {column} {definition}")
+
+
+GENDER_OPTIONS = {"", "男", "女", "其他"}
+GRADE_OPTIONS = {"", "大一", "大二", "大三", "大四", "研究生"}
+MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"}
+DEPARTMENT_OPTIONS = {"", "电控", "机械", "算法", "运营"}
+
+
+def normalize_limited_text(value: str, field_name: str, max_length: int = 80) -> str:
+    text = value.strip()
+    if len(text) > max_length:
+        raise HTTPException(status_code=400, detail=f"{field_name}不能超过 {max_length} 个字符")
+    return text
+
+
+def normalize_choice(value: str, field_name: str, allowed_values: set[str]) -> str:
+    text = value.strip()
+    if text not in allowed_values:
+        raise HTTPException(status_code=400, detail=f"{field_name}格式错误")
+    return text
+
+
+def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
+    return {
+        "full_name": normalize_limited_text(profile.full_name, "姓名", 32),
+        "gender": normalize_choice(profile.gender, "性别", GENDER_OPTIONS),
+        "grade": normalize_choice(profile.grade, "年级", GRADE_OPTIONS),
+        "member_status": normalize_choice(profile.member_status, "身份信息", MEMBER_STATUS_OPTIONS),
+        "department": normalize_choice(profile.department, "部门信息", DEPARTMENT_OPTIONS),
+        "phone": normalize_limited_text(profile.phone, "联系电话", 32),
+        "email": normalize_limited_text(profile.email, "邮箱", 80),
+        "bio": normalize_limited_text(profile.bio, "个人说明", 200),
+    }
+
+
+def site_account_response(row: sqlite3.Row) -> dict[str, str]:
+    return {
+        "account": row["account"],
+        "full_name": row["full_name"] or "",
+        "gender": row["gender"] or "",
+        "grade": row["grade"] or "",
+        "member_status": row["member_status"] or "",
+        "department": row["department"] or "",
+        "phone": row["phone"] or "",
+        "email": row["email"] or "",
+        "bio": row["bio"] or "",
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def validate_site_password(password: str) -> str:
+    if len(password) < 6 or len(password) > 72:
+        raise HTTPException(status_code=400, detail="密码长度需为 6 到 72 个字符")
+    return password
+
+
+def hash_site_password(password: str) -> str:
+    salt = os.urandom(16).hex()
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200_000).hex()
+    return f"pbkdf2_sha256${salt}${digest}"
+
+
+def verify_site_password(password: str, stored_hash: str) -> bool:
+    try:
+        algorithm, salt, digest = stored_hash.split("$", 2)
+    except ValueError:
+        return False
+    if algorithm != "pbkdf2_sha256":
+        return False
+    current_digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 200_000).hex()
+    return hmac.compare_digest(current_digest, digest)
 
 
 def verify_token(token: str, allowed_roles: set[str]) -> str:
@@ -343,11 +510,15 @@ def parse_excel(form_path: Path) -> list[dict[str, Any]]:
     rows = list(sheet.iter_rows(values_only=True))
     if not rows:
         raise ValueError("表格为空")
-    headers = [normalize_text(cell) for cell in rows[0]]
+    headers = [normalize_header(cell) for cell in rows[0]]
     for required_header in REQUIRED_HEADERS:
-        if required_header not in headers:
+        if normalize_header(required_header) not in headers:
             raise ValueError(f"缺少必填列：{required_header}")
-    header_indexes = {name: headers.index(name) for name in HEADER_MAP if name in headers}
+    header_indexes = {
+        name: headers.index(normalize_header(name))
+        for name in HEADER_MAP
+        if normalize_header(name) in headers
+    }
 
     parsed_rows: list[dict[str, Any]] = []
     for row_no, row in enumerate(rows[1:], start=2):
@@ -859,9 +1030,103 @@ def dashboard_data() -> dict[str, Any]:
     return {"counts": counts, "pending_batches": pending_batches, "in_stock_rows": in_stock_rows, "reimbursement_batches": reimbursement_batches, "logs": logs}
 
 
+def validate_plan_period(season_year: int, month: int) -> None:
+    if season_year < 2020 or season_year > 2100:
+        raise HTTPException(status_code=400, detail="赛季年份格式错误")
+    if month < 1 or month > 12:
+        raise HTTPException(status_code=400, detail="月份格式错误")
+
+
+def list_season_plan(season_year: int, month: int) -> list[dict[str, Any]]:
+    validate_plan_period(season_year, month)
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, season_year, month, group_name, status, target, display_order, updated_at
+            FROM season_plan
+            WHERE season_year = ? AND month = ?
+            ORDER BY display_order ASC, group_name ASC
+            """,
+            (season_year, month),
+        ).fetchall()
+    return [row_to_dict(row) for row in rows]
+
+
+def save_season_plan(season_year: int, month: int, plans: list["SeasonPlanItem"]) -> list[dict[str, Any]]:
+    validate_plan_period(season_year, month)
+    if not plans:
+        raise HTTPException(status_code=400, detail="计划不能为空")
+    timestamp = now_iso()
+    with db_connection() as conn:
+        for index, plan in enumerate(plans, start=1):
+            group_name = plan.group_name.strip()
+            status = plan.status.strip()
+            target = plan.target.strip()
+            if not group_name or not status or not target:
+                raise HTTPException(status_code=400, detail="组别、状态、目标不能为空")
+            conn.execute(
+                """
+                INSERT INTO season_plan (
+                    id, season_year, month, group_name, status, target,
+                    display_order, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(season_year, month, group_name) DO UPDATE SET
+                    status = excluded.status,
+                    target = excluded.target,
+                    display_order = excluded.display_order,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    uuid.uuid4().hex,
+                    season_year,
+                    month,
+                    group_name,
+                    status,
+                    target,
+                    index,
+                    timestamp,
+                    timestamp,
+                ),
+            )
+    return list_season_plan(season_year, month)
+
+
 class LoginRequest(BaseModel):
     password: str
     role: str = "admin"
+
+
+class SiteAccountProfile(BaseModel):
+    full_name: str = ""
+    gender: str = ""
+    grade: str = ""
+    member_status: str = ""
+    department: str = ""
+    phone: str = ""
+    email: str = ""
+    bio: str = ""
+
+
+class SiteAccountRequest(BaseModel):
+    account: str
+    password: str
+
+
+class SiteAccountRegisterRequest(SiteAccountRequest, SiteAccountProfile):
+    pass
+
+
+class SeasonPlanItem(BaseModel):
+    group_name: str
+    status: str
+    target: str
+
+
+class SeasonPlanRequest(BaseModel):
+    season_year: int
+    month: int
+    plans: list[SeasonPlanItem]
 
 
 class RowIdsRequest(BaseModel):
@@ -910,6 +1175,95 @@ def health() -> dict[str, str]:
     return {"status": "ok", "time": now_iso()}
 
 
+@app.post("/api/site-accounts/register")
+def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]:
+    account = normalize_account(payload.account)
+    password = validate_site_password(payload.password)
+    profile = normalize_site_profile(payload)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (account,)).fetchone()
+        if existing:
+            raise HTTPException(status_code=409, detail="账号已存在")
+        conn.execute(
+            """
+            INSERT INTO site_account (
+                account, password_hash, full_name, gender, grade, member_status,
+                department, phone, email, bio, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                account,
+                hash_site_password(password),
+                profile["full_name"],
+                profile["gender"],
+                profile["grade"],
+                profile["member_status"],
+                profile["department"],
+                profile["phone"],
+                profile["email"],
+                profile["bio"],
+                timestamp,
+                timestamp,
+            ),
+        )
+    return {"account": account}
+
+
+@app.post("/api/site-accounts/login")
+def login_site_account(payload: SiteAccountRequest) -> dict[str, str]:
+    account = normalize_account(payload.account)
+    with db_connection() as conn:
+        row = conn.execute("SELECT password_hash FROM site_account WHERE account = ?", (account,)).fetchone()
+    if not row or not verify_site_password(payload.password, row["password_hash"]):
+        raise HTTPException(status_code=401, detail="账号或密码错误")
+    return {"account": account}
+
+
+@app.get("/api/site-accounts/{account}")
+def get_site_account(account: str) -> dict[str, str]:
+    normalized_account = normalize_account(account)
+    with db_connection() as conn:
+        row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="账号不存在")
+    return site_account_response(row)
+
+
+@app.put("/api/site-accounts/{account}")
+def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, str]:
+    normalized_account = normalize_account(account)
+    profile = normalize_site_profile(payload)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        conn.execute(
+            """
+            UPDATE site_account
+            SET full_name = ?, gender = ?, grade = ?, member_status = ?,
+                department = ?, phone = ?, email = ?, bio = ?, updated_at = ?
+            WHERE account = ?
+            """,
+            (
+                profile["full_name"],
+                profile["gender"],
+                profile["grade"],
+                profile["member_status"],
+                profile["department"],
+                profile["phone"],
+                profile["email"],
+                profile["bio"],
+                timestamp,
+                normalized_account,
+            ),
+        )
+        row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    return site_account_response(row)
+
+
 @app.post("/api/auth/login")
 def login(payload: LoginRequest) -> dict[str, str]:
     if payload.role == "group_leader" and payload.password == GROUP_LEADER_PASSWORD:
@@ -917,6 +1271,27 @@ def login(payload: LoginRequest) -> dict[str, str]:
     if payload.role == "admin" and payload.password == ADMIN_PASSWORD:
         return {"token": make_token("admin"), "role": "admin"}
     raise HTTPException(status_code=401, detail="密码错误")
+
+
+@app.get("/api/season-plan")
+def get_season_plan(season_year: int = 2026, month: int = 6) -> dict[str, Any]:
+    return {
+        "season_year": season_year,
+        "month": month,
+        "plans": list_season_plan(season_year, month),
+    }
+
+
+@app.put("/api/season-plan")
+def update_season_plan(
+    payload: SeasonPlanRequest,
+    _: str = Depends(require_plan_editor),
+) -> dict[str, Any]:
+    return {
+        "season_year": payload.season_year,
+        "month": payload.month,
+        "plans": save_season_plan(payload.season_year, payload.month, payload.plans),
+    }
 
 
 @app.post("/api/invoices/upload")
@@ -973,10 +1348,11 @@ async def upload_invoice_form(
 def download_template() -> StreamingResponse:
     stream = build_template_workbook()
     filename = "采购表格模板.xlsx"
+    encoded_filename = quote(filename)
     return StreamingResponse(
         stream,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"},
     )
 
 
