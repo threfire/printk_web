@@ -177,11 +177,6 @@ button {
   display: none;
 }
 
-.nav-dropdown summary::after {
-  content: "v";
-  color: var(--muted);
-  font-size: 0.85rem;
-}
 
 .nav-dropdown-menu {
   position: absolute;
