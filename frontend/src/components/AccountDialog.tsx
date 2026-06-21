@@ -7,7 +7,7 @@ export function AccountDialog({ accountName }: { accountName: string }) {
         <a className="account-name" href="/account">
           {accountName}
         </a>
-        <form action="/api/account/logout" method="post">
+        <form action="/account/logout" method="post">
           <button className="account-link" type="submit">
             退出
           </button>
@@ -52,7 +52,7 @@ function AccountModal({ mode }: { mode: AccountMode }) {
             ×
           </a>
         </div>
-        <form className="account-modal-form" action={isRegister ? "/api/account/register" : "/api/account/login"} method="post">
+        <form className="account-modal-form" action={isRegister ? "/account/register" : "/account/login"} method="post">
           <label htmlFor={`${modalId}-name`}>账号</label>
           <input id={`${modalId}-name`} name="account" placeholder="账号名称" autoComplete="username" required />
           <label htmlFor={`${modalId}-password`}>密码</label>

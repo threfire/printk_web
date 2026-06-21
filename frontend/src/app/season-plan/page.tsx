@@ -38,7 +38,7 @@ function PlanCard({ plan }: { plan: SeasonPlanItem }) {
 
 function PlanEditor({ plans, period }: { plans: SeasonPlanItem[]; period: SeasonPlanPeriod }) {
   return (
-    <form className="form" action="/api/season-plan/update" method="post">
+    <form className="form" action="/season-plan/update" method="post">
       <input name="season_year" type="hidden" value={period.seasonYear} />
       <input name="month" type="hidden" value={period.month} />
       <input name="count" type="hidden" value={plans.length} />
@@ -69,7 +69,7 @@ function PlanEditor({ plans, period }: { plans: SeasonPlanItem[]; period: Season
         <button className="button" type="submit">
           保存计划
         </button>
-        <button className="ghost-button" formAction="/api/season-plan/logout" formMethod="post" type="submit">
+        <button className="ghost-button" formAction="/season-plan/logout" formMethod="post" type="submit">
           退出编辑
         </button>
       </div>
@@ -101,7 +101,7 @@ export default async function SeasonPlanPage({ searchParams }: SeasonPlanPagePro
         {ok ? <div className="message">{ok}</div> : null}
         {error ? <div className="message error">{error}</div> : null}
         {!isEditing && (
-          <form className="inline-login" action="/api/season-plan/login" method="post">
+          <form className="inline-login" action="/season-plan/login" method="post">
             <label className="sr-only" htmlFor="leader-password">
               组长密码
             </label>

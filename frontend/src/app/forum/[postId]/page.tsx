@@ -91,7 +91,7 @@ export default async function ForumPostPage({ params, searchParams }: ForumPostP
             <h2>添加回复</h2>
           </div>
           {account ? (
-            <form className="form" action={`/api/forum/posts/${data.post.id}/replies`} method="post">
+            <form className="form" action={`/forum/posts/${data.post.id}/replies`} method="post">
               <div className="field">
                 <label htmlFor="forum-reply-content">回复内容</label>
                 <textarea id="forum-reply-content" name="content" placeholder="补充你的经验、问题或结论" required rows={5} maxLength={2000} />

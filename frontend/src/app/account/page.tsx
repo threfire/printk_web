@@ -122,7 +122,7 @@ export default async function AccountPage() {
         <article className="card profile-form-card">
           <span className="eyebrow">EDIT</span>
           <h2>编辑资料</h2>
-          <form className="form profile-form" action="/api/account/profile" method="post">
+          <form className="form profile-form" action="/account/profile" method="post">
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="profile-full-name">姓名</label>

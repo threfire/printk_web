@@ -74,7 +74,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
             <h2>发布新帖</h2>
           </div>
           {account ? (
-            <form className="form" action="/api/forum/posts" method="post">
+            <form className="form" action="/forum/posts" method="post">
               <div className="field">
                 <label htmlFor="forum-title">标题</label>
                 <input id="forum-title" name="title" placeholder="例如：英雄机器人底盘调试记录" required minLength={2} maxLength={80} />
