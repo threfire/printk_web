@@ -130,6 +130,37 @@ export type ForumManagementData = {
   replies: AdminForumReply[];
 };
 
+export type HomepageAsset = {
+  id: string;
+  kind: "video" | "image";
+  url: string;
+  original_filename: string;
+  mime_type: string;
+  size_bytes: number;
+  alt: string;
+  display_order: number;
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HomepageQuote = {
+  id: string;
+  text: string;
+  source: string;
+  display_order: number;
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HomepageContentData = {
+  video: HomepageAsset | null;
+  videos: HomepageAsset[];
+  images: HomepageAsset[];
+  quotes: HomepageQuote[];
+};
+
 export function token() {
   if (typeof window === "undefined") {
     return "";

@@ -44,6 +44,7 @@ IN_STOCK_MASTER_DIR = STORAGE_DIR / "master" / "in_stock_master"
 OUT_STOCK_MASTER_DIR = STORAGE_DIR / "master" / "out_stock_master"
 REIMBURSEMENT_EXPORT_DIR = STORAGE_DIR / "master" / "reimbursement_export"
 TEMP_DIR = STORAGE_DIR / "temp"
+SITE_MEDIA_DIR = STORAGE_DIR / "site_media"
 
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
@@ -54,6 +55,9 @@ FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:3000,http://loc
 AGENT_LOCK = threading.Lock()
 FORUM_PUBLIC_STATUS = "approved"
 FORUM_CONTENT_STATUSES = {"pending", "approved", "rejected", "hidden"}
+HOME_ASSET_KINDS = {"video", "image"}
+HOME_VIDEO_MIME_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
+HOME_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 HEADER_MAP = {
     "采购日期": "purchase_date",
@@ -138,6 +142,7 @@ def ensure_directories() -> None:
         OUT_STOCK_MASTER_DIR,
         REIMBURSEMENT_EXPORT_DIR,
         TEMP_DIR,
+        SITE_MEDIA_DIR,
     ]:
         path.mkdir(parents=True, exist_ok=True)
 
@@ -331,6 +336,31 @@ def init_db() -> None:
                 FOREIGN KEY (author_account) REFERENCES site_account(account)
             );
 
+            CREATE TABLE IF NOT EXISTS homepage_asset (
+                id TEXT PRIMARY KEY,
+                kind TEXT NOT NULL,
+                url TEXT NOT NULL,
+                storage_path TEXT DEFAULT '',
+                original_filename TEXT DEFAULT '',
+                mime_type TEXT DEFAULT '',
+                size_bytes INTEGER NOT NULL DEFAULT 0,
+                alt TEXT DEFAULT '',
+                display_order INTEGER NOT NULL DEFAULT 0,
+                is_enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS homepage_quote (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL,
+                source TEXT DEFAULT '',
+                display_order INTEGER NOT NULL DEFAULT 0,
+                is_enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_season_plan_period
             ON season_plan (season_year, month, display_order);
 
@@ -368,7 +398,20 @@ def init_db() -> None:
             ON site_account_admin_log (account, created_at DESC)
             """
         )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_homepage_asset_kind_order
+            ON homepage_asset (kind, is_enabled, display_order, created_at)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_homepage_quote_order
+            ON homepage_quote (is_enabled, display_order, created_at)
+            """
+        )
         seed_season_plan(conn)
+        seed_homepage_content(conn)
 
 
 def row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
@@ -403,6 +446,80 @@ def seed_season_plan(conn: sqlite3.Connection) -> None:
             for index, (group, status, target) in enumerate(plans, start=1)
         ],
     )
+
+
+HOME_IMAGE_SEEDS = [
+    ("/home-carousel/team-01.jpeg", "PRINTK 成员在实验室演示康复机器人设备"),
+    ("/home-carousel/team-02.jpeg", "PRINTK 队员在赛事现场交流"),
+    ("/home-carousel/team-03.jpeg", "PRINTK 队员在场馆内讨论比赛细节"),
+    ("/home-carousel/team-04.jpeg", "PRINTK 成员在赛场调试机器人"),
+    ("/home-carousel/team-05.jpeg", "PRINTK 队员在比赛现场观察机器人状态"),
+    ("/home-carousel/team-06.jpeg", "PRINTK 队员在场边关注比赛进程"),
+    ("/home-carousel/team-07.jpeg", "PRINTK 成员在场馆通道集合"),
+    ("/home-carousel/team-08.png", "PRINTK 战队赛季全员合影"),
+    ("/home-carousel/team-09.jpg", "PRINTK 战队在 RoboMaster 现场合影"),
+    ("/home-carousel/team-10.jpg", "PRINTK 成员围绕机器人开展线下交流"),
+    ("/home-carousel/team-11.jpg", "PRINTK 队员围绕电脑集中讨论调试方案"),
+    ("/home-carousel/team-12.jpeg", "PRINTK 战队与机器人在赛场内合影留念"),
+    ("/home-carousel/team-13.jpeg", "PRINTK 队员在比赛现场近距离调试机器人"),
+]
+
+HOME_QUOTE_SEEDS = [
+    ("道阻且长，行则将至", "PRINTK 赛季口号"),
+    ("为青春赋予荣耀，让思考拥有力量", "RoboMaster 赛事理念"),
+    ("服务全球青年工程师成为追求极致、有实干精神的梦想家", "RoboMaster 高校系列赛"),
+    ("崇尚科学与创新，擅于反思，勇于实践，热爱分享", "RoboMaster 赛事理念"),
+    ("初心高于胜负，每一份努力都值得被肯定", "RoboMaster 组织奖文化"),
+    ("以学术价值为根基，培养具有工程思维、拥有实干精神的综合素质人才", "RoboMaster 赛事愿景"),
+    ("勇于创新、追求极致、崇尚实干、具备视野和远见", "RoboMaster 专属招聘通道"),
+]
+
+
+def seed_homepage_content(conn: sqlite3.Connection) -> None:
+    timestamp = now_iso()
+    video_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_asset WHERE kind = 'video'").fetchone()["total"]
+    if video_count == 0:
+        conn.execute(
+            """
+            INSERT INTO homepage_asset (
+                id, kind, url, original_filename, mime_type, size_bytes, alt,
+                display_order, is_enabled, created_at, updated_at
+            )
+            VALUES (?, 'video', ?, ?, 'video/mp4', ?, ?, 1, 1, ?, ?)
+            """,
+            (uuid.uuid4().hex, "/season-promo.mp4", "欢送老登之夜.mp4", 6233758, "赛季宣传视频", timestamp, timestamp),
+        )
+
+    image_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_asset WHERE kind = 'image'").fetchone()["total"]
+    if image_count == 0:
+        conn.executemany(
+            """
+            INSERT INTO homepage_asset (
+                id, kind, url, original_filename, mime_type, size_bytes, alt,
+                display_order, is_enabled, created_at, updated_at
+            )
+            VALUES (?, 'image', ?, ?, '', 0, ?, ?, 1, ?, ?)
+            """,
+            [
+                (uuid.uuid4().hex, url, Path(url).name, alt, index, timestamp, timestamp)
+                for index, (url, alt) in enumerate(HOME_IMAGE_SEEDS, start=1)
+            ],
+        )
+
+    quote_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_quote").fetchone()["total"]
+    if quote_count == 0:
+        conn.executemany(
+            """
+            INSERT INTO homepage_quote (
+                id, text, source, display_order, is_enabled, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, 1, ?, ?)
+            """,
+            [
+                (uuid.uuid4().hex, text, source, index, timestamp, timestamp)
+                for index, (text, source) in enumerate(HOME_QUOTE_SEEDS, start=1)
+            ],
+        )
 
 
 def make_token(role: str) -> str:
@@ -1299,6 +1416,232 @@ def save_season_plan(season_year: int, month: int, plans: list["SeasonPlanItem"]
     return list_season_plan(season_year, month)
 
 
+def homepage_asset_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "kind": row["kind"],
+        "url": row["url"],
+        "original_filename": row["original_filename"] or "",
+        "mime_type": row["mime_type"] or "",
+        "size_bytes": row["size_bytes"] or 0,
+        "alt": row["alt"] or "",
+        "display_order": row["display_order"] or 0,
+        "is_enabled": bool(row["is_enabled"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def homepage_quote_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "text": row["text"],
+        "source": row["source"] or "",
+        "display_order": row["display_order"] or 0,
+        "is_enabled": bool(row["is_enabled"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
+    enabled_clause = "" if include_disabled else "AND is_enabled = 1"
+    with db_connection() as conn:
+        videos = conn.execute(
+            f"""
+            SELECT *
+            FROM homepage_asset
+            WHERE kind = 'video' {enabled_clause}
+            ORDER BY display_order ASC, created_at DESC
+            """
+        ).fetchall()
+        images = conn.execute(
+            f"""
+            SELECT *
+            FROM homepage_asset
+            WHERE kind = 'image' {enabled_clause}
+            ORDER BY display_order ASC, created_at ASC
+            """
+        ).fetchall()
+        quotes = conn.execute(
+            f"""
+            SELECT *
+            FROM homepage_quote
+            WHERE 1 = 1 {enabled_clause}
+            ORDER BY display_order ASC, created_at ASC
+            """
+        ).fetchall()
+    video_items = [homepage_asset_response(row) for row in videos]
+    return {
+        "video": video_items[0] if video_items else None,
+        "videos": video_items,
+        "images": [homepage_asset_response(row) for row in images],
+        "quotes": [homepage_quote_response(row) for row in quotes],
+    }
+
+
+def normalize_homepage_order(value: int) -> int:
+    if value < 0 or value > 9999:
+        raise HTTPException(status_code=400, detail="排序值需在 0 到 9999 之间")
+    return value
+
+
+def normalize_homepage_kind(value: str) -> str:
+    kind = value.strip()
+    if kind not in HOME_ASSET_KINDS:
+        raise HTTPException(status_code=400, detail="媒体类型格式错误")
+    return kind
+
+
+def media_url(filename: str) -> str:
+    return f"/api/site-media/{quote(filename)}"
+
+
+async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_order: int) -> dict[str, Any]:
+    normalized_kind = normalize_homepage_kind(kind)
+    if not upload.filename:
+        raise HTTPException(status_code=400, detail="请选择上传文件")
+    content = await upload.read()
+    if len(content) > MAX_CONTENT_LENGTH:
+        raise HTTPException(status_code=413, detail="文件超过 50MB 上限")
+    mime_type = upload.content_type or ""
+    allowed_types = HOME_VIDEO_MIME_TYPES if normalized_kind == "video" else HOME_IMAGE_MIME_TYPES
+    if mime_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="文件类型不支持")
+
+    suffix = Path(upload.filename).suffix.lower()
+    if normalized_kind == "video" and suffix not in {".mp4", ".webm", ".mov"}:
+        raise HTTPException(status_code=400, detail="视频只支持 mp4、webm、mov")
+    if normalized_kind == "image" and suffix not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+        raise HTTPException(status_code=400, detail="图片只支持 jpg、png、webp、gif")
+
+    timestamp = now_iso()
+    media_id = uuid.uuid4().hex
+    filename = f"{normalized_kind}-{media_id}{suffix}"
+    target_path = SITE_MEDIA_DIR / filename
+    target_path.write_bytes(content)
+    normalized_alt = normalize_limited_text(alt, "媒体说明", 120)
+    normalized_order = normalize_homepage_order(display_order)
+
+    with db_connection() as conn:
+        if normalized_kind == "video":
+            conn.execute("UPDATE homepage_asset SET is_enabled = 0, updated_at = ? WHERE kind = 'video'", (timestamp,))
+        conn.execute(
+            """
+            INSERT INTO homepage_asset (
+                id, kind, url, storage_path, original_filename, mime_type, size_bytes,
+                alt, display_order, is_enabled, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+            """,
+            (
+                media_id,
+                normalized_kind,
+                media_url(filename),
+                str(target_path),
+                upload.filename,
+                mime_type,
+                len(content),
+                normalized_alt,
+                normalized_order,
+                timestamp,
+                timestamp,
+            ),
+        )
+        row = conn.execute("SELECT * FROM homepage_asset WHERE id = ?", (media_id,)).fetchone()
+    return homepage_asset_response(row)
+
+
+def update_homepage_asset(asset_id: str, payload: "HomepageAssetUpdate") -> dict[str, Any]:
+    timestamp = now_iso()
+    alt = normalize_limited_text(payload.alt, "媒体说明", 120)
+    display_order = normalize_homepage_order(payload.display_order)
+    with db_connection() as conn:
+        existing = conn.execute("SELECT * FROM homepage_asset WHERE id = ?", (asset_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="媒体不存在")
+        if existing["kind"] == "video" and payload.is_enabled:
+            conn.execute("UPDATE homepage_asset SET is_enabled = 0, updated_at = ? WHERE kind = 'video' AND id <> ?", (timestamp, asset_id))
+        conn.execute(
+            """
+            UPDATE homepage_asset
+            SET alt = ?, display_order = ?, is_enabled = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (alt, display_order, 1 if payload.is_enabled else 0, timestamp, asset_id),
+        )
+        row = conn.execute("SELECT * FROM homepage_asset WHERE id = ?", (asset_id,)).fetchone()
+    return homepage_asset_response(row)
+
+
+def delete_homepage_asset(asset_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        existing = conn.execute("SELECT * FROM homepage_asset WHERE id = ?", (asset_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="媒体不存在")
+        conn.execute("DELETE FROM homepage_asset WHERE id = ?", (asset_id,))
+    storage_path = existing["storage_path"] or ""
+    if storage_path:
+        path = Path(storage_path)
+        if path.exists() and path.resolve().is_relative_to(SITE_MEDIA_DIR.resolve()):
+            path.unlink()
+    return {"message": "媒体已删除"}
+
+
+def create_homepage_quote(payload: "HomepageQuoteCreate") -> dict[str, Any]:
+    text = normalize_limited_text(payload.text, "文案", 120)
+    if not text:
+        raise HTTPException(status_code=400, detail="文案不能为空")
+    source = normalize_limited_text(payload.source, "来源", 80)
+    display_order = normalize_homepage_order(payload.display_order)
+    quote_id = uuid.uuid4().hex
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO homepage_quote (
+                id, text, source, display_order, is_enabled, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (quote_id, text, source, display_order, 1 if payload.is_enabled else 0, timestamp, timestamp),
+        )
+        row = conn.execute("SELECT * FROM homepage_quote WHERE id = ?", (quote_id,)).fetchone()
+    return homepage_quote_response(row)
+
+
+def update_homepage_quote(quote_id: str, payload: "HomepageQuoteUpdate") -> dict[str, Any]:
+    text = normalize_limited_text(payload.text, "文案", 120)
+    if not text:
+        raise HTTPException(status_code=400, detail="文案不能为空")
+    source = normalize_limited_text(payload.source, "来源", 80)
+    display_order = normalize_homepage_order(payload.display_order)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM homepage_quote WHERE id = ?", (quote_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="文案不存在")
+        conn.execute(
+            """
+            UPDATE homepage_quote
+            SET text = ?, source = ?, display_order = ?, is_enabled = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (text, source, display_order, 1 if payload.is_enabled else 0, timestamp, quote_id),
+        )
+        row = conn.execute("SELECT * FROM homepage_quote WHERE id = ?", (quote_id,)).fetchone()
+    return homepage_quote_response(row)
+
+
+def delete_homepage_quote(quote_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM homepage_quote WHERE id = ?", (quote_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="文案不存在")
+        conn.execute("DELETE FROM homepage_quote WHERE id = ?", (quote_id,))
+    return {"message": "文案已删除"}
+
+
 class LoginRequest(BaseModel):
     password: str
     role: str = "admin"
@@ -1368,6 +1711,23 @@ class SeasonPlanRequest(BaseModel):
     plans: list[SeasonPlanItem]
 
 
+class HomepageAssetUpdate(BaseModel):
+    alt: str = ""
+    display_order: int = 0
+    is_enabled: bool = True
+
+
+class HomepageQuoteCreate(BaseModel):
+    text: str
+    source: str = ""
+    display_order: int = 0
+    is_enabled: bool = True
+
+
+class HomepageQuoteUpdate(HomepageQuoteCreate):
+    pass
+
+
 class RowIdsRequest(BaseModel):
     row_ids: list[str]
     note: str = ""
@@ -1412,6 +1772,71 @@ app.add_middleware(
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "time": now_iso()}
+
+
+@app.get("/api/homepage")
+def homepage_content() -> dict[str, Any]:
+    return get_homepage_content(include_disabled=False)
+
+
+@app.get("/api/site-media/{filename}")
+def get_site_media(filename: str) -> FileResponse:
+    path = (SITE_MEDIA_DIR / filename).resolve()
+    if not path.is_file() or not path.is_relative_to(SITE_MEDIA_DIR.resolve()):
+        raise HTTPException(status_code=404, detail="媒体文件不存在")
+    return FileResponse(path)
+
+
+@app.get("/api/admin/homepage")
+def admin_homepage_content(_: str = Depends(require_admin)) -> dict[str, Any]:
+    return get_homepage_content(include_disabled=True)
+
+
+@app.post("/api/admin/homepage/assets")
+async def upload_homepage_asset(
+    kind: str = Form(...),
+    alt: str = Form(""),
+    display_order: int = Form(0),
+    file: UploadFile = File(...),
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return await save_homepage_upload(kind, file, alt, display_order)
+
+
+@app.put("/api/admin/homepage/assets/{asset_id}")
+def update_homepage_asset_route(
+    asset_id: str,
+    payload: HomepageAssetUpdate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return update_homepage_asset(asset_id, payload)
+
+
+@app.delete("/api/admin/homepage/assets/{asset_id}")
+def delete_homepage_asset_route(asset_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    return delete_homepage_asset(asset_id)
+
+
+@app.post("/api/admin/homepage/quotes")
+def create_homepage_quote_route(
+    payload: HomepageQuoteCreate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return create_homepage_quote(payload)
+
+
+@app.put("/api/admin/homepage/quotes/{quote_id}")
+def update_homepage_quote_route(
+    quote_id: str,
+    payload: HomepageQuoteUpdate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return update_homepage_quote(quote_id, payload)
+
+
+@app.delete("/api/admin/homepage/quotes/{quote_id}")
+def delete_homepage_quote_route(quote_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    return delete_homepage_quote(quote_id)
 
 
 @app.post("/api/site-accounts/register")

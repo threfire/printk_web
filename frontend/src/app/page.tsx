@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HomeCarousel } from "@/components/HomeCarousel";
+import { API_BASE, type HomepageContentData } from "@/lib/api";
 
 const featureCards = [
   {
@@ -118,14 +119,78 @@ const carouselQuotes = [
   },
 ];
 
-export default function Home() {
+const fallbackHomepage: HomepageContentData = {
+  video: {
+    id: "fallback-video",
+    kind: "video",
+    url: "/season-promo.mp4",
+    original_filename: "欢送老登之夜.mp4",
+    mime_type: "video/mp4",
+    size_bytes: 6233758,
+    alt: "赛季宣传视频",
+    display_order: 1,
+    is_enabled: true,
+    created_at: "",
+    updated_at: "",
+  },
+  videos: [],
+  images: carouselImages.map((image, index) => ({
+    id: `fallback-image-${index + 1}`,
+    kind: "image",
+    url: image.src,
+    original_filename: image.src.split("/").pop() ?? "",
+    mime_type: "",
+    size_bytes: 0,
+    alt: image.alt,
+    display_order: index + 1,
+    is_enabled: true,
+    created_at: "",
+    updated_at: "",
+  })),
+  quotes: carouselQuotes.map((quote, index) => ({
+    id: `fallback-quote-${index + 1}`,
+    text: quote.text,
+    source: quote.source,
+    display_order: index + 1,
+    is_enabled: true,
+    created_at: "",
+    updated_at: "",
+  })),
+};
+
+async function fetchHomepageContent() {
+  try {
+    const response = await fetch(`${API_BASE}/api/homepage`, { cache: "no-store" });
+    if (!response.ok) {
+      return fallbackHomepage;
+    }
+    return (await response.json()) as HomepageContentData;
+  } catch {
+    return fallbackHomepage;
+  }
+}
+
+export default async function Home() {
+  const homepage = await fetchHomepageContent();
+  const video = homepage.video ?? fallbackHomepage.video;
+  const carouselImageItems = (homepage.images.length ? homepage.images : fallbackHomepage.images).map((image) => ({
+    src: image.url,
+    alt: image.alt || image.original_filename || "战队图片展示",
+  }));
+  const quoteItems = (homepage.quotes.length ? homepage.quotes : fallbackHomepage.quotes).map((quote) => ({
+    text: quote.text,
+    source: quote.source,
+  }));
+
   return (
     <div className="page">
-      <section className="season-video" aria-label="赛季宣传视频">
-        <video className="season-video-player" controls muted playsInline preload="metadata">
-          <source src="/season-promo.mp4" type="video/mp4" />
-        </video>
-      </section>
+      {video ? (
+        <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
+          <video className="season-video-player" controls playsInline preload="metadata">
+            <source src={video.url} type={video.mime_type || "video/mp4"} />
+          </video>
+        </section>
+      ) : null}
 
       <section className="hero">
         <div className="hero-copy">
@@ -172,7 +237,7 @@ export default function Home() {
         </div>
       </section>
 
-      <HomeCarousel images={carouselImages} quotes={carouselQuotes} />
+      <HomeCarousel images={carouselImageItems} quotes={quoteItems} />
 
       <section className="section">
         <div className="section-heading">

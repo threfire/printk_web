@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { API_BASE, DashboardData, type ForumManagementData } from "@/lib/api";
+import { API_BASE, DashboardData, type ForumManagementData, type HomepageContentData } from "@/lib/api";
 import {
   departmentOptions,
   genderOptions,
@@ -70,6 +71,19 @@ async function fetchForumManagement(token: string): Promise<ForumManagementData 
   return response.json() as Promise<ForumManagementData>;
 }
 
+async function fetchHomepageManagement(token: string): Promise<HomepageContentData | null> {
+  const response = await fetch(`${API_BASE}/api/admin/homepage`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json() as Promise<HomepageContentData>;
+}
+
 function param(params: Record<string, string | string[] | undefined>, key: string) {
   return firstParam(params[key]) ?? "";
 }
@@ -112,6 +126,13 @@ function formatDateTime(value: unknown) {
   });
 }
 
+function formatFileSize(value: number) {
+  if (!value) {
+    return "-";
+  }
+  return `${(value / 1024 / 1024).toFixed(2)} MB`;
+}
+
 function forumStatusText(value: string) {
   const labels: Record<string, string> = {
     pending: "待审核",
@@ -136,14 +157,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const dashboard = token ? await fetchDashboard(token) : null;
   const accountData = token ? await fetchAccounts(token, accountFilters) : null;
   const forumData = token ? await fetchForumManagement(token) : null;
+  const homepageData = token ? await fetchHomepageManagement(token) : null;
   const ok = firstParam(params.ok);
   const error = firstParam(params.error);
 
-  if (token && (!dashboard || !accountData || !forumData)) {
+  if (token && (!dashboard || !accountData || !forumData || !homepageData)) {
     redirect("/api/admin/logout");
   }
 
-  if (!dashboard || !accountData || !forumData) {
+  if (!dashboard || !accountData || !forumData || !homepageData) {
     return (
       <div className="page">
         <section className="section-hero">
@@ -204,6 +226,255 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <div className="stat">
             <strong>{dashboard.counts.out_stock}</strong>出库明细
           </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <span className="eyebrow">HOME</span>
+          <h2>首页内容管理</h2>
+        </div>
+
+        <div className="admin-content-grid">
+          <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data">
+            <h3>上传赛季宣传视频</h3>
+            <input name="kind" type="hidden" value="video" />
+            <div className="field">
+              <label htmlFor="home-video-file">视频文件</label>
+              <input id="home-video-file" name="file" type="file" accept="video/mp4,video/webm,video/quicktime" required />
+            </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="home-video-alt">视频说明</label>
+                <input id="home-video-alt" name="alt" defaultValue="赛季宣传视频" />
+              </div>
+              <div className="field">
+                <label htmlFor="home-video-order">排序</label>
+                <input id="home-video-order" name="display_order" type="number" min="0" max="9999" defaultValue="1" />
+              </div>
+            </div>
+            <button className="button" type="submit">
+              上传并启用视频
+            </button>
+          </form>
+
+          <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data">
+            <h3>上传轮播图片</h3>
+            <input name="kind" type="hidden" value="image" />
+            <div className="field">
+              <label htmlFor="home-image-file">图片文件</label>
+              <input id="home-image-file" name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required />
+            </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="home-image-alt">图片说明</label>
+                <input id="home-image-alt" name="alt" placeholder="用于无障碍说明" />
+              </div>
+              <div className="field">
+                <label htmlFor="home-image-order">排序</label>
+                <input id="home-image-order" name="display_order" type="number" min="0" max="9999" defaultValue="20" />
+              </div>
+            </div>
+            <button className="button" type="submit">
+              上传图片
+            </button>
+          </form>
+
+          <form className="form admin-content-form" action="/api/admin/homepage/quotes" method="post">
+            <h3>新增轮播文案</h3>
+            <div className="field">
+              <label htmlFor="home-quote-text">文案</label>
+              <textarea id="home-quote-text" name="text" rows={3} maxLength={120} required />
+            </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="home-quote-source">来源</label>
+                <input id="home-quote-source" name="source" maxLength={80} />
+              </div>
+              <div className="field">
+                <label htmlFor="home-quote-order">排序</label>
+                <input id="home-quote-order" name="display_order" type="number" min="0" max="9999" defaultValue="20" />
+              </div>
+            </div>
+            <label className="account-switch">
+              <input name="is_enabled" type="checkbox" defaultChecked value="true" />
+              启用
+            </label>
+            <button className="button" type="submit">
+              新建文案
+            </button>
+          </form>
+        </div>
+
+        <div className="section-heading admin-subheading">
+          <span className="eyebrow">VIDEOS</span>
+          <h3>视频列表</h3>
+        </div>
+        <div className="table-wrap">
+          <table className="admin-home-table">
+            <thead>
+              <tr>
+                <th>文件</th>
+                <th>说明</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {homepageData.videos.map((asset) => {
+                const formId = `home-video-${asset.id}`;
+                return (
+                  <tr key={asset.id}>
+                    <td>
+                      <strong>{asset.original_filename || asset.url}</strong>
+                      <div>{formatFileSize(asset.size_bytes)}</div>
+                      <div>{formatDateTime(asset.updated_at)}</div>
+                      <form id={formId} action={`/api/admin/homepage/assets/${encodeURIComponent(asset.id)}`} method="post" />
+                    </td>
+                    <td>
+                      <input form={formId} name="alt" defaultValue={asset.alt} />
+                    </td>
+                    <td>
+                      <input form={formId} name="display_order" type="number" min="0" max="9999" defaultValue={asset.display_order} />
+                    </td>
+                    <td>
+                      <label className="account-switch">
+                        <input form={formId} name="is_enabled" type="checkbox" defaultChecked={asset.is_enabled} value="true" />
+                        启用
+                      </label>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button className="ghost-button" form={formId} type="submit">
+                          保存
+                        </button>
+                        <form action={`/api/admin/homepage/assets/${encodeURIComponent(asset.id)}`} method="post">
+                          <input name="intent" type="hidden" value="delete" />
+                          <button className="ghost-button" type="submit">
+                            删除
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="section-heading admin-subheading">
+          <span className="eyebrow">QUOTES</span>
+          <h3>文案列表</h3>
+        </div>
+        <div className="table-wrap">
+          <table className="admin-home-table">
+            <thead>
+              <tr>
+                <th>文案</th>
+                <th>来源</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {homepageData.quotes.map((quote) => {
+                const formId = `home-quote-${quote.id}`;
+                return (
+                  <tr key={quote.id}>
+                    <td>
+                      <textarea form={formId} name="text" defaultValue={quote.text} rows={3} maxLength={120} />
+                      <form id={formId} action={`/api/admin/homepage/quotes/${encodeURIComponent(quote.id)}`} method="post" />
+                    </td>
+                    <td>
+                      <input form={formId} name="source" defaultValue={quote.source} maxLength={80} />
+                    </td>
+                    <td>
+                      <input form={formId} name="display_order" type="number" min="0" max="9999" defaultValue={quote.display_order} />
+                    </td>
+                    <td>
+                      <label className="account-switch">
+                        <input form={formId} name="is_enabled" type="checkbox" defaultChecked={quote.is_enabled} value="true" />
+                        启用
+                      </label>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button className="ghost-button" form={formId} type="submit">
+                          保存
+                        </button>
+                        <form action={`/api/admin/homepage/quotes/${encodeURIComponent(quote.id)}`} method="post">
+                          <input name="intent" type="hidden" value="delete" />
+                          <button className="ghost-button" type="submit">
+                            删除
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="section-heading admin-subheading">
+          <span className="eyebrow">IMAGES</span>
+          <h3>图片列表</h3>
+        </div>
+        <div className="table-wrap">
+          <table className="admin-home-table">
+            <thead>
+              <tr>
+                <th>预览</th>
+                <th>说明</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {homepageData.images.map((asset) => {
+                const formId = `home-image-${asset.id}`;
+                return (
+                  <tr key={asset.id}>
+                    <td>
+                      <Image className="admin-home-thumb" src={asset.url} alt={asset.alt || "轮播图片"} width={160} height={90} />
+                      <div>{asset.original_filename || asset.url}</div>
+                      <form id={formId} action={`/api/admin/homepage/assets/${encodeURIComponent(asset.id)}`} method="post" />
+                    </td>
+                    <td>
+                      <input form={formId} name="alt" defaultValue={asset.alt} />
+                    </td>
+                    <td>
+                      <input form={formId} name="display_order" type="number" min="0" max="9999" defaultValue={asset.display_order} />
+                    </td>
+                    <td>
+                      <label className="account-switch">
+                        <input form={formId} name="is_enabled" type="checkbox" defaultChecked={asset.is_enabled} value="true" />
+                        启用
+                      </label>
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button className="ghost-button" form={formId} type="submit">
+                          保存
+                        </button>
+                        <form action={`/api/admin/homepage/assets/${encodeURIComponent(asset.id)}`} method="post">
+                          <input name="intent" type="hidden" value="delete" />
+                          <button className="ghost-button" type="submit">
+                            删除
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
 
