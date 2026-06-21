@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { AccountDialog, AccountModals } from "@/components/AccountDialog";
 import { ThemeRoot, ThemeSwitcher } from "@/components/ThemeRoot";
+import { robotRoles } from "@/lib/robots";
 
 const navItems = [
   { href: "/", label: "首页" },
@@ -10,16 +11,6 @@ const navItems = [
   { href: "/invoices", label: "发票管理" },
   { href: "/image2", label: "图片工具" },
   { href: "/admin", label: "管理后台" },
-];
-
-const robotNavItems = [
-  { href: "/robots#hero", label: "英雄" },
-  { href: "/robots#infantry", label: "步兵" },
-  { href: "/robots#engineer", label: "工程" },
-  { href: "/robots#sentry", label: "哨兵" },
-  { href: "/robots#drone", label: "无人机" },
-  { href: "/robots#radar", label: "雷达" },
-  { href: "/robots#dart", label: "飞镖" },
 ];
 
 const memberNavItems = [
@@ -51,9 +42,9 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
               <summary>兵种</summary>
               <div className="nav-dropdown-menu">
                 <Link href="/robots">兵种总览</Link>
-                {robotNavItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    {item.label}
+                {robotRoles.map((robot) => (
+                  <Link key={robot.id} href={`/robots/${robot.id}`}>
+                    {robot.shortName}
                   </Link>
                 ))}
               </div>
