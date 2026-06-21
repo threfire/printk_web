@@ -29,7 +29,7 @@ const featureCards = [
   },
 ];
 
-const robots = ["英雄机器人", "步兵机器人", "工程机器人"];
+const robots = ["英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种", "无人机兵种", "雷达兵种", "飞镖兵种"];
 const groups = ["电控组", "机械组", "算法组", "视觉组", "运营组"];
 
 const carouselImages = [
@@ -95,7 +95,7 @@ export default function Home() {
           <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
           <h1>战队门户与赛季资产中心</h1>
           <p>
-            PRINTK 门户把发票管理、赛季规划、机器人展示和队员风采放在同一入口，成员能快速进入业务系统，管理人员能持续维护战队数据。
+            PRINTK 门户把发票管理、赛季规划、兵种展示和队员风采放在同一入口，成员能快速进入业务系统，管理人员能持续维护战队数据。
           </p>
           <div className="hero-actions">
             <Link className="button" href="/invoices">
@@ -124,8 +124,8 @@ export default function Home() {
               <span>核心组别</span>
             </div>
             <div>
-              <strong>3</strong>
-              <span>机器人方向</span>
+              <strong>7</strong>
+              <span>兵种方向</span>
             </div>
             <div>
               <strong>2026</strong>
@@ -156,14 +156,14 @@ export default function Home() {
       <section className="section split-section">
         <div className="section-heading">
           <span className="eyebrow">赛季资产</span>
-          <h2>机器人展示</h2>
+          <h2>兵种展示</h2>
         </div>
         <div className="card-grid">
           {robots.map((robot, index) => (
             <article className="card" key={robot}>
               <span className="badge">2026 赛季 #{index + 1}</span>
               <h3>{robot}</h3>
-              <p>资料按赛季归档，展示定位、负责组别、当前重点和交付物。</p>
+              <p>资料按赛季归档，展示兵种定位、负责组别、当前重点和交付物。</p>
             </article>
           ))}
         </div>
