@@ -12,22 +12,34 @@ export async function POST(request: Request) {
     redirect(feedbackPath("/forum", "error", "请先登录后再发布帖子"));
   }
 
-  const response = await fetch(`${API_BASE}/api/forum/posts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      title: String(form.get("title") ?? ""),
-      content: String(form.get("content") ?? ""),
-      author_account: account,
-    }),
-  });
+  let targetPath = "/forum";
+  let feedbackKey: "ok" | "error" = "error";
+  let feedbackMessage = "论坛服务暂时不可用，请稍后重试";
 
-  if (!response.ok) {
-    redirect(feedbackPath("/forum", "error", await responseError(response, "发布帖子失败")));
+  try {
+    const response = await fetch(`${API_BASE}/api/forum/posts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: String(form.get("title") ?? ""),
+        content: String(form.get("content") ?? ""),
+        author_account: account,
+      }),
+    });
+
+    if (!response.ok) {
+      feedbackMessage = await responseError(response, "发布帖子失败");
+    } else {
+      const result = (await response.json()) as { id: string };
+      targetPath = `/forum/${result.id}`;
+      feedbackKey = "ok";
+      feedbackMessage = "帖子已发布";
+    }
+  } catch {
+    feedbackMessage = "论坛服务暂时不可用，请稍后重试";
   }
 
-  const result = (await response.json()) as { id: string };
-  redirect(feedbackPath(`/forum/${result.id}`, "ok", "帖子已发布"));
+  redirect(feedbackPath(targetPath, feedbackKey, feedbackMessage));
 }

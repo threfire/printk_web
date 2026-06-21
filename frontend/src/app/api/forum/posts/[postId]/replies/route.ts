@@ -20,20 +20,30 @@ export async function POST(request: Request, { params }: ReplyRouteContext) {
     redirect(feedbackPath(postPath, "error", "请先登录后再回复"));
   }
 
-  const response = await fetch(`${API_BASE}/api/forum/posts/${encodeURIComponent(postId)}/replies`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: String(form.get("content") ?? ""),
-      author_account: account,
-    }),
-  });
+  let feedbackKey: "ok" | "error" = "error";
+  let feedbackMessage = "论坛服务暂时不可用，请稍后重试";
 
-  if (!response.ok) {
-    redirect(feedbackPath(postPath, "error", await responseError(response, "发布回复失败")));
+  try {
+    const response = await fetch(`${API_BASE}/api/forum/posts/${encodeURIComponent(postId)}/replies`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content: String(form.get("content") ?? ""),
+        author_account: account,
+      }),
+    });
+
+    if (!response.ok) {
+      feedbackMessage = await responseError(response, "发布回复失败");
+    } else {
+      feedbackKey = "ok";
+      feedbackMessage = "回复已发布";
+    }
+  } catch {
+    feedbackMessage = "论坛服务暂时不可用，请稍后重试";
   }
 
-  redirect(feedbackPath(postPath, "ok", "回复已发布"));
+  redirect(feedbackPath(postPath, feedbackKey, feedbackMessage));
 }

@@ -7,15 +7,29 @@ type ForumPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-async function fetchPosts(): Promise<ForumPostListData> {
+type ForumPostsState = {
+  data: ForumPostListData;
+  loadError: string;
+};
+
+async function fetchPosts(): Promise<ForumPostsState> {
   try {
     const response = await fetch(`${API_BASE}/api/forum/posts`, { cache: "no-store" });
     if (!response.ok) {
-      return { posts: [] };
+      return {
+        data: { posts: [] },
+        loadError: "论坛数据暂时不可用，请稍后刷新重试。",
+      };
     }
-    return response.json() as Promise<ForumPostListData>;
+    return {
+      data: (await response.json()) as ForumPostListData,
+      loadError: "",
+    };
   } catch {
-    return { posts: [] };
+    return {
+      data: { posts: [] },
+      loadError: "论坛服务连接失败，请稍后刷新重试。",
+    };
   }
 }
 
@@ -25,7 +39,7 @@ function formatTime(value: string) {
 
 export default async function ForumPage({ searchParams }: ForumPageProps) {
   const emptyQuery: Record<string, string | string[] | undefined> = {};
-  const [data, cookieStore, query] = await Promise.all([
+  const [forumState, cookieStore, query] = await Promise.all([
     fetchPosts(),
     cookies(),
     searchParams ?? Promise.resolve(emptyQuery),
@@ -42,6 +56,7 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
         <p>用于沉淀调试经验、赛季问题、物资讨论和训练复盘，登录后可发帖与回复。</p>
         {ok ? <div className="message">{ok}</div> : null}
         {error ? <div className="message error">{error}</div> : null}
+        {forumState.loadError ? <div className="message error">{forumState.loadError}</div> : null}
       </section>
 
       <section className="section forum-layout">
@@ -50,9 +65,9 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
             <span className="eyebrow">THREADS</span>
             <h2>最新帖子</h2>
           </div>
-          {data.posts.length > 0 ? (
+          {forumState.data.posts.length > 0 ? (
             <div className="forum-thread-list">
-              {data.posts.map((post) => (
+              {forumState.data.posts.map((post) => (
                 <Link className="forum-thread" href={`/forum/${post.id}`} key={post.id}>
                   <span className="badge">{post.reply_count} 条回复</span>
                   <h3>{post.title}</h3>
@@ -63,6 +78,8 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                 </Link>
               ))}
             </div>
+          ) : forumState.loadError ? (
+            <div className="message error">论坛列表暂未加载成功，恢复后可继续浏览帖子。</div>
           ) : (
             <div className="message">当前还没有帖子，登录后可以发布第一条讨论。</div>
           )}
@@ -77,11 +94,25 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
             <form className="form" action="/forum/posts" method="post">
               <div className="field">
                 <label htmlFor="forum-title">标题</label>
-                <input id="forum-title" name="title" placeholder="例如：英雄机器人底盘调试记录" required minLength={2} maxLength={80} />
+                <input
+                  id="forum-title"
+                  name="title"
+                  placeholder="例如：英雄机器人底盘调试记录"
+                  required
+                  minLength={2}
+                  maxLength={80}
+                />
               </div>
               <div className="field">
                 <label htmlFor="forum-content">内容</label>
-                <textarea id="forum-content" name="content" placeholder="写下问题、结论、复盘或协作需求" required rows={8} maxLength={5000} />
+                <textarea
+                  id="forum-content"
+                  name="content"
+                  placeholder="写下问题、结论、复盘或协作需求"
+                  required
+                  rows={8}
+                  maxLength={5000}
+                />
               </div>
               <button className="button" type="submit">
                 发布帖子
@@ -89,7 +120,11 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
             </form>
           ) : (
             <div className="message error">
-              请先<Link className="text-button" href="/#account-login">登录账号</Link>后发布帖子。
+              请先
+              <Link className="text-button" href="/#account-login">
+                登录账号
+              </Link>
+              后发布帖子。
             </div>
           )}
         </aside>
