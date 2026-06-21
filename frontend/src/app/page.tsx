@@ -5,6 +5,14 @@ import { API_BASE, type HomepageContentData } from "@/lib/api";
 
 const robots = ["英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种", "无人机兵种", "雷达兵种", "飞镖兵种"];
 const groups = ["电控组", "机械组", "算法组", "视觉组", "运营组"];
+const awardPlaceholders = [
+  { title: "RoboMaster 赛事奖项", meta: "奖状图片占位" },
+  { title: "赛季工程成果", meta: "奖杯图片占位" },
+  { title: "校级竞赛荣誉", meta: "证书图片占位" },
+  { title: "技术创新成果", meta: "奖项图片占位" },
+  { title: "团队建设荣誉", meta: "合影图片占位" },
+  { title: "年度贡献奖项", meta: "荣誉图片占位" },
+];
 
 const carouselImages = [
   { src: "/home-carousel/team-01.jpeg", alt: "PRINTK 成员在实验室演示康复机器人设备" },
@@ -173,6 +181,49 @@ export default async function Home() {
               <p>展示组别职责、负责重点和可沉淀资料，方便成员快速找到协作入口。</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="home-awards" aria-labelledby="home-awards-title">
+        <div className="home-awards-heading">
+          <span className="eyebrow">团队成果</span>
+          <h2 id="home-awards-title">奖项与荣誉展示</h2>
+          <p>这里会轮播展示战队历年获奖奖状、奖杯和成果图片，先保留占位，后续可直接替换为真实图片。</p>
+        </div>
+        <div className="home-awards-carousel" aria-label="奖项图片横向轮播占位">
+          <div className="home-awards-track">
+            {[...awardPlaceholders, ...awardPlaceholders].map((award, index) => (
+              <article className="home-award-card" key={`${award.title}-${index}`}>
+                <div className="home-award-media" aria-hidden="true">
+                  <span>AWARD</span>
+                </div>
+                <div>
+                  <h3>{award.title}</h3>
+                  <p>{award.meta}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="home-recruitment" aria-labelledby="home-recruitment-title">
+        <div className="home-recruitment-copy">
+          <span className="eyebrow">2028 赛季招新</span>
+          <h2 id="home-recruitment-title">加入 PRINTK，把热爱做成能上场的机器人</h2>
+          <p>
+            欢迎对机器人、工程实践和赛事运营感兴趣的同学加入招新群。机械、电控、算法、视觉、运营方向都会在群内发布介绍、训练安排和报名信息。
+          </p>
+          <div className="home-recruitment-tags" aria-label="招新方向">
+            <span>机械结构</span>
+            <span>电控开发</span>
+            <span>算法视觉</span>
+            <span>运营宣传</span>
+          </div>
+        </div>
+        <div className="home-recruitment-qr">
+          <Image src="/recruitment-qr.png" alt="PRINTK 2028 赛季招新群二维码" width={820} height={820} />
+          <p>扫码加入 28 赛季招新群</p>
         </div>
       </section>
 

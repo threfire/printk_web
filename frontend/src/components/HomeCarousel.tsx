@@ -274,7 +274,7 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
         <input
           aria-label="给当前图片发送弹幕"
           maxLength={48}
-          placeholder={`给第 ${activeIndex + 1} 张图片留言`}
+          placeholder="请发弹幕留下你想说的话吧 (｡･ω･｡)ﾉ♡"
           value={danmakuDraft}
           onChange={(event) => setDanmakuDraft(event.target.value)}
         />

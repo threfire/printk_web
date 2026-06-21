@@ -219,7 +219,8 @@ button {
 
 .theme-switcher {
   position: fixed;
-  right: clamp(0.75rem, 2vw, 1.25rem);
+  right: auto;
+  left: clamp(0.75rem, 2vw, 1.25rem);
   bottom: clamp(4.8rem, 7vw, 5.35rem);
   z-index: 35;
   display: grid;
@@ -1607,7 +1608,7 @@ p {
 }
 
 .forum-new-post-fab {
-  bottom: clamp(8.45rem, 11vw, 9.35rem);
+  bottom: clamp(0.75rem, 2vw, 1.25rem);
   width: 3.9rem;
   height: 3.9rem;
   font-size: 2.15rem;
@@ -2042,6 +2043,349 @@ th {
   background: color-mix(in srgb, var(--success) 16%, transparent);
 }
 
+.admin-page {
+  display: grid;
+  width: min(1720px, calc(100% - 1.5rem));
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding-top: 1.25rem;
+}
+
+.admin-sidebar,
+.admin-topbar,
+.admin-section {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 5.5rem;
+  display: grid;
+  gap: 1.1rem;
+  padding: 1rem;
+}
+
+.admin-sidebar-brand {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.35rem 0.35rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-sidebar-brand strong {
+  font-size: 1.15rem;
+}
+
+.admin-side-nav {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-side-nav a {
+  border-radius: var(--radius);
+  padding: 0.72rem 0.8rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.admin-side-nav a:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.admin-workspace {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.admin-workspace > *,
+.admin-section {
+  min-width: 0;
+}
+
+.admin-topbar {
+  position: sticky;
+  top: 5.5rem;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.admin-topbar h1 {
+  max-width: none;
+  margin-top: 0.28rem;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.admin-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.admin-feedback {
+  margin: 0;
+}
+
+.admin-section {
+  scroll-margin-top: 7.5rem;
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.admin-section .section-heading {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.admin-section h2 {
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+}
+
+.admin-overview .stats,
+#accounts .stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-page .stat {
+  min-height: 6.6rem;
+  padding: 1rem;
+}
+
+.admin-page .stat strong {
+  margin-bottom: 0.45rem;
+  font-size: clamp(1.75rem, 3vw, 2.55rem);
+}
+
+.admin-page .table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+
+.admin-page table {
+  min-width: 920px;
+}
+
+.admin-page th,
+.admin-page td {
+  vertical-align: top;
+}
+
+.admin-page tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-soft) 58%, transparent);
+}
+
+.admin-page input,
+.admin-page select,
+.admin-page textarea {
+  max-width: 100%;
+}
+
+.admin-page .form {
+  margin-bottom: 1rem;
+}
+
+.admin-page .row-actions {
+  gap: 0.45rem;
+}
+
+.admin-page .row-actions .ghost-button,
+.admin-page td .ghost-button {
+  min-height: 2.2rem;
+  padding: 0.48rem 0.7rem;
+}
+
+.admin-page .admin-content-grid {
+  grid-template-columns: repeat(3, minmax(15rem, 1fr));
+}
+
+.admin-page .admin-content-form {
+  min-height: 100%;
+}
+
+.home-awards {
+  display: grid;
+  gap: 1.15rem;
+  margin-top: 2.4rem;
+}
+
+.home-awards-heading {
+  display: grid;
+  gap: 0.65rem;
+  max-width: 48rem;
+}
+
+.home-awards-heading h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1.12;
+}
+
+.home-awards-heading p {
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 80%, var(--muted));
+  line-height: 1.75;
+}
+
+.home-awards-carousel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--gold) 10%, transparent), transparent 44%),
+    color-mix(in srgb, var(--surface-strong) 74%, transparent);
+}
+
+.home-awards-track {
+  display: flex;
+  width: max-content;
+  gap: 1rem;
+  animation: home-awards-scroll 34s linear infinite;
+}
+
+.home-awards-carousel:hover .home-awards-track {
+  animation-play-state: paused;
+}
+
+.home-award-card {
+  display: grid;
+  gap: 0.75rem;
+  width: clamp(14rem, 22vw, 19rem);
+  flex: 0 0 auto;
+}
+
+.home-award-media {
+  display: grid;
+  min-height: 10.5rem;
+  place-items: center;
+  border: 1px dashed color-mix(in srgb, var(--gold) 54%, var(--line));
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--gold) 18%, transparent), transparent 60%),
+    color-mix(in srgb, var(--surface) 78%, transparent);
+}
+
+.home-award-media span {
+  color: color-mix(in srgb, var(--gold) 76%, var(--text));
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.home-award-card h3,
+.home-award-card p {
+  margin: 0;
+}
+
+.home-award-card h3 {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.home-award-card p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@keyframes home-awards-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+.home-recruitment {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(14rem, 0.58fr);
+  gap: clamp(1.25rem, 4vw, 2.5rem);
+  align-items: center;
+  margin-top: 2.4rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 4vw, 2.4rem);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 48%),
+    linear-gradient(145deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 62%),
+    color-mix(in srgb, var(--surface-strong) 76%, transparent);
+}
+
+.home-recruitment-copy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.home-recruitment-copy h2 {
+  max-width: 15ch;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 1.06;
+}
+
+.home-recruitment-copy p {
+  max-width: 42rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 82%, var(--muted));
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.home-recruitment-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.home-recruitment-tags span {
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
+  border-radius: var(--radius);
+  padding: 0.42rem 0.62rem;
+  background: color-mix(in srgb, var(--accent-soft) 70%, transparent);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.home-recruitment-qr {
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.home-recruitment-qr img {
+  width: min(100%, 17.5rem);
+  height: auto;
+  border-radius: var(--radius);
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+}
+
+.home-recruitment-qr p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .home-thanks {
   display: grid;
   gap: 1.25rem;
@@ -2140,7 +2484,8 @@ th {
   }
 
   .theme-switcher {
-    right: clamp(0.75rem, 2vw, 1.25rem);
+    right: auto;
+    left: clamp(0.75rem, 2vw, 1.25rem);
   }
 
   .header-actions {
@@ -2149,6 +2494,10 @@ th {
   }
 
   .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .home-recruitment {
     grid-template-columns: 1fr;
   }
 
@@ -2161,6 +2510,31 @@ th {
   .forum-layout,
   .image2-workbench {
     grid-template-columns: 1fr;
+  }
+
+  .admin-page {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar,
+  .admin-topbar {
+    position: static;
+  }
+
+  .admin-side-nav {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .admin-side-nav a {
+    flex: 0 0 auto;
+  }
+
+  .admin-overview .stats,
+  #accounts .stats,
+  .admin-page .admin-content-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .account-hero {
@@ -2213,6 +2587,29 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .admin-topbar {
+    display: grid;
+  }
+
+  .admin-topbar-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-section .section-heading {
+    display: grid;
+    align-items: start;
+  }
+
+  .admin-overview .stats,
+  #accounts .stats,
+  .admin-page .admin-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page .stat {
+    min-height: 5.5rem;
+  }
+
   .profile-list div {
     grid-template-columns: 1fr;
     gap: 0.25rem;
@@ -2224,6 +2621,31 @@ th {
 
   .hero-stats {
     grid-template-columns: 1fr;
+  }
+
+  .home-awards-carousel {
+    padding: 0.75rem;
+  }
+
+  .home-award-card {
+    width: min(72vw, 17rem);
+  }
+
+  .home-award-media {
+    min-height: 9rem;
+  }
+
+  .home-recruitment {
+    padding: 1rem;
+  }
+
+  .home-recruitment-copy h2 {
+    max-width: 100%;
+    font-size: clamp(1.75rem, 10vw, 2.45rem);
+  }
+
+  .home-recruitment-qr img {
+    width: min(100%, 15.5rem);
   }
 
   .home-footer-main,
@@ -2251,5 +2673,15 @@ th {
   .member-detail-card {
     max-height: calc(100vh - 1rem);
     padding: 0.65rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-awards-track {
+    animation: none;
+  }
+
+  .home-awards-carousel {
+    overflow-x: auto;
   }
 }

@@ -16,6 +16,14 @@ type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
+const adminNavItems = [
+  { href: "#overview", label: "总览" },
+  { href: "#home-content", label: "首页内容" },
+  { href: "#accounts", label: "账号管理" },
+  { href: "#forum", label: "论坛审核" },
+  { href: "#materials", label: "物资审核" },
+];
+
 type AccountManagementData = {
   accounts: SiteAccountProfile[];
   summary: {
@@ -188,27 +196,45 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   }
 
   return (
-    <div className="page">
-      <section className="section-hero">
-        <span className="eyebrow">ADMIN</span>
-        <h1>管理后台</h1>
-        {ok ? <div className="message">{ok}</div> : null}
-        {error ? <div className="message error">{error}</div> : null}
-        <div className="hero-actions">
-          <form action="/api/admin/review/run" method="post">
-            <button className="button" type="submit">
-              执行本地审核扫描
-            </button>
-          </form>
-          <form action="/api/admin/logout" method="post">
-            <button className="ghost-button" type="submit">
-              退出登录
-            </button>
-          </form>
+    <div className="page admin-page">
+      <aside className="admin-sidebar" aria-label="管理后台导航">
+        <div className="admin-sidebar-brand">
+          <span className="eyebrow">ADMIN</span>
+          <strong>管理后台</strong>
         </div>
-      </section>
+        <nav className="admin-side-nav">
+          {adminNavItems.map((item) => (
+            <a href={item.href} key={item.href}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </aside>
 
-      <section className="section">
+      <div className="admin-workspace">
+        <header className="admin-topbar">
+          <div>
+            <span className="eyebrow">CONTROL</span>
+            <h1>管理后台</h1>
+          </div>
+          <div className="admin-topbar-actions">
+            <form action="/api/admin/review/run" method="post">
+              <button className="button" type="submit">
+                执行本地审核扫描
+              </button>
+            </form>
+            <form action="/api/admin/logout" method="post">
+              <button className="ghost-button" type="submit">
+                退出登录
+              </button>
+            </form>
+          </div>
+        </header>
+
+        {ok ? <div className="message admin-feedback">{ok}</div> : null}
+        {error ? <div className="message error admin-feedback">{error}</div> : null}
+
+        <section className="section admin-section admin-overview" id="overview">
         <div className="section-heading">
           <span className="eyebrow">STATUS</span>
           <h2>状态总览</h2>
@@ -229,7 +255,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section" id="home-content">
         <div className="section-heading">
           <span className="eyebrow">HOME</span>
           <h2>首页内容管理</h2>
@@ -478,7 +504,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section" id="accounts">
         <div className="section-heading">
           <span className="eyebrow">ACCOUNTS</span>
           <h2>账号管理</h2>
@@ -649,7 +675,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section" id="forum">
         <div className="section-heading">
           <span className="eyebrow">FORUM</span>
           <h2>论坛管理</h2>
@@ -812,7 +838,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section" id="materials">
         <div className="section-heading">
           <span className="eyebrow">BATCHES</span>
           <h2>待入库批次</h2>
@@ -867,7 +893,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section">
         <div className="section-heading">
           <span className="eyebrow">STOCK</span>
           <h2>库内明细</h2>
@@ -915,7 +941,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section">
         <div className="section-heading">
           <span className="eyebrow">REIMBURSEMENT</span>
           <h2>最近报销批次</h2>
@@ -957,7 +983,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </div>
       </section>
 
-      <section className="section">
+        <section className="section admin-section">
         <div className="section-heading">
           <span className="eyebrow">LOGS</span>
           <h2>处理日志</h2>
@@ -995,7 +1021,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             </tbody>
           </table>
         </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
