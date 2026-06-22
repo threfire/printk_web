@@ -129,6 +129,7 @@ export default async function Home() {
   const homepage = await fetchHomepageContent();
   const video = homepage.video ?? fallbackHomepage.video;
   const carouselImageItems = (homepage.images.length ? homepage.images : fallbackHomepage.images).map((image) => ({
+    imageKey: image.id,
     src: image.url,
     alt: image.alt || image.original_filename || "战队图片展示",
   }));
@@ -277,7 +278,11 @@ export default async function Home() {
         联系我们
       </a>
       <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
-        ★
+        <span className="home-reward-mark" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
       </Link>
       <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
         <a className="home-contact-dismiss" href="#" aria-label="关闭联系我们弹窗" />

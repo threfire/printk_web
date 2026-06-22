@@ -368,6 +368,7 @@ def init_db() -> None:
 
             CREATE TABLE IF NOT EXISTS homepage_danmaku (
                 id TEXT PRIMARY KEY,
+                image_key TEXT DEFAULT '',
                 image_src TEXT NOT NULL,
                 author_account TEXT DEFAULT '',
                 author_name TEXT DEFAULT '',
@@ -440,7 +441,7 @@ def init_db() -> None:
         conn.execute(
             """
             CREATE INDEX IF NOT EXISTS idx_homepage_danmaku_image_created
-            ON homepage_danmaku (image_src, created_at_ms)
+            ON homepage_danmaku (image_key, created_at_ms)
             """
         )
         seed_season_plan(conn)
@@ -668,12 +669,21 @@ def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
         for row in conn.execute("PRAGMA table_info(homepage_danmaku)").fetchall()
     }
     column_definitions = {
+        "image_key": "TEXT DEFAULT ''",
         "author_account": "TEXT DEFAULT ''",
         "author_name": "TEXT DEFAULT ''",
     }
     for column, definition in column_definitions.items():
         if column not in existing_columns:
             conn.execute(f"ALTER TABLE homepage_danmaku ADD COLUMN {column} {definition}")
+
+    conn.execute(
+        """
+        UPDATE homepage_danmaku
+        SET image_key = image_src
+        WHERE COALESCE(image_key, '') = ''
+        """
+    )
 
     conn.execute(
         """
@@ -1589,11 +1599,13 @@ def homepage_quote_response(row: sqlite3.Row) -> dict[str, Any]:
 
 
 def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
+    image_key = row["image_key"] if "image_key" in row.keys() else row["image_src"]
     author_name = row["author_name"] if "author_name" in row.keys() else ""
     author_account = row["author_account"] if "author_account" in row.keys() else ""
     account_full_name = row["account_full_name"] if "account_full_name" in row.keys() else ""
     return {
         "id": row["id"],
+        "imageKey": image_key,
         "imageSrc": row["image_src"],
         "authorAccount": author_account,
         "authorName": author_name or account_full_name or author_account,
@@ -1811,8 +1823,13 @@ def normalize_danmaku_image_src(value: str) -> str:
     return image_src
 
 
-def list_homepage_danmaku(image_src: str | None = None) -> dict[str, Any]:
-    if not image_src:
+def normalize_danmaku_image_key(value: str) -> str:
+    return normalize_limited_text(value, "图片标识", 120)
+
+
+def list_homepage_danmaku(image_key: str | None = None) -> dict[str, Any]:
+    normalized_image_key = normalize_danmaku_image_key(image_key or "")
+    if not normalized_image_key:
         return {"messages": []}
 
     with db_connection() as conn:
@@ -1824,16 +1841,19 @@ def list_homepage_danmaku(image_src: str | None = None) -> dict[str, Any]:
             FROM homepage_danmaku AS danmaku
             LEFT JOIN site_account AS account
                 ON account.account = danmaku.author_account
-            WHERE danmaku.image_src = ?
+            WHERE danmaku.image_key = ?
             ORDER BY created_at_ms ASC
             LIMIT 120
             """,
-            (normalize_danmaku_image_src(image_src),),
+            (normalized_image_key,),
         ).fetchall()
     return {"messages": [homepage_danmaku_response(row) for row in rows]}
 
 
 def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
+    image_key = normalize_danmaku_image_key(payload.imageKey)
+    if not image_key:
+        raise HTTPException(status_code=400, detail="图片标识不能为空")
     image_src = normalize_danmaku_image_src(payload.imageSrc)
     text = normalize_limited_text(payload.text, "留言弹幕", 48)
     if not text:
@@ -1856,18 +1876,19 @@ def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
             else:
                 author_name = author_account
         message_count = conn.execute(
-            "SELECT COUNT(*) AS total FROM homepage_danmaku WHERE image_src = ?",
-            (image_src,),
+            "SELECT COUNT(*) AS total FROM homepage_danmaku WHERE image_key = ?",
+            (image_key,),
         ).fetchone()["total"]
         conn.execute(
             """
             INSERT INTO homepage_danmaku (
-                id, image_src, author_account, author_name, text, track, color, created_at_ms, duration, delay, created_at
+                id, image_key, image_src, author_account, author_name, text, track, color, created_at_ms, duration, delay, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 danmaku_id,
+                image_key,
                 image_src,
                 author_account,
                 author_name,
@@ -1980,6 +2001,7 @@ class HomepageQuoteUpdate(HomepageQuoteCreate):
 
 
 class HomepageDanmakuCreate(BaseModel):
+    imageKey: str = ""
     imageSrc: str
     text: str
     authorAccount: str = ""
@@ -2037,8 +2059,8 @@ def homepage_content() -> dict[str, Any]:
 
 
 @app.get("/api/homepage/danmaku")
-def homepage_danmaku(image_src: str | None = Query(default=None)) -> dict[str, Any]:
-    return list_homepage_danmaku(image_src)
+def homepage_danmaku(image_key: str | None = Query(default=None)) -> dict[str, Any]:
+    return list_homepage_danmaku(image_key)
 
 
 @app.post("/api/homepage/danmaku")

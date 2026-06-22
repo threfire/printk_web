@@ -4,6 +4,7 @@ import Image from "next/image";
 import { type FormEvent, startTransition, useEffect, useState } from "react";
 
 type CarouselImage = {
+  imageKey: string;
   src: string;
   alt: string;
 };
@@ -21,6 +22,7 @@ type HomeCarouselProps = {
 
 type DanmakuMessage = {
   id: string;
+  imageKey?: string;
   imageSrc?: string;
   authorAccount?: string;
   authorName?: string;
@@ -34,7 +36,7 @@ type DanmakuMessage = {
 
 type DanmakuStore = Record<string, DanmakuMessage[]>;
 type DanmakuResponse = {
-  messages?: Array<Partial<DanmakuMessage> & { imageSrc?: string }>;
+  messages?: Array<Partial<DanmakuMessage> & { imageKey?: string; imageSrc?: string }>;
 };
 
 const AUTOPLAY_DELAY_MS = 5000;
@@ -77,7 +79,7 @@ function getSlot(index: number, activeIndex: number, direction: 1 | -1, total: n
   return backward < forward ? "hidden-left" : "hidden-right";
 }
 
-function messageList(value: unknown, expectedImageSrc: string): DanmakuMessage[] {
+function messageList(value: unknown, expectedImageKey: string): DanmakuMessage[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -93,11 +95,12 @@ function messageList(value: unknown, expectedImageSrc: string): DanmakuMessage[]
         typeof message.id === "string" &&
         typeof message.text === "string" &&
         message.text.trim().length > 0 &&
-        message.imageSrc === expectedImageSrc
+        message.imageKey === expectedImageKey
       );
     })
     .map((message, index) => ({
       id: message.id,
+      imageKey: message.imageKey,
       imageSrc: message.imageSrc,
       authorAccount: typeof message.authorAccount === "string" ? message.authorAccount : "",
       authorName: typeof message.authorName === "string" ? message.authorName : "",
@@ -110,18 +113,18 @@ function messageList(value: unknown, expectedImageSrc: string): DanmakuMessage[]
     }));
 }
 
-async function fetchDanmakuMessages(imageSrc: string) {
-  if (!imageSrc) {
+async function fetchDanmakuMessages(imageKey: string) {
+  if (!imageKey) {
     return null;
   }
 
-  const response = await fetch(`/api/homepage/danmaku?image_src=${encodeURIComponent(imageSrc)}`, { cache: "no-store" });
+  const response = await fetch(`/api/homepage/danmaku?image_key=${encodeURIComponent(imageKey)}`, { cache: "no-store" });
   if (!response.ok) {
     return null;
   }
 
   const body = (await response.json()) as DanmakuResponse;
-  return messageList(body.messages, imageSrc);
+  return messageList(body.messages, imageKey);
 }
 
 export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCarouselProps) {
@@ -132,7 +135,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
   const [danmakuByImage, setDanmakuByImage] = useState<DanmakuStore>({});
   const [danmakuDraft, setDanmakuDraft] = useState("");
   const activeImage = images[activeIndex];
-  const activeImageSrc = activeImage?.src ?? "";
+  const activeImageKey = activeImage?.imageKey ?? "";
 
   const goNext = () => {
     if (images.length < 2) {
@@ -174,13 +177,13 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
   }, [images.length, paused]);
 
   useEffect(() => {
-    if (!activeImageSrc) {
+    if (!activeImageKey) {
       return undefined;
     }
 
     let active = true;
     const refresh = () => {
-      void fetchDanmakuMessages(activeImageSrc)
+      void fetchDanmakuMessages(activeImageKey)
         .then((messages) => {
           if (!active || !messages) {
             return;
@@ -188,7 +191,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
 
           setDanmakuByImage((current) => ({
             ...current,
-            [activeImageSrc]: messages,
+            [activeImageKey]: messages,
           }));
         })
         .catch(() => null);
@@ -204,14 +207,14 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
       window.clearTimeout(firstTimer);
       window.clearInterval(timer);
     };
-  }, [activeImageSrc]);
+  }, [activeImageKey]);
 
   if (images.length === 0) {
     return null;
   }
 
   const activeQuoteIndex = quotes.length ? activeIndex % quotes.length : -1;
-  const activeMessages = danmakuByImage[activeImageSrc] ?? [];
+  const activeMessages = danmakuByImage[activeImageKey] ?? [];
 
   const sendDanmaku = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -228,25 +231,25 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ imageSrc: activeImage.src, text, authorAccount: accountName }),
+        body: JSON.stringify({ imageKey: activeImage.imageKey, imageSrc: activeImage.src, text, authorAccount: accountName }),
       });
       if (!response.ok) {
         return;
       }
       const body = (await response.json()) as { message?: DanmakuMessage };
       const nextMessage = body.message;
-      if (nextMessage?.imageSrc === activeImage.src) {
+      if (nextMessage?.imageKey === activeImage.imageKey) {
         setDanmakuByImage((current) => ({
           ...current,
-          [activeImage.src]: [...(current[activeImage.src] ?? []), nextMessage],
+          [activeImage.imageKey]: [...(current[activeImage.imageKey] ?? []), nextMessage],
         }));
       } else {
-        void fetchDanmakuMessages(activeImage.src)
+        void fetchDanmakuMessages(activeImage.imageKey)
           .then((messages) => {
             if (messages) {
               setDanmakuByImage((current) => ({
                 ...current,
-                [activeImage.src]: messages,
+                [activeImage.imageKey]: messages,
               }));
             }
           })
@@ -318,7 +321,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
                 {activeMessages.map((message) => (
                   <span
                     className="danmaku-item"
-                    key={`${activeImage.src}-${message.id}`}
+                    key={`${activeImage.imageKey}-${message.id}`}
                     style={{
                       top: `${0.9 + message.track * 2.35}rem`,
                       color: message.color,

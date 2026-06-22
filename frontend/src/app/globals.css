@@ -1985,10 +1985,38 @@ p {
 }
 
 .home-reward-fab {
-  bottom: clamp(7.55rem, 10vw, 8.5rem);
+  bottom: clamp(9.35rem, 12vw, 10.35rem);
   width: 3.35rem;
   height: 3.35rem;
-  font-size: 1.65rem;
+}
+
+.home-reward-mark {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 0.34rem);
+  align-items: end;
+  justify-content: center;
+  gap: 0.18rem;
+  width: 1.55rem;
+  height: 1.55rem;
+}
+
+.home-reward-mark span {
+  display: block;
+  width: 100%;
+  border-radius: 999px 999px 0 0;
+  background: currentColor;
+}
+
+.home-reward-mark span:nth-child(1) {
+  height: 0.55rem;
+}
+
+.home-reward-mark span:nth-child(2) {
+  height: 0.95rem;
+}
+
+.home-reward-mark span:nth-child(3) {
+  height: 1.35rem;
 }
 
 .forum-new-post-fab:hover,

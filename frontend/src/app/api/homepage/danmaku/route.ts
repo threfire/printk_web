@@ -11,8 +11,8 @@ async function responseError(response: Response, fallback: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const imageSrc = searchParams.get("image_src") ?? "";
-  const params = imageSrc ? `?image_src=${encodeURIComponent(imageSrc)}` : "";
+  const imageKey = searchParams.get("image_key") ?? "";
+  const params = imageKey ? `?image_key=${encodeURIComponent(imageKey)}` : "";
   const response = await fetch(`${API_BASE}/api/homepage/danmaku${params}`, { cache: "no-store" });
 
   if (!response.ok) {
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      imageKey: String(body.imageKey ?? ""),
       imageSrc: String(body.imageSrc ?? ""),
       text: String(body.text ?? ""),
       authorAccount: String(body.authorAccount ?? ""),
