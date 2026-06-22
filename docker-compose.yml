@@ -9,6 +9,7 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-wrprintk}
       GROUP_LEADER_PASSWORD: ${GROUP_LEADER_PASSWORD:-group123}
       SECRET_KEY: ${SECRET_KEY:-material-agent-secret}
+      STORAGE_DIR: /app/storage
     ports:
       - "8000:8000"
     volumes:

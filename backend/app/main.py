@@ -26,7 +26,7 @@ from pydantic import BaseModel
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-STORAGE_DIR = PROJECT_ROOT / "storage"
+STORAGE_DIR = Path(os.environ.get("STORAGE_DIR", PROJECT_ROOT / "storage")).resolve()
 DB_PATH = STORAGE_DIR / "system.db"
 
 UNREGISTERED_DIR = STORAGE_DIR / "invoices" / "unregistered"
