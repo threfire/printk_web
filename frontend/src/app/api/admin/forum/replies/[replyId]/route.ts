@@ -1,22 +1,22 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { API_BASE } from "@/lib/api";
-import { feedbackPath, responseError } from "@/lib/admin-feedback";
+import { adminReturnPath, feedbackPath, responseError } from "@/lib/admin-feedback";
 
 type ReplyRouteContext = {
   params: Promise<{ replyId: string }>;
 };
 
 export async function POST(request: Request, { params }: ReplyRouteContext) {
+  const adminPath = adminReturnPath(request, "/admin/forum");
   const [{ replyId }, form, cookieStore] = await Promise.all([
     params,
     request.formData(),
     cookies(),
-  ]);
+  ]);  
   const token = cookieStore.get("printk-admin-token")?.value ?? "";
-  const adminPath = "/admin";
   if (!token) {
-    redirect(feedbackPath("/admin", "error", "请先登录管理员后台"));
+    redirect(feedbackPath(adminPath, "error", "请先登录管理员后台"));
   }
 
   const intent = String(form.get("intent") ?? "moderate");

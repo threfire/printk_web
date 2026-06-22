@@ -5,6 +5,7 @@ import { feedbackPath, responseError } from "@/lib/admin-feedback";
 
 export async function POST(request: Request) {
   const form = await request.formData();
+  const currentPath = String(form.get("return_to") ?? "/admin");
   const password = String(form.get("password") ?? "");
   const response = await fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
   });
 
   if (!response.ok) {
-    redirect(feedbackPath("/admin", "error", await responseError(response, "管理员登录失败")));
+    redirect(feedbackPath(currentPath, "error", await responseError(response, "管理员登录失败")));
   }
 
   const result = (await response.json()) as { token: string };
@@ -25,5 +26,5 @@ export async function POST(request: Request) {
     sameSite: "lax",
     path: "/",
   });
-  redirect(feedbackPath("/admin", "ok", "管理员登录成功"));
+  redirect(feedbackPath(currentPath, "ok", "管理员登录成功"));
 }

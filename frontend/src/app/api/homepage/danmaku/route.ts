@@ -35,6 +35,7 @@ export async function POST(request: Request) {
     body: JSON.stringify({
       imageSrc: String(body.imageSrc ?? ""),
       text: String(body.text ?? ""),
+      authorAccount: String(body.authorAccount ?? ""),
     }),
   });
 

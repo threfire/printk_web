@@ -16,10 +16,13 @@ type CarouselQuote = {
 type HomeCarouselProps = {
   images: CarouselImage[];
   quotes?: CarouselQuote[];
+  accountName?: string;
 };
 
 type DanmakuMessage = {
   id: string;
+  authorAccount?: string;
+  authorName?: string;
   text: string;
   track: number;
   color: string;
@@ -89,6 +92,8 @@ function messageList(value: unknown): DanmakuMessage[] {
     })
     .map((message, index) => ({
       id: message.id,
+      authorAccount: typeof message.authorAccount === "string" ? message.authorAccount : "",
+      authorName: typeof message.authorName === "string" ? message.authorName : "",
       text: message.text.slice(0, 48),
       track: Number.isFinite(message.track) ? Math.abs(Math.trunc(message.track)) % DANMAKU_TRACKS : index % DANMAKU_TRACKS,
       color: typeof message.color === "string" ? message.color : DANMAKU_COLORS[index % DANMAKU_COLORS.length],
@@ -112,7 +117,7 @@ async function fetchDanmakuMessages(imageSrc: string) {
   return messageList(body.messages);
 }
 
-export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
+export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [paused, setPaused] = useState(false);
@@ -216,7 +221,7 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ imageSrc: activeImage.src, text }),
+        body: JSON.stringify({ imageSrc: activeImage.src, text, authorAccount: accountName }),
       });
       if (!response.ok) {
         return;
@@ -314,7 +319,7 @@ export function HomeCarousel({ images, quotes = [] }: HomeCarouselProps) {
                       animationDelay: `${message.delay}s`,
                     }}
                   >
-                    {message.text}
+                    {message.authorName ? `${message.authorName}：${message.text}` : message.text}
                   </span>
                 ))}
               </div>

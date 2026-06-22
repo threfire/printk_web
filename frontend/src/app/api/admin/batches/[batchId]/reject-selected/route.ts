@@ -1,12 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { API_BASE } from "@/lib/api";
-import { feedbackPath, responseError } from "@/lib/admin-feedback";
+import { adminReturnPath, feedbackPath, responseError } from "@/lib/admin-feedback";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ batchId: string }> },
 ) {
+  const adminPath = adminReturnPath(request, "/admin/materials");
   const token = (await cookies()).get("printk-admin-token")?.value ?? "";
   const { batchId } = await params;
   const form = await request.formData();
@@ -15,7 +16,7 @@ export async function POST(
   const batchPath = `/admin/batches/${encodeURIComponent(batchId)}`;
 
   if (!token) {
-    redirect(feedbackPath("/admin", "error", "请先登录管理员后台"));
+    redirect(feedbackPath(adminPath, "error", "请先登录管理员后台"));
   }
   if (rowIds.length === 0) {
     redirect(feedbackPath(batchPath, "error", "请选择需要驳回的明细"));

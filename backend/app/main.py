@@ -366,6 +366,8 @@ def init_db() -> None:
             CREATE TABLE IF NOT EXISTS homepage_danmaku (
                 id TEXT PRIMARY KEY,
                 image_src TEXT NOT NULL,
+                author_account TEXT DEFAULT '',
+                author_name TEXT DEFAULT '',
                 text TEXT NOT NULL,
                 track INTEGER NOT NULL,
                 color TEXT NOT NULL,
@@ -387,6 +389,7 @@ def init_db() -> None:
             """
         )
         ensure_site_account_profile_columns(conn)
+        ensure_homepage_danmaku_columns(conn)
         ensure_forum_moderation_columns(conn)
         conn.execute(
             """
@@ -612,6 +615,33 @@ def ensure_forum_moderation_columns(conn: sqlite3.Connection) -> None:
     for column, definition in reply_definitions.items():
         if column not in reply_columns:
             conn.execute(f"ALTER TABLE forum_reply ADD COLUMN {column} {definition}")
+
+
+def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
+    existing_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(homepage_danmaku)").fetchall()
+    }
+    column_definitions = {
+        "author_account": "TEXT DEFAULT ''",
+        "author_name": "TEXT DEFAULT ''",
+    }
+    for column, definition in column_definitions.items():
+        if column not in existing_columns:
+            conn.execute(f"ALTER TABLE homepage_danmaku ADD COLUMN {column} {definition}")
+
+    conn.execute(
+        """
+        UPDATE homepage_danmaku
+        SET author_name = COALESCE(
+            NULLIF(author_name, ''),
+            NULLIF((SELECT full_name FROM site_account WHERE site_account.account = homepage_danmaku.author_account), ''),
+            author_account,
+            ''
+        )
+        WHERE COALESCE(author_name, '') = ''
+        """
+    )
 
 
 GENDER_OPTIONS = {"", "男", "女", "其他"}
@@ -1465,9 +1495,14 @@ def homepage_quote_response(row: sqlite3.Row) -> dict[str, Any]:
 
 
 def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
+    author_name = row["author_name"] if "author_name" in row.keys() else ""
+    author_account = row["author_account"] if "author_account" in row.keys() else ""
+    account_full_name = row["account_full_name"] if "account_full_name" in row.keys() else ""
     return {
         "id": row["id"],
         "imageSrc": row["image_src"],
+        "authorAccount": author_account,
+        "authorName": author_name or account_full_name or author_account,
         "text": row["text"],
         "track": row["track"],
         "color": row["color"],
@@ -1687,9 +1722,13 @@ def list_homepage_danmaku(image_src: str | None = None) -> dict[str, Any]:
         if image_src:
             rows = conn.execute(
                 """
-                SELECT *
-                FROM homepage_danmaku
-                WHERE image_src = ?
+                SELECT
+                    danmaku.*,
+                    account.full_name AS account_full_name
+                FROM homepage_danmaku AS danmaku
+                LEFT JOIN site_account AS account
+                    ON account.account = danmaku.author_account
+                WHERE danmaku.image_src = ?
                 ORDER BY created_at_ms ASC
                 LIMIT 120
                 """,
@@ -1698,8 +1737,12 @@ def list_homepage_danmaku(image_src: str | None = None) -> dict[str, Any]:
         else:
             rows = conn.execute(
                 """
-                SELECT *
-                FROM homepage_danmaku
+                SELECT
+                    danmaku.*,
+                    account.full_name AS account_full_name
+                FROM homepage_danmaku AS danmaku
+                LEFT JOIN site_account AS account
+                    ON account.account = danmaku.author_account
                 ORDER BY created_at_ms ASC
                 LIMIT 600
                 """
@@ -1712,11 +1755,23 @@ def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
     text = normalize_limited_text(payload.text, "留言弹幕", 48)
     if not text:
         raise HTTPException(status_code=400, detail="留言弹幕不能为空")
+    author_account = normalize_account(payload.authorAccount) if payload.authorAccount.strip() else ""
 
     timestamp = now_iso()
     created_at_ms = int(time.time() * 1000)
     danmaku_id = uuid.uuid4().hex
     with db_connection() as conn:
+        author_name = ""
+        if author_account:
+            account_row = conn.execute(
+                "SELECT account, full_name FROM site_account WHERE account = ?",
+                (author_account,),
+            ).fetchone()
+            if account_row is not None:
+                author_account = account_row["account"]
+                author_name = account_row["full_name"] or account_row["account"]
+            else:
+                author_name = author_account
         message_count = conn.execute(
             "SELECT COUNT(*) AS total FROM homepage_danmaku WHERE image_src = ?",
             (image_src,),
@@ -1724,13 +1779,15 @@ def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
         conn.execute(
             """
             INSERT INTO homepage_danmaku (
-                id, image_src, text, track, color, created_at_ms, duration, delay, created_at
+                id, image_src, author_account, author_name, text, track, color, created_at_ms, duration, delay, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 danmaku_id,
                 image_src,
+                author_account,
+                author_name,
                 text,
                 message_count % DANMAKU_TRACKS,
                 DANMAKU_COLORS[message_count % len(DANMAKU_COLORS)],
@@ -1847,6 +1904,7 @@ class HomepageQuoteUpdate(HomepageQuoteCreate):
 class HomepageDanmakuCreate(BaseModel):
     imageSrc: str
     text: str
+    authorAccount: str = ""
 
 
 class RowIdsRequest(BaseModel):

@@ -1,16 +1,17 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { API_BASE } from "@/lib/api";
-import { feedbackPath, responseError } from "@/lib/admin-feedback";
+import { adminReturnPath, feedbackPath, responseError } from "@/lib/admin-feedback";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ account: string }> },
 ) {
+  const adminPath = adminReturnPath(request, "/admin/accounts");
   const token = (await cookies()).get("printk-admin-token")?.value ?? "";
   const { account } = await params;
   if (!token) {
-    redirect(feedbackPath("/admin", "error", "请先登录管理员后台"));
+    redirect(feedbackPath(adminPath, "error", "请先登录管理员后台"));
   }
 
   const form = await request.formData();
@@ -25,8 +26,8 @@ export async function POST(
   });
 
   if (!response.ok) {
-    redirect(feedbackPath("/admin", "error", await responseError(response, "图片工具权限更新失败")));
+    redirect(feedbackPath(adminPath, "error", await responseError(response, "图片工具权限更新失败")));
   }
 
-  redirect(feedbackPath("/admin", "ok", image2Allowed ? "图片工具权限已添加" : "图片工具权限已移除"));
+  redirect(feedbackPath(adminPath, "ok", image2Allowed ? "图片工具权限已添加" : "图片工具权限已移除"));
 }

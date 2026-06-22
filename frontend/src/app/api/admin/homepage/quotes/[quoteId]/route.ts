@@ -1,13 +1,14 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { API_BASE } from "@/lib/api";
-import { feedbackPath, responseError } from "@/lib/admin-feedback";
+import { adminReturnPath, feedbackPath, responseError } from "@/lib/admin-feedback";
 
 type QuoteRouteContext = {
   params: Promise<{ quoteId: string }>;
 };
 
 export async function POST(request: Request, { params }: QuoteRouteContext) {
+  const adminPath = adminReturnPath(request, "/admin/homepage");
   const [{ quoteId }, form, cookieStore] = await Promise.all([
     params,
     request.formData(),
@@ -15,7 +16,7 @@ export async function POST(request: Request, { params }: QuoteRouteContext) {
   ]);
   const token = cookieStore.get("printk-admin-token")?.value ?? "";
   if (!token) {
-    redirect(feedbackPath("/admin", "error", "请先登录管理员后台"));
+    redirect(feedbackPath(adminPath, "error", "请先登录管理员后台"));
   }
 
   const endpoint = `${API_BASE}/api/admin/homepage/quotes/${encodeURIComponent(quoteId)}`;
@@ -41,8 +42,8 @@ export async function POST(request: Request, { params }: QuoteRouteContext) {
         });
 
   if (!response.ok) {
-    redirect(feedbackPath("/admin", "error", await responseError(response, "首页文案保存失败")));
+    redirect(feedbackPath(adminPath, "error", await responseError(response, "首页文案保存失败")));
   }
 
-  redirect(feedbackPath("/admin", "ok", intent === "delete" ? "首页文案已删除" : "首页文案已保存"));
+  redirect(feedbackPath(adminPath, "ok", intent === "delete" ? "首页文案已删除" : "首页文案已保存"));
 }

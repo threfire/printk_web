@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 
@@ -92,6 +93,8 @@ async function fetchHomepageContent() {
 }
 
 export default async function Home() {
+  const cookieStore = await cookies();
+  const accountName = cookieStore.get("printk-site-account")?.value ?? "";
   const homepage = await fetchHomepageContent();
   const video = homepage.video ?? fallbackHomepage.video;
   const carouselImageItems = (homepage.images.length ? homepage.images : fallbackHomepage.images).map((image) => ({
@@ -151,7 +154,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeCarousel images={carouselImageItems} quotes={quoteItems} />
+      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} />
 
       <section className="section split-section">
         <div className="section-heading">
