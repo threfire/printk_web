@@ -276,6 +276,9 @@ export default async function Home() {
       <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
         联系我们
       </a>
+      <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
+        ★
+      </Link>
       <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
         <a className="home-contact-dismiss" href="#" aria-label="关闭联系我们弹窗" />
         <div className="home-contact-dialog">

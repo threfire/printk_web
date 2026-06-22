@@ -26,6 +26,10 @@ export function adminReturnPath(request: Request, fallback = "/admin") {
   }
 }
 
+export function wantsJsonResponse(request: Request) {
+  return request.headers.get("x-admin-async") === "true" || request.headers.get("accept")?.includes("application/json") === true;
+}
+
 export async function responseError(response: Response, fallback: string) {
   const body = await response.json().catch(() => ({ detail: fallback }));
   return String(body.detail ?? fallback);

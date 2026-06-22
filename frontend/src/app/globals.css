@@ -1394,9 +1394,80 @@ p {
   font-weight: 800;
 }
 
-.plan-editor-card {
+.plan-task-list,
+.plan-editor-list {
   display: grid;
+  gap: 0.85rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.plan-task,
+.plan-editor-row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+}
+
+.plan-task {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
   gap: 1rem;
+  padding: 1rem;
+}
+
+.plan-task-done {
+  border-color: color-mix(in srgb, var(--accent) 46%, var(--line));
+}
+
+.plan-task-check {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.plan-task h3 {
+  margin: 0.65rem 0 0.35rem;
+}
+
+.plan-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.plan-editor-row {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(8rem, 0.7fr) minmax(12rem, 1fr) minmax(10rem, 0.8fr) minmax(8rem, 0.6fr);
+  gap: 0.8rem;
+  align-items: start;
+  padding: 1rem;
+}
+
+.plan-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.plan-check input {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.plan-target-field {
+  grid-column: 1 / -1;
 }
 
 .stat {
@@ -1868,7 +1939,8 @@ p {
 }
 
 .forum-new-post-fab,
-.home-contact-fab {
+.home-contact-fab,
+.home-reward-fab {
   position: fixed;
   right: clamp(1rem, 3vw, 1.8rem);
   z-index: 34;
@@ -1901,15 +1973,27 @@ p {
 
 .home-contact-fab {
   bottom: clamp(0.75rem, 2vw, 1.25rem);
-  min-width: 5.6rem;
-  min-height: 3.35rem;
-  padding: 0.85rem 1rem;
-  font-size: 0.95rem;
-  white-space: nowrap;
+  width: 3.35rem;
+  min-height: 6.3rem;
+  padding: 0.8rem 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.18;
+  text-align: center;
+  white-space: normal;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
+
+.home-reward-fab {
+  bottom: clamp(7.55rem, 10vw, 8.5rem);
+  width: 3.35rem;
+  height: 3.35rem;
+  font-size: 1.65rem;
 }
 
 .forum-new-post-fab:hover,
-.home-contact-fab:hover {
+.home-contact-fab:hover,
+.home-reward-fab:hover {
   border-color: color-mix(in srgb, var(--theme-switch-color) 92%, white);
   box-shadow:
     0 18px 44px color-mix(in srgb, var(--theme-switch-color) 36%, transparent),
@@ -1918,7 +2002,8 @@ p {
 }
 
 .forum-new-post-fab:focus-visible,
-.home-contact-fab:focus-visible {
+.home-contact-fab:focus-visible,
+.home-reward-fab:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--theme-switch-color) 78%, white);
   outline-offset: 3px;
 }
@@ -1971,6 +2056,57 @@ p {
   color: var(--text);
   font-size: 1.15rem;
   letter-spacing: 0;
+}
+
+.reward-hero h1 {
+  max-width: 8ch;
+}
+
+.reward-ranking-section {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.reward-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.reward-podium-card {
+  display: grid;
+  gap: 0.4rem;
+  min-height: 11rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, var(--line));
+  border-radius: var(--radius);
+  padding: 1rem;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--gold) 14%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface-strong) 82%, transparent);
+}
+
+.reward-podium-card[data-rank="1"] {
+  border-color: color-mix(in srgb, var(--gold) 76%, var(--line));
+}
+
+.reward-podium-card span {
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.reward-podium-card strong {
+  color: var(--text);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.reward-podium-card h3,
+.reward-podium-card p {
+  margin: 0;
+}
+
+.reward-ranking-table {
+  min-width: 820px;
 }
 
 .image2-workbench {
@@ -2496,6 +2632,20 @@ th {
   min-height: 100%;
 }
 
+.admin-reward-table {
+  min-width: 920px;
+}
+
+.reward-score-input {
+  width: 9rem;
+  min-height: 2.45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.7rem;
+  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
+  color: var(--text);
+}
+
 .home-awards {
   display: grid;
   gap: 1.15rem;
@@ -2860,6 +3010,10 @@ th {
   }
 
   .home-recruitment {
+    grid-template-columns: 1fr;
+  }
+
+  .reward-podium {
     grid-template-columns: 1fr;
   }
 

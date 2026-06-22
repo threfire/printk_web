@@ -19,6 +19,8 @@ const emptyProfile: SiteAccountProfile = {
   phone: "",
   email: "",
   bio: "",
+  reward_score: 0,
+  reward_eligible: false,
   image2_allowed: false,
   is_disabled: false,
 };

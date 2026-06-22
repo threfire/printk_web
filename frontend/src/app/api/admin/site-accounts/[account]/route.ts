@@ -18,6 +18,7 @@ export async function POST(
   const form = await request.formData();
   const payload = {
     ...profileFromForm(form),
+    reward_score: Number.parseInt(String(form.get("reward_score") ?? "0"), 10) || 0,
     image2_allowed: String(form.get("image2_allowed") ?? "") === "true",
     is_disabled: String(form.get("is_disabled") ?? "") === "true",
     admin_note: String(form.get("admin_note") ?? "").trim(),

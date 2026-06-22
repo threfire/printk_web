@@ -109,6 +109,9 @@ function AccountModal({ mode }: { mode: AccountMode }) {
                     <option value="非战队队员">非战队队员</option>
                     <option value="梯队队员">梯队队员</option>
                     <option value="正式队员">正式队员</option>
+                    <option value="兵种组长">兵种组长</option>
+                    <option value="队长">队长</option>
+                    <option value="管理员">管理员</option>
                     <option value="老队员">老队员</option>
                     <option value="退役队员">退役队员</option>
                     <option value="老师">老师</option>

@@ -50,7 +50,6 @@ MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")
-GROUP_LEADER_PASSWORD = os.getenv("GROUP_LEADER_PASSWORD", "group123")
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:3000,http://localhost:3000")
 AGENT_LOCK = threading.Lock()
 FORUM_PUBLIC_STATUS = "approved"
@@ -269,13 +268,16 @@ def init_db() -> None:
                 id TEXT PRIMARY KEY,
                 season_year INTEGER NOT NULL,
                 month INTEGER NOT NULL,
-                group_name TEXT NOT NULL,
+                group_name TEXT DEFAULT '',
+                robot_type TEXT NOT NULL,
+                task_title TEXT NOT NULL,
                 status TEXT NOT NULL,
                 target TEXT NOT NULL,
+                assignee_account TEXT DEFAULT '',
+                is_completed INTEGER NOT NULL DEFAULT 0,
                 display_order INTEGER NOT NULL,
                 created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL,
-                UNIQUE (season_year, month, group_name)
+                updated_at TEXT NOT NULL
             );
 
             CREATE TABLE IF NOT EXISTS site_account (
@@ -289,6 +291,7 @@ def init_db() -> None:
                 phone TEXT DEFAULT '',
                 email TEXT DEFAULT '',
                 bio TEXT DEFAULT '',
+                reward_score INTEGER NOT NULL DEFAULT 0,
                 image2_allowed INTEGER NOT NULL DEFAULT 0,
                 is_disabled INTEGER NOT NULL DEFAULT 0,
                 admin_note TEXT DEFAULT '',
@@ -388,6 +391,7 @@ def init_db() -> None:
 
             """
         )
+        ensure_season_plan_schema(conn)
         ensure_site_account_profile_columns(conn)
         ensure_homepage_danmaku_columns(conn)
         ensure_forum_moderation_columns(conn)
@@ -407,6 +411,12 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_site_account_member_status
             ON site_account (member_status, image2_allowed, is_disabled)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_site_account_reward_ranking
+            ON site_account (member_status, is_disabled, reward_score DESC, updated_at DESC)
             """
         )
         conn.execute(
@@ -449,24 +459,23 @@ def seed_season_plan(conn: sqlite3.Connection) -> None:
     if existing and existing["total"] > 0:
         return
     plans = [
-        ("电控组", "准备中", "完成底盘通信、功率管理和基础控制联调。"),
-        ("机械组", "准备中", "完成关键机构方案评审和第一轮装配验证。"),
-        ("算法组", "准备中", "完成自动导航、策略接口和仿真数据整理。"),
-        ("视觉组", "准备中", "完成识别流程、相机标定和目标跟踪测试。"),
-        ("运营组", "准备中", "完成物资清单、预算台账和赛季宣传计划。"),
+        ("英雄兵种", "云台与发射联调", "准备中", "完成云台通信、发射链路和赛前检查清单。"),
+        ("步兵兵种", "底盘功率控制", "准备中", "完成底盘通信、功率管理和基础控制联调。"),
+        ("工程兵种", "机构方案验证", "准备中", "完成关键机构方案评审和第一轮装配验证。"),
+        ("哨兵兵种", "自动导航测试", "准备中", "完成自动导航、策略接口和仿真数据整理。"),
     ]
     timestamp = now_iso()
     conn.executemany(
         """
         INSERT INTO season_plan (
-            id, season_year, month, group_name, status, target,
-            display_order, created_at, updated_at
+            id, season_year, month, group_name, robot_type, task_title, status, target,
+            assignee_account, is_completed, display_order, created_at, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?)
         """,
         [
-            (uuid.uuid4().hex, 2026, 6, group, status, target, index, timestamp, timestamp)
-            for index, (group, status, target) in enumerate(plans, start=1)
+            (uuid.uuid4().hex, 2026, 6, f"{robot_type}：{task_title}", robot_type, task_title, status, target, index, timestamp, timestamp)
+            for index, (robot_type, task_title, status, target) in enumerate(plans, start=1)
         ],
     )
 
@@ -559,6 +568,33 @@ def normalize_account(value: str) -> str:
     return account
 
 
+def ensure_season_plan_schema(conn: sqlite3.Connection) -> None:
+    existing_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(season_plan)").fetchall()
+    }
+    column_definitions = {
+        "group_name": "TEXT DEFAULT ''",
+        "robot_type": "TEXT NOT NULL DEFAULT ''",
+        "task_title": "TEXT NOT NULL DEFAULT ''",
+        "assignee_account": "TEXT DEFAULT ''",
+        "is_completed": "INTEGER NOT NULL DEFAULT 0",
+    }
+    for column, definition in column_definitions.items():
+        if column not in existing_columns:
+            conn.execute(f"ALTER TABLE season_plan ADD COLUMN {column} {definition}")
+
+    if "group_name" in existing_columns:
+        conn.execute(
+            """
+            UPDATE season_plan
+            SET robot_type = COALESCE(NULLIF(robot_type, ''), group_name),
+                task_title = COALESCE(NULLIF(task_title, ''), target)
+            WHERE COALESCE(robot_type, '') = '' OR COALESCE(task_title, '') = ''
+            """
+        )
+
+
 def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
     existing_columns = {
         row["name"]
@@ -573,6 +609,7 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
         "phone": "TEXT DEFAULT ''",
         "email": "TEXT DEFAULT ''",
         "bio": "TEXT DEFAULT ''",
+        "reward_score": "INTEGER NOT NULL DEFAULT 0",
         "image2_allowed": "INTEGER NOT NULL DEFAULT 0",
         "is_disabled": "INTEGER NOT NULL DEFAULT 0",
         "admin_note": "TEXT DEFAULT ''",
@@ -581,6 +618,14 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
     for column, definition in profile_columns.items():
         if column not in existing_columns:
             conn.execute(f"ALTER TABLE site_account ADD COLUMN {column} {definition}")
+    conn.execute(
+        """
+        UPDATE site_account
+        SET reward_score = 0
+        WHERE member_status NOT IN ('正式队员', '老队员')
+            AND COALESCE(reward_score, 0) <> 0
+        """
+    )
 
 
 def ensure_forum_moderation_columns(conn: sqlite3.Connection) -> None:
@@ -646,8 +691,11 @@ def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
 
 GENDER_OPTIONS = {"", "男", "女", "其他"}
 GRADE_OPTIONS = {"", "大一", "大二", "大三", "大四", "研究生"}
-MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"}
+PLAN_EDITOR_STATUS_OPTIONS = {"兵种组长", "队长", "管理员", "老师"}
+MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "兵种组长", "队长", "管理员", "老队员", "退役队员", "老师"}
+REWARD_STATUS_OPTIONS = {"正式队员", "老队员"}
 DEPARTMENT_OPTIONS = {"", "电控", "机械", "算法", "运营"}
+SEASON_PLAN_ROBOT_TYPES = {"英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种"}
 
 
 def normalize_limited_text(value: str, field_name: str, max_length: int = 80) -> str:
@@ -677,7 +725,20 @@ def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
     }
 
 
+def reward_eligible(member_status: str) -> bool:
+    return member_status in REWARD_STATUS_OPTIONS
+
+
+def normalize_reward_score(value: int) -> int:
+    if value < 0:
+        raise HTTPException(status_code=400, detail="奖励分不能小于 0")
+    if value > 999999:
+        raise HTTPException(status_code=400, detail="奖励分不能超过 999999")
+    return value
+
+
 def site_account_response(row: sqlite3.Row, include_admin: bool = False) -> dict[str, Any]:
+    eligible = reward_eligible(row["member_status"] or "")
     data = {
         "account": row["account"],
         "full_name": row["full_name"] or "",
@@ -688,6 +749,8 @@ def site_account_response(row: sqlite3.Row, include_admin: bool = False) -> dict
         "phone": row["phone"] or "",
         "email": row["email"] or "",
         "bio": row["bio"] or "",
+        "reward_score": row["reward_score"] if eligible else 0,
+        "reward_eligible": eligible,
         "image2_allowed": bool(row["image2_allowed"]),
         "is_disabled": bool(row["is_disabled"]),
         "last_login_at": row["last_login_at"] or "",
@@ -827,10 +890,20 @@ def require_admin(authorization: str | None = Header(default=None)) -> str:
     return verify_token(authorization.removeprefix("Bearer ").strip(), {"admin"})
 
 
-def require_plan_editor(authorization: str | None = Header(default=None)) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="请先登录")
-    return verify_token(authorization.removeprefix("Bearer ").strip(), {"admin", "group_leader"})
+def require_site_plan_editor(payload: "SeasonPlanRequest") -> str:
+    account = normalize_account(payload.editor_account)
+    with db_connection() as conn:
+        row = conn.execute(
+            "SELECT account, member_status, is_disabled FROM site_account WHERE account = ?",
+            (account,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=401, detail="请先登录账号")
+    if row["is_disabled"]:
+        raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
+    if row["member_status"] not in PLAN_EDITOR_STATUS_OPTIONS:
+        raise HTTPException(status_code=403, detail="当前账号没有赛季规划编辑权限")
+    return account
 
 
 def log_process(stage: str, level: str, message: str, batch_id: str | None = None) -> None:
@@ -1416,14 +1489,22 @@ def list_season_plan(season_year: int, month: int) -> list[dict[str, Any]]:
     with db_connection() as conn:
         rows = conn.execute(
             """
-            SELECT id, season_year, month, group_name, status, target, display_order, updated_at
+            SELECT
+                id, season_year, month, robot_type, task_title, status, target,
+                assignee_account, is_completed, display_order, updated_at
             FROM season_plan
             WHERE season_year = ? AND month = ?
-            ORDER BY display_order ASC, group_name ASC
+                AND robot_type IN ('英雄兵种', '步兵兵种', '工程兵种', '哨兵兵种')
+            ORDER BY display_order ASC, robot_type ASC, task_title ASC
             """,
             (season_year, month),
         ).fetchall()
-    return [row_to_dict(row) for row in rows]
+    plans = []
+    for row in rows:
+        plan = row_to_dict(row)
+        plan["is_completed"] = bool(plan["is_completed"])
+        plans.append(plan)
+    return plans
 
 
 def save_season_plan(season_year: int, month: int, plans: list["SeasonPlanItem"]) -> list[dict[str, Any]]:
@@ -1432,32 +1513,45 @@ def save_season_plan(season_year: int, month: int, plans: list["SeasonPlanItem"]
         raise HTTPException(status_code=400, detail="计划不能为空")
     timestamp = now_iso()
     with db_connection() as conn:
+        conn.execute("DELETE FROM season_plan WHERE season_year = ? AND month = ?", (season_year, month))
         for index, plan in enumerate(plans, start=1):
-            group_name = plan.group_name.strip()
+            robot_type = plan.robot_type.strip()
+            task_title = plan.task_title.strip()
             status = plan.status.strip()
             target = plan.target.strip()
-            if not group_name or not status or not target:
-                raise HTTPException(status_code=400, detail="组别、状态、目标不能为空")
+            assignee_account = plan.assignee_account.strip()
+            if robot_type not in SEASON_PLAN_ROBOT_TYPES:
+                raise HTTPException(status_code=400, detail="兵种格式错误")
+            if not task_title or not status or not target:
+                raise HTTPException(status_code=400, detail="兵种、任务、状态、目标不能为空")
+            if assignee_account:
+                assignee = conn.execute(
+                    "SELECT account, is_disabled FROM site_account WHERE account = ?",
+                    (assignee_account,),
+                ).fetchone()
+                if assignee is None:
+                    raise HTTPException(status_code=400, detail=f"执行人账号不存在：{assignee_account}")
+                if assignee["is_disabled"]:
+                    raise HTTPException(status_code=400, detail=f"执行人账号已停用：{assignee_account}")
             conn.execute(
                 """
                 INSERT INTO season_plan (
-                    id, season_year, month, group_name, status, target,
-                    display_order, created_at, updated_at
+                    id, season_year, month, group_name, robot_type, task_title, status, target,
+                    assignee_account, is_completed, display_order, created_at, updated_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(season_year, month, group_name) DO UPDATE SET
-                    status = excluded.status,
-                    target = excluded.target,
-                    display_order = excluded.display_order,
-                    updated_at = excluded.updated_at
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     uuid.uuid4().hex,
                     season_year,
                     month,
-                    group_name,
+                    f"{robot_type}：{task_title}",
+                    robot_type,
+                    task_title,
                     status,
                     target,
+                    assignee_account,
+                    1 if plan.is_completed else 0,
                     index,
                     timestamp,
                     timestamp,
@@ -1830,7 +1924,12 @@ class Image2AccessRequest(BaseModel):
     image2_allowed: bool
 
 
+class RewardScoreRequest(BaseModel):
+    reward_score: int
+
+
 class SiteAccountAdminUpdate(SiteAccountProfile):
+    reward_score: int = 0
     image2_allowed: bool = False
     is_disabled: bool = False
     admin_note: str = ""
@@ -1859,14 +1958,18 @@ class ForumModerationRequest(BaseModel):
 
 
 class SeasonPlanItem(BaseModel):
-    group_name: str
+    robot_type: str
+    task_title: str
     status: str
     target: str
+    assignee_account: str = ""
+    is_completed: bool = False
 
 
 class SeasonPlanRequest(BaseModel):
     season_year: int
     month: int
+    editor_account: str
     plans: list[SeasonPlanItem]
 
 
@@ -2028,9 +2131,9 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
             """
             INSERT INTO site_account (
                 account, password_hash, full_name, gender, grade, member_status,
-                department, phone, email, bio, created_at, updated_at
+                department, phone, email, bio, reward_score, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
             """,
             (
                 account,
@@ -2091,7 +2194,9 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
             """
             UPDATE site_account
             SET full_name = ?, gender = ?, grade = ?, member_status = ?,
-                department = ?, phone = ?, email = ?, bio = ?, updated_at = ?
+                department = ?, phone = ?, email = ?, bio = ?,
+                reward_score = CASE WHEN ? IN ('正式队员', '老队员') THEN reward_score ELSE 0 END,
+                updated_at = ?
             WHERE account = ?
             """,
             (
@@ -2103,6 +2208,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
                 profile["phone"],
                 profile["email"],
                 profile["bio"],
+                profile["member_status"],
                 timestamp,
                 normalized_account,
             ),
@@ -2190,6 +2296,7 @@ def update_site_account_by_admin(
     normalized_account = normalize_account(account)
     profile = normalize_site_profile(payload)
     admin_note = normalize_limited_text(payload.admin_note, "后台备注", 200)
+    reward_score = normalize_reward_score(payload.reward_score) if reward_eligible(profile["member_status"]) else 0
     if payload.image2_allowed and profile["member_status"] != "正式队员":
         raise HTTPException(status_code=400, detail="图片工具权限只支持正式队员账号")
     if payload.is_disabled and payload.image2_allowed:
@@ -2204,7 +2311,7 @@ def update_site_account_by_admin(
             UPDATE site_account
             SET full_name = ?, gender = ?, grade = ?, member_status = ?,
                 department = ?, phone = ?, email = ?, bio = ?,
-                image2_allowed = ?, is_disabled = ?, admin_note = ?, updated_at = ?
+                reward_score = ?, image2_allowed = ?, is_disabled = ?, admin_note = ?, updated_at = ?
             WHERE account = ?
             """,
             (
@@ -2216,6 +2323,7 @@ def update_site_account_by_admin(
                 profile["phone"],
                 profile["email"],
                 profile["bio"],
+                reward_score,
                 1 if payload.image2_allowed else 0,
                 1 if payload.is_disabled else 0,
                 admin_note,
@@ -2226,6 +2334,66 @@ def update_site_account_by_admin(
         account_admin_log(conn, normalized_account, "update", "管理员更新账号资料")
         updated = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
     return site_account_response(updated, include_admin=True)
+
+
+@app.put("/api/admin/site-accounts/{account}/reward-score")
+def update_site_account_reward_score(
+    account: str,
+    payload: RewardScoreRequest,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_account = normalize_account(account)
+    reward_score = normalize_reward_score(payload.reward_score)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute(
+            "SELECT account, member_status FROM site_account WHERE account = ?",
+            (normalized_account,),
+        ).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        if not reward_eligible(existing["member_status"] or ""):
+            raise HTTPException(status_code=400, detail="该账号身份不支持奖励分")
+        conn.execute(
+            """
+            UPDATE site_account
+            SET reward_score = ?, updated_at = ?
+            WHERE account = ?
+            """,
+            (reward_score, timestamp, normalized_account),
+        )
+        account_admin_log(conn, normalized_account, "reward_score", "管理员更新奖励分")
+        updated = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    return site_account_response(updated, include_admin=True)
+
+
+@app.get("/api/reward-ranking")
+def reward_ranking() -> dict[str, Any]:
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT account, full_name, member_status, department, reward_score, updated_at
+            FROM site_account
+            WHERE is_disabled = 0
+                AND member_status IN ('正式队员', '老队员')
+            ORDER BY reward_score DESC, updated_at ASC, account ASC
+            LIMIT 200
+            """
+        ).fetchall()
+    return {
+        "ranking": [
+            {
+                "rank": index,
+                "account": row["account"],
+                "full_name": row["full_name"] or row["account"],
+                "member_status": row["member_status"] or "",
+                "department": row["department"] or "",
+                "reward_score": row["reward_score"] or 0,
+                "updated_at": row["updated_at"] or "",
+            }
+            for index, row in enumerate(rows, start=1)
+        ]
+    }
 
 
 @app.post("/api/admin/site-accounts/{account}/reset-password")
@@ -2608,8 +2776,6 @@ def create_forum_reply(post_id: str, payload: ForumReplyCreateRequest) -> dict[s
 
 @app.post("/api/auth/login")
 def login(payload: LoginRequest) -> dict[str, str]:
-    if payload.role == "group_leader" and payload.password == GROUP_LEADER_PASSWORD:
-        return {"token": make_token("group_leader"), "role": "group_leader"}
     if payload.role == "admin" and payload.password == ADMIN_PASSWORD:
         return {"token": make_token("admin"), "role": "admin"}
     raise HTTPException(status_code=401, detail="密码错误")
@@ -2627,8 +2793,8 @@ def get_season_plan(season_year: int = 2026, month: int = 6) -> dict[str, Any]:
 @app.put("/api/season-plan")
 def update_season_plan(
     payload: SeasonPlanRequest,
-    _: str = Depends(require_plan_editor),
 ) -> dict[str, Any]:
+    require_site_plan_editor(payload)
     return {
         "season_year": payload.season_year,
         "month": payload.month,

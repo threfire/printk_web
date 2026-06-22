@@ -67,9 +67,12 @@ export type SeasonPlanItem = {
   id?: string;
   season_year?: number;
   month?: number;
-  group_name: string;
+  robot_type: string;
+  task_title: string;
   status: string;
   target: string;
+  assignee_account: string;
+  is_completed: boolean;
   display_order?: number;
   updated_at?: string;
 };
@@ -159,6 +162,20 @@ export type HomepageContentData = {
   videos: HomepageAsset[];
   images: HomepageAsset[];
   quotes: HomepageQuote[];
+};
+
+export type RewardRankingItem = {
+  rank: number;
+  account: string;
+  full_name: string;
+  member_status: string;
+  department: string;
+  reward_score: number;
+  updated_at: string;
+};
+
+export type RewardRankingData = {
+  ranking: RewardRankingItem[];
 };
 
 export function token() {
