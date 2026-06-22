@@ -165,7 +165,7 @@ button {
 
 .nav-links a:hover,
 .nav-dropdown summary:hover,
-.nav-dropdown[open] summary,
+.nav-dropdown:hover summary,
 .ghost-button:hover {
   color: var(--accent);
 }
@@ -185,10 +185,10 @@ button {
 
 .nav-dropdown-menu {
   position: absolute;
-  top: calc(100% + 0.35rem);
+  top: 100%;
   left: 50%;
   z-index: 30;
-  display: grid;
+  display: none;
   min-width: 9.5rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -196,6 +196,10 @@ button {
   background: var(--surface-strong);
   box-shadow: var(--shadow);
   transform: translateX(-50%);
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+  display: grid;
 }
 
 .nav-dropdown-menu a {
