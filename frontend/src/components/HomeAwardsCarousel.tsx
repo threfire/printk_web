@@ -32,19 +32,27 @@ function getAwardSlot(index: number, activeIndex: number, direction: 1 | -1, tot
     return "right";
   }
 
-  if (direction === 1 && forward === 2) {
+  if (backward === 2) {
+    return "far-left";
+  }
+
+  if (forward === 2) {
+    return "far-right";
+  }
+
+  if (direction === 1 && forward === 3) {
     return "enter-right";
   }
 
-  if (direction === 1 && backward === 2) {
+  if (direction === 1 && backward === 3) {
     return "exit-left";
   }
 
-  if (direction === -1 && backward === 2) {
+  if (direction === -1 && backward === 3) {
     return "enter-left";
   }
 
-  if (direction === -1 && forward === 2) {
+  if (direction === -1 && forward === 3) {
     return "exit-right";
   }
 
@@ -106,17 +114,11 @@ export function HomeAwardsCarousel({ awards }: HomeAwardsCarouselProps) {
     <div
       className="home-awards-carousel"
       aria-label="奖项图片层叠轮播"
+      data-dragging={dragStartX === null ? "false" : "true"}
       onPointerDown={(event) => setDragStartX(event.clientX)}
       onPointerCancel={() => setDragStartX(null)}
       onPointerUp={handlePointerUp}
     >
-      <button className="carousel-nav carousel-nav-prev home-awards-nav" type="button" aria-label="上一项荣誉" onClick={goPrev}>
-        <span aria-hidden="true">&lsaquo;</span>
-      </button>
-      <button className="carousel-nav carousel-nav-next home-awards-nav" type="button" aria-label="下一项荣誉" onClick={goNext}>
-        <span aria-hidden="true">&rsaquo;</span>
-      </button>
-
       <div className="home-awards-stack" aria-live="polite">
         {awards.map((award, index) => (
           <article className="home-award-card" data-slot={getAwardSlot(index, activeIndex, direction, awards.length)} key={`${award.title}-${index}`}>

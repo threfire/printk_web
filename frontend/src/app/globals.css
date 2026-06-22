@@ -1549,20 +1549,22 @@ p {
 .forum-summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 .forum-summary-pill {
   display: inline-grid;
-  gap: 0.08rem;
+  gap: 0.18rem;
   min-width: 0;
-  border-left: 2px solid color-mix(in srgb, var(--accent) 58%, transparent);
-  padding: 0.1rem 0 0.1rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.65rem 0.72rem;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
 }
 
 .forum-summary-pill strong {
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
@@ -1623,9 +1625,11 @@ p {
 
 .forum-layout {
   display: grid;
-  grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
-  gap: 1.1rem;
+  grid-template-columns: minmax(16rem, 18rem) minmax(0, 1fr);
+  gap: 0;
   align-items: start;
+  padding: 0;
+  overflow: hidden;
 }
 
 .forum-sidebar {
@@ -1634,6 +1638,8 @@ p {
   display: grid;
   gap: 1.1rem;
   min-width: 0;
+  padding: 1.15rem;
+  background: color-mix(in srgb, var(--surface-strong) 58%, transparent);
 }
 
 .forum-sidebar-block {
@@ -1642,23 +1648,28 @@ p {
 }
 
 .forum-sidebar-block > strong {
+  color: var(--text);
   font-size: 0.95rem;
 }
 
 .forum-section-nav {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .forum-section-nav a {
   display: grid;
-  gap: 0.16rem;
-  border-left: 2px solid transparent;
-  padding: 0.35rem 0 0.35rem 0.65rem;
+  gap: 0.18rem;
+  border: 1px solid transparent;
+  border-left: 3px solid color-mix(in srgb, var(--line) 92%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.6rem 0.72rem;
+  background: color-mix(in srgb, var(--surface) 44%, transparent);
 }
 
 .forum-section-nav a:hover {
   border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 62%, transparent);
 }
 
 .forum-section-nav span {
@@ -1683,6 +1694,9 @@ p {
   display: grid;
   gap: 0.75rem;
   min-width: 0;
+  border-left: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+  padding: 1.15rem;
+  background: color-mix(in srgb, var(--surface) 34%, transparent);
 }
 
 .forum-thread-list,
@@ -1696,7 +1710,7 @@ p {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1rem;
-  background: color-mix(in srgb, var(--surface-strong) 86%, transparent);
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
 }
 
 .forum-thread {
@@ -2333,8 +2347,6 @@ th {
 }
 
 .admin-sidebar {
-  position: sticky;
-  top: 5.5rem;
   display: grid;
   gap: 1.1rem;
   padding: 1rem;
@@ -2380,9 +2392,6 @@ th {
 }
 
 .admin-topbar {
-  position: sticky;
-  top: 5.5rem;
-  z-index: 6;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2513,31 +2522,21 @@ th {
 
 .home-awards-carousel {
   position: relative;
-  min-height: clamp(21rem, 42vw, 34rem);
+  min-height: clamp(23rem, 36vw, 30rem);
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: clamp(0.8rem, 3vw, 1.25rem);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--gold) 10%, transparent), transparent 44%),
-    color-mix(in srgb, var(--surface-strong) 74%, transparent);
-  box-shadow: var(--shadow);
+  border-radius: calc(var(--radius) * 1.2);
+  padding: 0;
+  cursor: grab;
   touch-action: pan-y;
 }
 
-.home-awards-carousel::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--bg) 24%, transparent), transparent 42%, color-mix(in srgb, var(--bg) 20%, transparent)),
-    linear-gradient(0deg, color-mix(in srgb, var(--bg) 18%, transparent), transparent 48%);
-  pointer-events: none;
+.home-awards-carousel[data-dragging="true"] {
+  cursor: grabbing;
 }
 
 .home-awards-stack {
   position: relative;
-  min-height: clamp(19rem, 38vw, 31rem);
+  min-height: clamp(22rem, 34vw, 29rem);
 }
 
 .home-award-card {
@@ -2546,7 +2545,7 @@ th {
   left: 50%;
   display: grid;
   gap: 0.75rem;
-  width: min(78vw, 34rem);
+  width: min(62vw, 30rem);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 34%, var(--line));
   border-radius: var(--radius);
@@ -2570,29 +2569,43 @@ th {
 .home-award-card[data-slot="left"] {
   z-index: 3;
   opacity: 0.68;
-  transform: translate(-84%, -50%) scale(0.78);
+  transform: translate(-108%, -50%) scale(0.76);
   filter: saturate(0.82) brightness(0.75);
 }
 
 .home-award-card[data-slot="right"] {
   z-index: 3;
   opacity: 0.74;
-  transform: translate(-16%, -50%) scale(0.82);
+  transform: translate(8%, -50%) scale(0.8);
   filter: saturate(0.88) brightness(0.82);
+}
+
+.home-award-card[data-slot="far-left"] {
+  z-index: 2;
+  opacity: 0.42;
+  transform: translate(-150%, -50%) scale(0.62);
+  filter: saturate(0.72) brightness(0.66);
+}
+
+.home-award-card[data-slot="far-right"] {
+  z-index: 2;
+  opacity: 0.48;
+  transform: translate(50%, -50%) scale(0.66);
+  filter: saturate(0.76) brightness(0.7);
 }
 
 .home-award-card[data-slot="enter-left"],
 .home-award-card[data-slot="hidden-left"] {
   z-index: 1;
   opacity: 0;
-  transform: translate(-120%, -50%) scale(0.68);
+  transform: translate(-188%, -50%) scale(0.54);
   filter: saturate(0.7) brightness(0.62);
 }
 
 .home-award-card[data-slot="exit-left"] {
   z-index: 2;
   opacity: 0;
-  transform: translate(-122%, -50%) scale(0.7);
+  transform: translate(-190%, -50%) scale(0.56);
   filter: saturate(0.72) brightness(0.62);
 }
 
@@ -2600,14 +2613,14 @@ th {
 .home-award-card[data-slot="hidden-right"] {
   z-index: 1;
   opacity: 0;
-  transform: translate(20%, -50%) scale(0.7);
+  transform: translate(86%, -50%) scale(0.56);
   filter: saturate(0.72) brightness(0.64);
 }
 
 .home-award-card[data-slot="exit-right"] {
   z-index: 2;
   opacity: 0;
-  transform: translate(22%, -50%) scale(0.72);
+  transform: translate(88%, -50%) scale(0.58);
   filter: saturate(0.74) brightness(0.64);
 }
 
@@ -2659,10 +2672,6 @@ th {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.5;
-}
-
-.home-awards-nav {
-  z-index: 8;
 }
 
 .home-recruitment {
@@ -2867,6 +2876,11 @@ th {
 
   .forum-sidebar {
     position: static;
+  }
+
+  .forum-stream {
+    border-top: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+    border-left: 0;
   }
 
   .forum-section-nav {

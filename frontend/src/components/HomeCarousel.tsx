@@ -108,7 +108,7 @@ async function fetchDanmakuMessages(imageSrc: string) {
     return null;
   }
 
-  const response = await fetch(`/api/homepage/danmaku?image_src=${encodeURIComponent(imageSrc)}`, { cache: "no-store" });
+  const response = await fetch("/api/homepage/danmaku", { cache: "no-store" });
   if (!response.ok) {
     return null;
   }

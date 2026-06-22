@@ -116,17 +116,6 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
       <section className="section forum-layout" id="forum-topics">
         <aside className="forum-sidebar" aria-label="论坛侧边栏">
           <div className="forum-sidebar-block">
-            <strong>主题分区</strong>
-            <nav className="forum-section-nav" aria-label="论坛分区">
-              {forumSections.map((section) => (
-                <a href="#forum-topics" key={section.id}>
-                  <span>{section.name}</span>
-                  <small>{section.description}</small>
-                </a>
-              ))}
-            </nav>
-          </div>
-          <div className="forum-sidebar-block">
             <strong>论坛概览</strong>
             <div className="forum-summary" aria-label="论坛概览">
               <span className="forum-summary-pill">
@@ -146,6 +135,17 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
                 <small>置顶</small>
               </span>
             </div>
+          </div>
+          <div className="forum-sidebar-block">
+            <strong>主题分区</strong>
+            <nav className="forum-section-nav" aria-label="论坛分区">
+              {forumSections.map((section) => (
+                <a href="#forum-topics" key={section.id}>
+                  <span>{section.name}</span>
+                  <small>{section.description}</small>
+                </a>
+              ))}
+            </nav>
           </div>
         </aside>
 

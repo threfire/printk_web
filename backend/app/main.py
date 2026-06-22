@@ -1797,20 +1797,6 @@ def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
                 timestamp,
             ),
         )
-        conn.execute(
-            """
-            DELETE FROM homepage_danmaku
-            WHERE image_src = ?
-              AND id NOT IN (
-                  SELECT id
-                  FROM homepage_danmaku
-                  WHERE image_src = ?
-                  ORDER BY created_at_ms DESC
-                  LIMIT 120
-              )
-            """,
-            (image_src, image_src),
-        )
         row = conn.execute("SELECT * FROM homepage_danmaku WHERE id = ?", (danmaku_id,)).fetchone()
     return {"message": homepage_danmaku_response(row)}
 
