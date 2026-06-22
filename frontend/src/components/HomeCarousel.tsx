@@ -21,6 +21,7 @@ type HomeCarouselProps = {
 
 type DanmakuMessage = {
   id: string;
+  imageSrc?: string;
   authorAccount?: string;
   authorName?: string;
   text: string;
@@ -76,7 +77,7 @@ function getSlot(index: number, activeIndex: number, direction: 1 | -1, total: n
   return backward < forward ? "hidden-left" : "hidden-right";
 }
 
-function messageList(value: unknown): DanmakuMessage[] {
+function messageList(value: unknown, expectedImageSrc: string): DanmakuMessage[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -88,10 +89,16 @@ function messageList(value: unknown): DanmakuMessage[] {
       }
 
       const message = item as Partial<DanmakuMessage>;
-      return typeof message.id === "string" && typeof message.text === "string" && message.text.trim().length > 0;
+      return (
+        typeof message.id === "string" &&
+        typeof message.text === "string" &&
+        message.text.trim().length > 0 &&
+        message.imageSrc === expectedImageSrc
+      );
     })
     .map((message, index) => ({
       id: message.id,
+      imageSrc: message.imageSrc,
       authorAccount: typeof message.authorAccount === "string" ? message.authorAccount : "",
       authorName: typeof message.authorName === "string" ? message.authorName : "",
       text: message.text.slice(0, 48),
@@ -114,7 +121,7 @@ async function fetchDanmakuMessages(imageSrc: string) {
   }
 
   const body = (await response.json()) as DanmakuResponse;
-  return messageList(body.messages);
+  return messageList(body.messages, imageSrc);
 }
 
 export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCarouselProps) {
@@ -228,7 +235,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
       }
       const body = (await response.json()) as { message?: DanmakuMessage };
       const nextMessage = body.message;
-      if (nextMessage) {
+      if (nextMessage?.imageSrc === activeImage.src) {
         setDanmakuByImage((current) => ({
           ...current,
           [activeImage.src]: [...(current[activeImage.src] ?? []), nextMessage],

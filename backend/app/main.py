@@ -1812,35 +1812,24 @@ def normalize_danmaku_image_src(value: str) -> str:
 
 
 def list_homepage_danmaku(image_src: str | None = None) -> dict[str, Any]:
+    if not image_src:
+        return {"messages": []}
+
     with db_connection() as conn:
-        if image_src:
-            rows = conn.execute(
-                """
-                SELECT
-                    danmaku.*,
-                    account.full_name AS account_full_name
-                FROM homepage_danmaku AS danmaku
-                LEFT JOIN site_account AS account
-                    ON account.account = danmaku.author_account
-                WHERE danmaku.image_src = ?
-                ORDER BY created_at_ms ASC
-                LIMIT 120
-                """,
-                (normalize_danmaku_image_src(image_src),),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                """
-                SELECT
-                    danmaku.*,
-                    account.full_name AS account_full_name
-                FROM homepage_danmaku AS danmaku
-                LEFT JOIN site_account AS account
-                    ON account.account = danmaku.author_account
-                ORDER BY created_at_ms ASC
-                LIMIT 600
-                """
-            ).fetchall()
+        rows = conn.execute(
+            """
+            SELECT
+                danmaku.*,
+                account.full_name AS account_full_name
+            FROM homepage_danmaku AS danmaku
+            LEFT JOIN site_account AS account
+                ON account.account = danmaku.author_account
+            WHERE danmaku.image_src = ?
+            ORDER BY created_at_ms ASC
+            LIMIT 120
+            """,
+            (normalize_danmaku_image_src(image_src),),
+        ).fetchall()
     return {"messages": [homepage_danmaku_response(row) for row in rows]}
 
 
