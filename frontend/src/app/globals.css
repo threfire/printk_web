@@ -2090,8 +2090,21 @@ p {
   letter-spacing: 0;
 }
 
+.reward-hero {
+  gap: 0.45rem;
+  padding-block: clamp(0.9rem, 2.2vw, 1.45rem);
+}
+
 .reward-hero h1 {
   max-width: 8ch;
+  margin-top: 0.45rem;
+  font-size: clamp(2rem, 4.2vw, 3.8rem);
+  line-height: 1;
+}
+
+.reward-hero p {
+  margin: 0;
+  line-height: 1.6;
 }
 
 .reward-ranking-section {
