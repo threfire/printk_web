@@ -104,10 +104,10 @@ export default function InvoicesPage() {
       <section className="section-hero">
         <span className="eyebrow">INVOICE SYSTEM</span>
         <h1>发票管理</h1>
-        <p>成员在这里上传固定格式的 .xlsx 采购表格，发票信息直接来自表格字段。</p>
+        <p>成员在这里上传固定格式的 .xlsx 发票表格，发票信息直接来自表格字段。</p>
         <div className="hero-actions">
           <a className="ghost-button" href={downloadUrl("/api/invoices/template")}>
-            下载表格模板
+            下载发票表格模板
           </a>
           <a className="ghost-button" href="/admin">
             管理员后台
@@ -135,23 +135,19 @@ export default function InvoicesPage() {
       <section className="section">
         <div className="section-heading">
           <span className="eyebrow">UPLOAD</span>
-          <h2>提交采购表格</h2>
+          <h2>提交发票表格</h2>
         </div>
         <form className="form" onSubmit={onSubmit}>
           <div className="field">
-            <label htmlFor="team_name">团队名称</label>
-            <input id="team_name" name="team_name" required placeholder="例如：PRINTK 战队" />
+            <label htmlFor="team_name">兵种名称</label>
+            <input id="team_name" name="team_name" required placeholder="例如：步兵" />
           </div>
           <div className="field">
             <label htmlFor="submitter_name">提交人姓名</label>
             <input id="submitter_name" name="submitter_name" required />
           </div>
           <div className="field">
-            <label htmlFor="submitter_id">提交人编号</label>
-            <input id="submitter_id" name="submitter_id" required />
-          </div>
-          <div className="field">
-            <label htmlFor="form_file">采购表格</label>
+            <label htmlFor="form_file">发票表格</label>
             <input id="form_file" name="form_file" type="file" accept=".xlsx" required />
           </div>
           <div className="field">

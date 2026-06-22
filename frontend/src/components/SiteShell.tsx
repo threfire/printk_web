@@ -21,9 +21,6 @@ const memberNavItems = [
   { href: "/members#all-members", label: "全部队员" },
   { href: "/members#active-members", label: "现役队员" },
   { href: "/members#retired-members", label: "退役队员" },
-  { href: "/members#retired-2025", label: "2025 退役" },
-  { href: "/members#retired-2024", label: "2024 退役" },
-  { href: "/members#retired-2023", label: "2023 退役" },
 ];
 
 export async function SiteShell({ children }: { children: React.ReactNode }) {

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
 import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 
@@ -92,6 +93,36 @@ async function fetchHomepageContent() {
   }
 }
 
+function buildAwardItems(homepage: HomepageContentData): HomeAwardItem[] {
+  if (homepage === fallbackHomepage) {
+    return awardPlaceholders;
+  }
+
+  if (!homepage.images.length && !homepage.quotes.length) {
+    return awardPlaceholders;
+  }
+
+  const itemCount = Math.max(homepage.images.length, homepage.quotes.length);
+  return Array.from({ length: itemCount }, (_, index) => {
+    const image = homepage.images.length ? homepage.images[index % homepage.images.length] : undefined;
+    const quote = homepage.quotes.length ? homepage.quotes[index % homepage.quotes.length] : undefined;
+    const imageLabel = image?.alt || image?.original_filename || "";
+    const title = quote?.source || imageLabel || awardPlaceholders[index % awardPlaceholders.length].title;
+    const meta = quote?.text || imageLabel || awardPlaceholders[index % awardPlaceholders.length].meta;
+
+    return {
+      title,
+      meta,
+      image: image
+        ? {
+            src: image.url,
+            alt: imageLabel || title,
+          }
+        : undefined,
+    };
+  });
+}
+
 export default async function Home() {
   const cookieStore = await cookies();
   const accountName = cookieStore.get("printk-site-account")?.value ?? "";
@@ -105,6 +136,7 @@ export default async function Home() {
     text: quote.text,
     source: quote.source,
   }));
+  const awardItems = buildAwardItems(homepage);
 
   return (
     <div className="page">
@@ -191,23 +223,9 @@ export default async function Home() {
         <div className="home-awards-heading">
           <span className="eyebrow">团队成果</span>
           <h2 id="home-awards-title">奖项与荣誉展示</h2>
-          <p>这里会轮播展示战队历年获奖奖状、奖杯和成果图片，先保留占位，后续可直接替换为真实图片。</p>
+          <p>这里优先轮播展示后台首页内容管理配置的荣誉图片和文案，数据为空时展示占位内容。</p>
         </div>
-        <div className="home-awards-carousel" aria-label="奖项图片横向轮播占位">
-          <div className="home-awards-track">
-            {[...awardPlaceholders, ...awardPlaceholders].map((award, index) => (
-              <article className="home-award-card" key={`${award.title}-${index}`}>
-                <div className="home-award-media" aria-hidden="true">
-                  <span>AWARD</span>
-                </div>
-                <div>
-                  <h3>{award.title}</h3>
-                  <p>{award.meta}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
+        <HomeAwardsCarousel awards={awardItems} />
       </section>
 
       <section className="home-recruitment" aria-labelledby="home-recruitment-title">

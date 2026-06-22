@@ -90,34 +90,14 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
     <div className="page forum-page">
       <section className="section forum-header">
         <div className="forum-header-copy">
-          <span className="eyebrow">FORUM</span>
           <h1>论坛</h1>
           <p>围绕调试经验、赛季问题、物资协作和训练复盘组织主题，提交内容经管理员审核后展示。</p>
         </div>
 
         <div className="forum-header-tools">
-          <div className="forum-summary" aria-label="论坛概览">
-            <span className="forum-summary-pill">
-              <strong>{posts.length}</strong>
-              <small>主题</small>
-            </span>
-            <span className="forum-summary-pill">
-              <strong>{totalReplies}</strong>
-              <small>回复</small>
-            </span>
-            <span className="forum-summary-pill">
-              <strong>{activeAuthors}</strong>
-              <small>成员</small>
-            </span>
-            <span className="forum-summary-pill">
-              <strong>{pinnedCount}</strong>
-              <small>置顶</small>
-            </span>
-          </div>
-
           <div className="forum-rule-popover">
             <button className="forum-rule-trigger" type="button" aria-label="查看发帖规则">
-              规
+              发帖规则
             </button>
             <div className="forum-rule-tooltip" role="tooltip">
               <strong>发帖规则</strong>
@@ -133,54 +113,91 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
         {forumState.loadError ? <div className="message error">{forumState.loadError}</div> : null}
       </section>
 
-      <section className="section forum-stream" id="forum-topics">
-        {posts.length > 0 ? (
-          <div className="forum-thread-list">
-            {posts.map((post) => {
-              const section = getForumSection(post.title, post.content);
-              return (
-                <Link className="forum-thread" href={`/forum/${post.id}`} key={post.id}>
-                  <span className="forum-avatar" aria-hidden="true">
-                    {post.author_name.slice(0, 1).toUpperCase()}
-                  </span>
-                  <span className="forum-thread-content">
-                    <span className="forum-thread-kicker">
-                      <span className="forum-section-pill">{section.name}</span>
-                      {post.is_pinned ? <span className="badge">置顶</span> : null}
-                      {post.is_locked ? <span className="badge">锁定</span> : null}
-                    </span>
-                    <h3>{post.title}</h3>
-                    <p>{post.content}</p>
-                    <span className="forum-meta">
-                      {post.author_name} · {formatTime(post.created_at)}
-                    </span>
-                  </span>
-                  <span className="forum-thread-stats">
-                    <strong>{post.reply_count}</strong>
-                    <small>回复</small>
-                  </span>
-                </Link>
-              );
-            })}
+      <section className="section forum-layout" id="forum-topics">
+        <aside className="forum-sidebar" aria-label="论坛侧边栏">
+          <div className="forum-sidebar-block">
+            <strong>主题分区</strong>
+            <nav className="forum-section-nav" aria-label="论坛分区">
+              {forumSections.map((section) => (
+                <a href="#forum-topics" key={section.id}>
+                  <span>{section.name}</span>
+                  <small>{section.description}</small>
+                </a>
+              ))}
+            </nav>
           </div>
-        ) : forumState.loadError ? (
-          <div className="message error">论坛列表暂未加载成功，恢复后可继续浏览帖子。</div>
-        ) : (
-          <div className="message">当前还没有帖子，登录后可以发布第一条讨论。</div>
-        )}
+          <div className="forum-sidebar-block">
+            <strong>论坛概览</strong>
+            <div className="forum-summary" aria-label="论坛概览">
+              <span className="forum-summary-pill">
+                <strong>{posts.length}</strong>
+                <small>主题</small>
+              </span>
+              <span className="forum-summary-pill">
+                <strong>{totalReplies}</strong>
+                <small>回复</small>
+              </span>
+              <span className="forum-summary-pill">
+                <strong>{activeAuthors}</strong>
+                <small>成员</small>
+              </span>
+              <span className="forum-summary-pill">
+                <strong>{pinnedCount}</strong>
+                <small>置顶</small>
+              </span>
+            </div>
+          </div>
+        </aside>
+
+        <div className="forum-stream">
+          {posts.length > 0 ? (
+            <div className="forum-thread-list">
+              {posts.map((post) => {
+                const section = getForumSection(post.title, post.content);
+                return (
+                  <Link className="forum-thread" href={`/forum/${post.id}`} key={post.id}>
+                    <span className="forum-avatar" aria-hidden="true">
+                      {post.author_name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="forum-thread-content">
+                      <span className="forum-thread-kicker">
+                        <span className="forum-section-pill">{section.name}</span>
+                        {post.is_pinned ? <span className="badge">置顶</span> : null}
+                        {post.is_locked ? <span className="badge">锁定</span> : null}
+                      </span>
+                      <h3>{post.title}</h3>
+                      <p>{post.content}</p>
+                      <span className="forum-meta">
+                        {post.author_name} · {formatTime(post.created_at)}
+                      </span>
+                    </span>
+                    <span className="forum-thread-stats">
+                      <strong>{post.reply_count}</strong>
+                      <small>回复</small>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : forumState.loadError ? (
+            <div className="message error">论坛列表暂未加载成功，恢复后可继续浏览帖子。</div>
+          ) : (
+            <div className="message">当前还没有帖子，登录后可以发布第一条讨论。</div>
+          )}
+        </div>
       </section>
 
       <div className="forum-compose-popover" id="new-post" aria-labelledby="new-post-title">
-        <Link className="forum-compose-dismiss" href="/forum" aria-label="关闭发布窗口" />
+        <a className="forum-compose-dismiss" href="#" aria-label="关闭发布窗口" />
         <section className="forum-compose-dialog">
           <div className="forum-compose-header">
             <div>
               <span className="eyebrow">POST</span>
               <h2 id="new-post-title">发布新帖</h2>
             </div>
-            <Link className="forum-compose-close" href="/forum" aria-label="关闭发布窗口">
+            <a className="forum-compose-close" href="#" aria-label="关闭发布窗口">
               ×
-            </Link>
+            </a>
           </div>
           {account ? (
             <form className="form" action="/forum/posts" method="post">

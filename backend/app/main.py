@@ -1275,7 +1275,7 @@ def export_master_sheets() -> None:
 def build_template_workbook() -> io.BytesIO:
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = "采购模板"
+    sheet.title = "发票模板"
     sheet.append(list(HEADER_MAP.keys()))
     sheet.append(["2026-06-18", "A4纸", "80g", "包", 2, 25, 50, "文具店", "FP01", "INV-0001", "2026-06-18", 50, "示例数据"])
     stream = io.BytesIO()
@@ -2654,18 +2654,18 @@ def update_season_plan(
 async def upload_invoice_form(
     team_name: str = Form(...),
     submitter_name: str = Form(...),
-    submitter_id: str = Form(...),
     remark: str = Form(""),
     form_file: UploadFile = File(...),
 ) -> dict[str, str]:
-    if not team_name.strip() or not submitter_name.strip() or not submitter_id.strip():
-        raise HTTPException(status_code=400, detail="团队名称、提交人姓名、提交人编号不能为空")
+    if not team_name.strip() or not submitter_name.strip():
+        raise HTTPException(status_code=400, detail="兵种名称、提交人姓名不能为空")
     if not form_file.filename or Path(form_file.filename).suffix.lower() != ".xlsx":
         raise HTTPException(status_code=400, detail="只支持上传 .xlsx 表格")
     content = await form_file.read()
     if len(content) > MAX_CONTENT_LENGTH:
         raise HTTPException(status_code=413, detail="文件超过 50MB 上限")
 
+    submitter_id = "invoice"
     batch_id = build_batch_id(submitter_id)
     batch_dir = UNREGISTERED_DIR / batch_id
     batch_dir.mkdir(parents=True, exist_ok=True)
@@ -2703,7 +2703,7 @@ async def upload_invoice_form(
 @app.get("/api/invoices/template")
 def download_template() -> StreamingResponse:
     stream = build_template_workbook()
-    filename = "采购表格模板.xlsx"
+    filename = "发票表格模板.xlsx"
     encoded_filename = quote(filename)
     return StreamingResponse(
         stream,

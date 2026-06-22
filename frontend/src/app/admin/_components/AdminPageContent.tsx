@@ -35,7 +35,7 @@ const adminNavItems = [
   { href: "/admin/homepage", label: "首页内容", section: "home" },
   { href: "/admin/accounts", label: "账号管理", section: "accounts" },
   { href: "/admin/forum", label: "论坛审核", section: "forum" },
-  { href: "/admin/materials", label: "物资审核", section: "materials" },
+  { href: "/admin/materials", label: "发票审核", section: "materials" },
 ] satisfies Array<{ href: string; label: string; section: AdminSection }>;
 
 const adminSectionTitles: Record<AdminSection, string> = {
@@ -43,7 +43,7 @@ const adminSectionTitles: Record<AdminSection, string> = {
   home: "首页内容管理",
   accounts: "账号管理",
   forum: "论坛审核",
-  materials: "物资审核",
+  materials: "发票审核",
   batch: "批次复核",
 };
 
@@ -297,12 +297,6 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
             <p>{adminSectionDescriptions[section]}</p>
           </div>
           <div className="admin-topbar-actions">
-            <form action="/api/admin/review/run" method="post">
-              <input name="return_to" type="hidden" value={currentPath} />
-              <button className="button" type="submit">
-                执行本地审核扫描
-              </button>
-            </form>
             <form action="/api/admin/logout" method="post">
               <button className="ghost-button" type="submit">
                 退出登录
@@ -932,6 +926,12 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
         <div className="section-heading">
           <span className="eyebrow">BATCHES</span>
           <h2>待入库批次</h2>
+          <form action="/api/admin/review/run" method="post">
+            <input name="return_to" type="hidden" value={currentPath} />
+            <button className="button" type="submit">
+              执行本地审核扫描
+            </button>
+          </form>
         </div>
         <div className="table-wrap">
           <table className="admin-batch-table">
