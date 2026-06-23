@@ -11,5 +11,5 @@ export function getCurrentSeasonPlanPeriod(date = new Date()): SeasonPlanPeriod 
 }
 
 export function formatSeasonPlanTitle(period: SeasonPlanPeriod) {
-  return `${period.seasonYear} 赛季 ${period.month} 月计划`;
+  return `${period.seasonYear} 赛季 ${period.month} 月规划`;
 }

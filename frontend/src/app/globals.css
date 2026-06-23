@@ -1960,6 +1960,82 @@ p {
   max-width: 52rem;
 }
 
+.forum-inbox {
+  display: grid;
+  gap: 1rem;
+}
+
+.forum-inbox-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.forum-inbox-item {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+}
+
+.forum-inbox-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.forum-inbox-item-head strong {
+  min-width: min(100%, 16rem);
+  overflow-wrap: anywhere;
+}
+
+.forum-inbox-item-head span:last-child {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.forum-inbox-item p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+}
+
+.forum-status-badge {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.22rem 0.58rem;
+  background: color-mix(in srgb, var(--accent-soft) 78%, transparent);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.forum-status-badge.rejected {
+  border-color: color-mix(in srgb, var(--danger) 34%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+
+.forum-reject-reason {
+  border-left: 3px solid var(--danger);
+  border-radius: calc(var(--radius) - 3px);
+  padding: 0.65rem 0.75rem;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.forum-reply-edit-form {
+  border-top: 1px solid color-mix(in srgb, var(--line) 84%, transparent);
+  padding-top: 0.85rem;
+}
+
 .forum-post-hero h1 {
   max-width: 18ch;
 }
@@ -3365,5 +3441,863 @@ th {
 @media (prefers-reduced-motion: reduce) {
   .home-award-card {
     transition: none;
+  }
+}
+
+.season-planning-page {
+  width: min(1680px, calc(100% - 1.5rem));
+  padding-top: 1.25rem;
+}
+
+.season-planning-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.42fr);
+  gap: 1rem;
+  align-items: stretch;
+  min-height: clamp(14rem, 24vw, 22rem);
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: var(--radius);
+  padding: clamp(1.25rem, 3vw, 2.35rem);
+  background:
+    linear-gradient(130deg, color-mix(in srgb, var(--primary) 22%, transparent), transparent 42%),
+    linear-gradient(150deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface-strong) 86%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.season-planning-hero h1 {
+  max-width: 9ch;
+  margin-top: 0.55rem;
+  font-size: clamp(3rem, 7vw, 6.4rem);
+  line-height: 0.95;
+}
+
+.season-planning-hero p {
+  max-width: 45rem;
+  margin: 0.9rem 0 0;
+  color: color-mix(in srgb, var(--text) 86%, var(--muted));
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.7;
+}
+
+.season-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  align-self: end;
+}
+
+.season-hero-metrics div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  background: color-mix(in srgb, var(--bg) 44%, transparent);
+}
+
+.season-hero-metrics strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: clamp(1.55rem, 3vw, 2.55rem);
+  line-height: 1;
+}
+
+.season-hero-metrics span {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.season-control-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
+}
+
+.season-month-form {
+  flex: 1 1 24rem;
+  max-width: none;
+}
+
+.season-month-form input,
+.season-month-form select {
+  flex: 1 1 9rem;
+  min-height: 2.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.8rem;
+  background: color-mix(in srgb, var(--surface-strong) 78%, transparent);
+  color: var(--text);
+}
+
+.season-month-board {
+  margin-top: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: var(--radius);
+  padding: clamp(0.7rem, 1.4vw, 1rem);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 84%, transparent), transparent),
+    color-mix(in srgb, var(--bg) 42%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.month-week-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+.month-week-row span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: clamp(6.5rem, 9.8vw, 10.75rem);
+  gap: 0.45rem;
+}
+
+.month-cell {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  align-content: space-between;
+  gap: 0.45rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.72rem;
+  background: color-mix(in srgb, var(--surface-strong) 76%, transparent);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.month-cell:first-child {
+  grid-column: calc(var(--month-offset) + 1);
+}
+
+.month-cell:hover {
+  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+  transform: translateY(-2px);
+}
+
+.month-cell-day {
+  color: var(--text);
+  font-size: clamp(1.15rem, 2vw, 1.75rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.month-cell-week {
+  position: absolute;
+  top: 0.72rem;
+  right: 0.72rem;
+  color: color-mix(in srgb, var(--muted) 86%, transparent);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.month-cell strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text);
+  font-size: clamp(0.86rem, 1vw, 1rem);
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.month-cell small {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--text) 74%, var(--muted));
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-cell-active {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent 62%),
+    color-mix(in srgb, var(--surface-strong) 84%, transparent);
+}
+
+.month-cell-done {
+  border-color: color-mix(in srgb, var(--success) 54%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--success) 18%, transparent), transparent 62%),
+    color-mix(in srgb, var(--surface-strong) 84%, transparent);
+}
+
+.month-cell-risk {
+  border-color: color-mix(in srgb, var(--gold) 54%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--gold) 16%, transparent), transparent 62%),
+    color-mix(in srgb, var(--surface-strong) 84%, transparent);
+}
+
+.month-cell-quiet {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 62%),
+    color-mix(in srgb, var(--surface-strong) 74%, transparent);
+}
+
+.week-zoom {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.36fr) minmax(0, 1fr);
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+}
+
+.week-days,
+.week-detail {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.week-days {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+}
+
+.week-day-card {
+  display: grid;
+  grid-template-columns: minmax(5rem, auto) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 4.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+
+.week-day-card span,
+.week-progress-row span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.week-day-card strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text);
+}
+
+.week-day-card p,
+.week-progress-row p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.week-detail {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  padding: clamp(1rem, 2vw, 1.45rem);
+}
+
+.week-detail h2 {
+  font-size: clamp(1.45rem, 2.6vw, 2.3rem);
+}
+
+.week-progress-row {
+  display: grid;
+  grid-template-columns: 2.3rem minmax(8rem, 0.32fr) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.65rem;
+}
+
+.compact-editor {
+  margin-top: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+}
+
+.compact-editor summary {
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.compact-editor .plan-editor {
+  padding: 0 1rem 1rem;
+}
+
+.compact-editor .plan-editor-row {
+  grid-template-columns: 4.2rem minmax(8rem, 0.75fr) minmax(12rem, 1.2fr) minmax(9rem, 0.8fr) minmax(8rem, 0.7fr);
+  padding: 0.75rem;
+}
+
+.robot-rail-section {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 76%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.robot-rail-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.robot-rail-heading h2 {
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+}
+
+.robot-rail {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(10rem, 1fr));
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+}
+
+.robot-rail-card,
+.robot-directory-card {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 64%),
+    color-mix(in srgb, var(--surface) 72%, transparent);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.robot-rail-card {
+  min-height: 8.6rem;
+  padding: 0.85rem;
+}
+
+.robot-rail-card:hover,
+.robot-directory-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent);
+  transform: translateY(-2px);
+}
+
+.robot-rail-card span,
+.robot-rail-card strong,
+.robot-rail-card small,
+.robot-directory-card small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.robot-rail-card span {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.robot-rail-card strong {
+  color: color-mix(in srgb, var(--text) 84%, var(--accent));
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.robot-rail-card small,
+.robot-directory-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.robot-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.85rem;
+}
+
+.robot-directory-card {
+  min-height: 12rem;
+  padding: 1rem;
+}
+
+.robot-directory-card h3,
+.robot-directory-card p {
+  margin: 0;
+}
+
+.robot-directory-card h3 {
+  font-size: 1.25rem;
+}
+
+.robot-directory-card p {
+  line-height: 1.55;
+}
+
+.robot-planning-page {
+  width: min(1540px, calc(100% - 1.5rem));
+  padding-top: 1.25rem;
+}
+
+.robot-plan-header,
+.robot-plan-brief {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.robot-plan-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+  padding: clamp(1rem, 2.4vw, 1.75rem);
+}
+
+.robot-plan-header h1 {
+  max-width: none;
+  margin-top: 0.45rem;
+  font-size: clamp(2.2rem, 5vw, 4.4rem);
+}
+
+.robot-plan-header p {
+  max-width: 52rem;
+  margin: 0.55rem 0 0;
+  line-height: 1.65;
+}
+
+.robot-plan-brief {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.32fr) minmax(0, 1fr);
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+}
+
+.brief-main {
+  display: grid;
+  align-content: center;
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  background: color-mix(in srgb, var(--bg) 34%, transparent);
+}
+
+.brief-main strong {
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.brief-main p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.brief-grid div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.7rem;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.brief-grid dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.brief-grid dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.robot-planning-windows {
+  display: grid;
+  gap: 1rem;
+  height: min(78vh, 820px);
+  min-height: 42rem;
+  margin-top: 0.85rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  border-radius: var(--radius);
+}
+
+.planning-window {
+  min-height: min(74vh, 760px);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+  border-radius: var(--radius);
+  padding: clamp(1rem, 2vw, 1.4rem);
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  box-shadow: var(--shadow);
+  transform: scale(0.985);
+  transform-origin: top center;
+  transition:
+    transform 420ms cubic-bezier(0.22, 0.64, 0.28, 1),
+    border-color 260ms ease;
+}
+
+.planning-window:hover,
+.planning-window:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 52%, transparent);
+  transform: scale(1);
+}
+
+.window-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.window-title-row h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+}
+
+.permission-pill {
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--line));
+  border-radius: var(--radius);
+  padding: 0.45rem 0.7rem;
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  color: color-mix(in srgb, var(--gold) 82%, var(--text));
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.milestone-stage {
+  position: relative;
+  min-height: clamp(25rem, 48vh, 34rem);
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 34%, transparent), transparent),
+    repeating-linear-gradient(90deg, transparent 0 5.5rem, color-mix(in srgb, var(--line) 44%, transparent) 5.5rem calc(5.5rem + 1px));
+}
+
+.milestone-curve {
+  position: absolute;
+  inset: 6% 3%;
+  width: 94%;
+  height: 58%;
+  fill: none;
+}
+
+.milestone-curve polyline {
+  stroke: color-mix(in srgb, var(--accent) 72%, var(--text));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 12;
+  filter: drop-shadow(0 14px 26px color-mix(in srgb, var(--accent) 26%, transparent));
+}
+
+.milestone-nodes {
+  position: absolute;
+  inset: 0;
+}
+
+.milestone-node {
+  position: absolute;
+  width: min(15rem, 28%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24);
+}
+
+.milestone-node-1 {
+  top: 54%;
+  left: 4%;
+}
+
+.milestone-node-2 {
+  top: 18%;
+  left: 25%;
+}
+
+.milestone-node-3 {
+  top: 44%;
+  left: 47%;
+}
+
+.milestone-node-4 {
+  top: 14%;
+  left: 68%;
+}
+
+.milestone-node summary {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.milestone-node summary::marker {
+  color: var(--accent);
+}
+
+.milestone-node span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.milestone-node strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.milestone-node p {
+  margin: 0;
+  padding: 0 0.75rem 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.milestone-node small {
+  display: block;
+  padding: 0 0.75rem 0.75rem;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.milestone-node.is-done {
+  border-color: color-mix(in srgb, var(--success) 52%, var(--line));
+}
+
+.monthly-task-board {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.monthly-task-row {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr) minmax(7rem, auto);
+  gap: 0.85rem;
+  align-items: center;
+  min-height: 5.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+
+.task-check {
+  display: grid;
+  width: 2.2rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  filter: grayscale(1);
+  opacity: 0.58;
+}
+
+.task-check-done {
+  border-color: color-mix(in srgb, var(--success) 64%, var(--line));
+  filter: none;
+  opacity: 1;
+}
+
+.monthly-task-row strong,
+.weekly-log-row strong {
+  color: var(--text);
+}
+
+.monthly-task-row p {
+  margin: 0.25rem 0 0;
+  line-height: 1.45;
+}
+
+.monthly-task-row small,
+.weekly-log-row small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.weekly-log-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.weekly-log-row {
+  display: grid;
+  grid-template-columns: minmax(4rem, 0.16fr) minmax(0, 1fr) minmax(8rem, auto);
+  gap: 0.85rem;
+  align-items: center;
+  min-height: 5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+
+.weekly-log-row span {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+@media (max-width: 1120px) {
+  .season-planning-hero,
+  .robot-plan-header,
+  .robot-plan-brief,
+  .week-zoom {
+    grid-template-columns: 1fr;
+  }
+
+  .brief-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .robot-rail {
+    grid-template-columns: repeat(7, minmax(11rem, 12rem));
+  }
+
+  .compact-editor .plan-editor-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compact-editor .plan-check,
+  .compact-editor .plan-target-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .season-planning-page,
+  .robot-planning-page {
+    width: min(100% - 1rem, 1680px);
+    padding-top: 0.85rem;
+  }
+
+  .season-planning-hero {
+    min-height: 13rem;
+  }
+
+  .season-planning-hero h1 {
+    font-size: clamp(2.4rem, 13vw, 3.7rem);
+  }
+
+  .season-hero-metrics,
+  .brief-grid,
+  .month-week-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .month-week-row {
+    display: none;
+  }
+
+  .month-grid {
+    grid-template-columns: repeat(7, minmax(7.25rem, 1fr));
+    grid-auto-rows: 7.4rem;
+    overflow-x: auto;
+  }
+
+  .month-cell:first-child {
+    grid-column: auto;
+  }
+
+  .week-progress-row,
+  .weekly-log-row,
+  .monthly-task-row,
+  .week-day-card {
+    grid-template-columns: 1fr;
+  }
+
+  .robot-plan-header {
+    align-items: start;
+  }
+
+  .robot-planning-windows {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .planning-window {
+    min-height: 33rem;
+    transform: none;
+  }
+
+  .milestone-stage {
+    min-height: 38rem;
+  }
+
+  .milestone-node {
+    width: min(18rem, 78%);
+  }
+
+  .milestone-node-1 {
+    top: 8%;
+    left: 6%;
+  }
+
+  .milestone-node-2 {
+    top: 31%;
+    left: 18%;
+  }
+
+  .milestone-node-3 {
+    top: 54%;
+    left: 6%;
+  }
+
+  .milestone-node-4 {
+    top: 76%;
+    left: 18%;
   }
 }

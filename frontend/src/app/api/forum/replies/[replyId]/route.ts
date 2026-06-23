@@ -3,50 +3,47 @@ import { redirect } from "next/navigation";
 import { API_BASE } from "@/lib/api";
 import { feedbackPath, responseError } from "@/lib/admin-feedback";
 
-type PostRouteContext = {
-  params: Promise<{ postId: string }>;
+type ReplyRouteContext = {
+  params: Promise<{ replyId: string }>;
 };
 
-export async function POST(request: Request, { params }: PostRouteContext) {
-  const [{ postId }, form, cookieStore] = await Promise.all([
+export async function POST(request: Request, { params }: ReplyRouteContext) {
+  const [{ replyId }, form, cookieStore] = await Promise.all([
     params,
     request.formData(),
     cookies(),
   ]);
   const account = cookieStore.get("printk-site-account")?.value ?? "";
-  const editPath = `/forum/${postId}/edit`;
+  const inboxPath = "/forum/inbox";
 
   if (!account) {
-    redirect(feedbackPath(editPath, "error", "请先登录后再编辑帖子"));
+    redirect(feedbackPath(inboxPath, "error", "请先登录后再编辑回复"));
   }
 
   let feedbackKey: "ok" | "error" = "error";
   let feedbackMessage = "论坛服务暂时不可用，请稍后重试";
-  let targetPath = editPath;
 
   try {
-    const response = await fetch(`${API_BASE}/api/forum/posts/${encodeURIComponent(postId)}`, {
+    const response = await fetch(`${API_BASE}/api/forum/replies/${encodeURIComponent(replyId)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        title: String(form.get("title") ?? ""),
         content: String(form.get("content") ?? ""),
         author_account: account,
       }),
     });
 
     if (!response.ok) {
-      feedbackMessage = await responseError(response, "编辑帖子失败");
+      feedbackMessage = await responseError(response, "编辑回复失败");
     } else {
       feedbackKey = "ok";
-      feedbackMessage = "帖子已重新提交审核";
-      targetPath = "/forum/inbox";
+      feedbackMessage = "回复已重新提交审核";
     }
   } catch {
     feedbackMessage = "论坛服务暂时不可用，请稍后重试";
   }
 
-  redirect(feedbackPath(targetPath, feedbackKey, feedbackMessage));
+  redirect(feedbackPath(inboxPath, feedbackKey, feedbackMessage));
 }

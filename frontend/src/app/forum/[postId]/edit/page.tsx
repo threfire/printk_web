@@ -22,11 +22,12 @@ type ForumPostEditState =
       message: string;
     };
 
-async function fetchPost(postId: string): Promise<ForumPostEditState> {
+async function fetchPost(postId: string, account: string): Promise<ForumPostEditState> {
   try {
-    const response = await fetch(`${API_BASE}/api/forum/posts/${encodeURIComponent(postId)}`, {
-      cache: "no-store",
-    });
+    const endpoint = account
+      ? `${API_BASE}/api/forum/my-posts/${encodeURIComponent(postId)}?author_account=${encodeURIComponent(account)}`
+      : `${API_BASE}/api/forum/posts/${encodeURIComponent(postId)}`;
+    const response = await fetch(endpoint, { cache: "no-store" });
     if (response.status === 404) {
       return { status: "not-found" };
     }
@@ -45,16 +46,16 @@ async function fetchPost(postId: string): Promise<ForumPostEditState> {
 export default async function ForumPostEditPage({ params, searchParams }: ForumPostEditPageProps) {
   const emptyQuery: Record<string, string | string[] | undefined> = {};
   const { postId } = await params;
-  const [postState, cookieStore, query] = await Promise.all([
-    fetchPost(postId),
+  const [cookieStore, query] = await Promise.all([
     cookies(),
     searchParams ?? Promise.resolve(emptyQuery),
   ]);
+  const account = cookieStore.get("printk-site-account")?.value ?? "";
+  const postState = await fetchPost(postId, account);
   if (postState.status === "not-found") {
     notFound();
   }
 
-  const account = cookieStore.get("printk-site-account")?.value ?? "";
   const error = firstParam(query.error);
 
   if (postState.status === "error") {

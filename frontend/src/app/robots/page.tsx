@@ -5,18 +5,18 @@ export default function RobotsPage() {
   return (
     <div className="page">
       <section className="section-hero">
-        <span className="eyebrow">ROLES</span>
-        <h1>兵种展示</h1>
-        <p>兵种资料按独立页面归档，点击兵种卡片即可查看定位、负责组别、训练重点和交付资料。</p>
+        <span className="eyebrow">ROBOT LINES</span>
+        <h1>兵种机器人</h1>
+        <p>舵轮英雄、全向英雄、舵轮步兵、全向步兵、舵轮哨兵、麦轮哨兵、轮腿步兵按独立页面展示赛季负责人、需求、验收目标和进度窗口。</p>
       </section>
       <section className="section">
-        <div className="card-grid">
+        <div className="robot-directory-grid">
           {robotRoles.map((robot) => (
-            <Link className="card robot-card" href={`/robots/${robot.id}`} key={robot.id}>
+            <Link className="robot-directory-card" href={`/robots/${robot.id}`} key={robot.id}>
               <span className="badge">{robot.group}</span>
               <h3>{robot.name}</h3>
               <p>{robot.role}</p>
-              <p>{robot.overview}</p>
+              <small>{robot.deliverable}</small>
             </Link>
           ))}
         </div>

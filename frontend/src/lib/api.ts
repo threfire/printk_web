@@ -113,10 +113,15 @@ export type ForumReply = {
   reviewed_at: string;
   deleted_at: string;
   created_at: string;
+  updated_at: string;
 };
 
 export type AdminForumReply = ForumReply & {
   post_title: string;
+};
+
+export type ForumInboxReply = AdminForumReply & {
+  post_status: ForumPost["status"] | "";
 };
 
 export type ForumPostListData = {
@@ -131,6 +136,11 @@ export type ForumPostDetailData = {
 export type ForumManagementData = {
   posts: ForumPost[];
   replies: AdminForumReply[];
+};
+
+export type ForumInboxData = {
+  posts: ForumPost[];
+  replies: ForumInboxReply[];
 };
 
 export type HomepageAsset = {

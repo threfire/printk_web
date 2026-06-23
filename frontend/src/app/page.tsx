@@ -5,7 +5,15 @@ import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsC
 import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 
-const robots = ["英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种", "无人机兵种", "雷达兵种", "飞镖兵种"];
+const robots = [
+  "舵轮英雄机器人",
+  "全向轮英雄机器人",
+  "舵轮步兵机器人",
+  "全向轮步兵机器人",
+  "六轴工程机器人",
+  "舵轮哨兵机器人",
+  "全向轮哨兵机器人",
+];
 const groups = ["电控组", "机械组", "算法组", "视觉组", "运营组"];
 const awardPlaceholders = [
   { title: "RoboMaster 赛事奖项", meta: "奖状图片占位" },
@@ -152,9 +160,9 @@ export default async function Home() {
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
-          <h1>战队门户与赛季资产中心</h1>
+          <h1>printk机甲大师战队</h1>
           <p>
-            PRINTK 门户把功能入口、赛季规划、兵种展示和队员资料放在同一个入口，成员能快速进入业务系统，管理人员能持续维护战队数据。
+            printk机甲大师战队成立于2024年秋季，位于贵州大学明正楼科技园1楼报告厅，正式队员30多人。战队参加过2025赛季高校联盟赛广西站并获步兵对抗赛季军，参加过2026赛季高校联盟赛重庆站，首次完整参与高校联盟赛的步兵对抗赛、工程挑战赛和3v3对抗赛三个赛项。
           </p>
           <div className="hero-actions">
             <Link className="button" href="/invoices">
@@ -191,13 +199,11 @@ export default async function Home() {
 
       <section className="section split-section">
         <div className="section-heading">
-          <span className="eyebrow">赛季资产</span>
           <h2>兵种展示</h2>
         </div>
         <div className="card-grid">
-          {robots.map((robot, index) => (
+          {robots.map((robot) => (
             <article className="card" key={robot}>
-              <span className="badge">2026 赛季 #{index + 1}</span>
               <h3>{robot}</h3>
               <p>资料按赛季归档，展示兵种定位、负责组别、当前重点和交付物。</p>
             </article>

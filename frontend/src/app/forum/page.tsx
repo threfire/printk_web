@@ -95,6 +95,11 @@ export default async function ForumPage({ searchParams }: ForumPageProps) {
         </div>
 
         <div className="forum-header-tools">
+          {account ? (
+            <Link className="ghost-button" href="/forum/inbox">
+              我的审核收件箱
+            </Link>
+          ) : null}
           <div className="forum-rule-popover">
             <button className="forum-rule-trigger" type="button" aria-label="查看发帖规则">
               发帖规则

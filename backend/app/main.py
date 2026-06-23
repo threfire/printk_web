@@ -338,6 +338,7 @@ def init_db() -> None:
                 reviewed_at TEXT DEFAULT '',
                 deleted_at TEXT DEFAULT '',
                 created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT '',
                 FOREIGN KEY (post_id) REFERENCES forum_post(id),
                 FOREIGN KEY (author_account) REFERENCES site_account(account)
             );
@@ -407,6 +408,18 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_forum_reply_status_created_at
             ON forum_reply (status, deleted_at, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_forum_post_author_status_updated
+            ON forum_post (author_account, status, deleted_at, updated_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_forum_reply_author_status_updated
+            ON forum_reply (author_account, status, deleted_at, updated_at DESC)
             """
         )
         conn.execute(
@@ -679,10 +692,18 @@ def ensure_forum_moderation_columns(conn: sqlite3.Connection) -> None:
         "reviewed_by": "TEXT DEFAULT ''",
         "reviewed_at": "TEXT DEFAULT ''",
         "deleted_at": "TEXT DEFAULT ''",
+        "updated_at": "TEXT NOT NULL DEFAULT ''",
     }
     for column, definition in reply_definitions.items():
         if column not in reply_columns:
             conn.execute(f"ALTER TABLE forum_reply ADD COLUMN {column} {definition}")
+    conn.execute(
+        """
+        UPDATE forum_reply
+        SET updated_at = created_at
+        WHERE COALESCE(updated_at, '') = ''
+        """
+    )
 
 
 def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
@@ -845,6 +866,7 @@ def forum_reply_response(row: sqlite3.Row) -> dict[str, str]:
         "reviewed_at": row["reviewed_at"] if "reviewed_at" in row.keys() else "",
         "deleted_at": row["deleted_at"] if "deleted_at" in row.keys() else "",
         "created_at": row["created_at"],
+        "updated_at": row["updated_at"] if "updated_at" in row.keys() and row["updated_at"] else row["created_at"],
     }
 
 
@@ -1992,6 +2014,11 @@ class ForumReplyCreateRequest(BaseModel):
     author_account: str
 
 
+class ForumReplyUpdateRequest(BaseModel):
+    content: str
+    author_account: str
+
+
 class ForumModerationRequest(BaseModel):
     status: str
     reject_reason: str = ""
@@ -2696,10 +2723,11 @@ def moderate_forum_reply(
             SET status = ?,
                 reject_reason = ?,
                 reviewed_by = ?,
-                reviewed_at = ?
+                reviewed_at = ?,
+                updated_at = ?
             WHERE id = ?
             """,
-            (status, reject_reason, reviewer, timestamp, reply_id),
+            (status, reject_reason, reviewer, timestamp, timestamp, reply_id),
         )
         conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, existing["post_id"]))
     return {"id": reply_id}
@@ -2715,10 +2743,10 @@ def delete_forum_reply(reply_id: str, _: str = Depends(require_admin)) -> dict[s
         conn.execute(
             """
             UPDATE forum_reply
-            SET deleted_at = ?, status = 'hidden'
+            SET deleted_at = ?, status = 'hidden', updated_at = ?
             WHERE id = ?
             """,
-            (timestamp, reply_id),
+            (timestamp, timestamp, reply_id),
         )
         conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, existing["post_id"]))
     return {"id": reply_id}
@@ -2748,6 +2776,92 @@ def list_forum_posts() -> dict[str, Any]:
             (FORUM_PUBLIC_STATUS, FORUM_PUBLIC_STATUS),
         ).fetchall()
     return {"posts": [forum_post_response(row) for row in rows]}
+
+
+@app.get("/api/forum/inbox")
+def list_forum_inbox(author_account: str = Query(...)) -> dict[str, Any]:
+    with db_connection() as conn:
+        account = ensure_forum_author(conn, author_account)
+        posts = conn.execute(
+            """
+            SELECT
+                post.*,
+                account.full_name,
+                COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
+            WHERE post.author_account = ?
+                AND post.status IN ('pending', 'rejected')
+                AND COALESCE(post.deleted_at, '') = ''
+            GROUP BY post.id
+            ORDER BY post.updated_at DESC
+            LIMIT 100
+            """,
+            (FORUM_PUBLIC_STATUS, account),
+        ).fetchall()
+        replies = conn.execute(
+            """
+            SELECT
+                reply.*,
+                account.full_name,
+                post.title AS post_title,
+                post.status AS post_status
+            FROM forum_reply AS reply
+            LEFT JOIN site_account AS account ON account.account = reply.author_account
+            LEFT JOIN forum_post AS post ON post.id = reply.post_id
+            WHERE reply.author_account = ?
+                AND reply.status IN ('pending', 'rejected')
+                AND COALESCE(reply.deleted_at, '') = ''
+            ORDER BY reply.updated_at DESC
+            LIMIT 100
+            """,
+            (account,),
+        ).fetchall()
+    reply_payload = []
+    for row in replies:
+        item = forum_reply_response(row)
+        item["post_title"] = row["post_title"] or ""
+        item["post_status"] = row["post_status"] or ""
+        reply_payload.append(item)
+    return {
+        "posts": [forum_post_response(row) for row in posts],
+        "replies": reply_payload,
+    }
+
+
+@app.get("/api/forum/my-posts/{post_id}")
+def get_my_forum_post(post_id: str, author_account: str = Query(...)) -> dict[str, Any]:
+    with db_connection() as conn:
+        account = ensure_forum_author(conn, author_account)
+        post = conn.execute(
+            """
+            SELECT
+                post.*,
+                account.full_name,
+                COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
+            WHERE post.id = ?
+                AND post.author_account = ?
+                AND COALESCE(post.deleted_at, '') = ''
+            GROUP BY post.id
+            """,
+            (FORUM_PUBLIC_STATUS, post_id, account),
+        ).fetchone()
+        if post is None:
+            raise HTTPException(status_code=404, detail="post not found")
+    return {
+        "post": forum_post_response(post),
+        "replies": [],
+    }
 
 
 @app.post("/api/forum/posts")
@@ -2898,13 +3012,59 @@ def create_forum_reply(post_id: str, payload: ForumReplyCreateRequest) -> dict[s
             raise HTTPException(status_code=400, detail="帖子已锁定，暂时不能回复")
         conn.execute(
             """
-            INSERT INTO forum_reply (id, post_id, content, author_account, status, created_at)
-            VALUES (?, ?, ?, ?, 'pending', ?)
+            INSERT INTO forum_reply (id, post_id, content, author_account, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, 'pending', ?, ?)
             """,
-            (reply_id, post_id, content, author_account, timestamp),
+            (reply_id, post_id, content, author_account, timestamp, timestamp),
         )
         conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, post_id))
     return {"id": reply_id, "post_id": post_id}
+
+
+@app.put("/api/forum/replies/{reply_id}")
+def update_forum_reply(reply_id: str, payload: ForumReplyUpdateRequest) -> dict[str, Any]:
+    content = normalize_forum_content(payload.content, "reply", 2000)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        author_account = ensure_forum_author(conn, payload.author_account)
+        existing = conn.execute(
+            """
+            SELECT id, post_id, author_account, deleted_at
+            FROM forum_reply
+            WHERE id = ?
+            """,
+            (reply_id,),
+        ).fetchone()
+        if existing is None or existing["deleted_at"]:
+            raise HTTPException(status_code=404, detail="reply not found")
+        if existing["author_account"] != author_account:
+            raise HTTPException(status_code=403, detail="cannot edit this reply")
+        conn.execute(
+            """
+            UPDATE forum_reply
+            SET content = ?,
+                status = 'pending',
+                reject_reason = '',
+                reviewed_by = '',
+                reviewed_at = '',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (content, timestamp, reply_id),
+        )
+        conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, existing["post_id"]))
+        row = conn.execute(
+            """
+            SELECT reply.*, account.full_name
+            FROM forum_reply AS reply
+            LEFT JOIN site_account AS account ON account.account = reply.author_account
+            WHERE reply.id = ?
+            """,
+            (reply_id,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="reply not found")
+    return forum_reply_response(row)
 
 
 @app.post("/api/auth/login")
