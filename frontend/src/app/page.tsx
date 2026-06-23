@@ -6,13 +6,19 @@ import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 
 const robots = [
-  "舵轮英雄机器人",
-  "全向轮英雄机器人",
-  "舵轮步兵机器人",
-  "全向轮步兵机器人",
-  "六轴工程机器人",
-  "舵轮哨兵机器人",
-  "全向轮哨兵机器人",
+  { name: "舵轮英雄机器人" },
+  { name: "全向轮英雄机器人" },
+  { name: "舵轮步兵机器人" },
+  { name: "全向轮步兵机器人" },
+  {
+    name: "六轴工程机器人",
+    image: {
+      src: "/robots/engineering-robot.png",
+      alt: "PRINTK 六轴工程机器人",
+    },
+  },
+  { name: "舵轮哨兵机器人" },
+  { name: "全向轮哨兵机器人" },
 ];
 const memberGroups = [
   { name: "机械组", members: ["周亦辰", "林嘉航", "何景川", "陈知远", "赵书衡"] },
@@ -164,7 +170,6 @@ export default async function Home() {
 
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
           <h1 className="hero-title">
             <span className="hero-title-primary">PRINTK</span>
             <span className="hero-title-secondary">机甲大师战队</span>
@@ -211,8 +216,11 @@ export default async function Home() {
         </div>
         <div className="card-grid">
           {robots.map((robot) => (
-            <article className="card" key={robot}>
-              <h3>{robot}</h3>
+            <article className="card home-robot-card" key={robot.name}>
+              {robot.image ? (
+                <Image className="home-robot-image" src={robot.image.src} alt={robot.image.alt} width={873} height={655} />
+              ) : null}
+              <h3>{robot.name}</h3>
               <p>资料按赛季归档，展示兵种定位、负责组别、当前重点和交付物。</p>
             </article>
           ))}

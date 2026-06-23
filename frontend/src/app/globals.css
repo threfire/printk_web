@@ -1225,6 +1225,14 @@ p {
   border-color: color-mix(in srgb, var(--accent) 48%, transparent);
 }
 
+.home-robot-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 873 / 655;
+  border-radius: calc(var(--radius) - 4px);
+  object-fit: cover;
+}
+
 .feature-card {
   min-height: 13rem;
 }
@@ -1296,19 +1304,18 @@ p {
 
 .home-member-list {
   display: grid;
-  gap: 0.72rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 0.9rem;
+  row-gap: 0.72rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .home-member-list li {
-  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
-  border-radius: calc(var(--radius) - 4px);
-  padding: 0.62rem 0.72rem;
-  background: color-mix(in srgb, var(--surface) 64%, transparent);
   color: color-mix(in srgb, var(--text) 90%, var(--muted));
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .member-photo-link:hover .member-photo {

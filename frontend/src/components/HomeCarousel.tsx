@@ -277,27 +277,6 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
         </section>
       ) : null}
 
-      <form className="danmaku-panel" onSubmit={sendDanmaku}>
-        <button
-          className="danmaku-toggle"
-          type="button"
-          aria-pressed={danmakuEnabled}
-          onClick={() => setDanmakuEnabled((current) => !current)}
-        >
-          {danmakuEnabled ? "弹幕开" : "弹幕关"}
-        </button>
-        <input
-          aria-label="给当前图片发送弹幕"
-          maxLength={48}
-          placeholder="请发弹幕留下你想说的话吧 (｡･ω･｡)ﾉ♡"
-          value={danmakuDraft}
-          onChange={(event) => setDanmakuDraft(event.target.value)}
-        />
-        <button className="button danmaku-send" type="submit">
-          发送
-        </button>
-      </form>
-
       <section className="image-carousel" aria-label="战队图片展示">
         <button className="carousel-nav carousel-nav-prev" type="button" aria-label="上一张" onClick={goPrev}>
           <span aria-hidden="true">&lsaquo;</span>
@@ -337,6 +316,27 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
           </div>
         ))}
       </section>
+
+      <form className="danmaku-panel" onSubmit={sendDanmaku}>
+        <button
+          className="danmaku-toggle"
+          type="button"
+          aria-pressed={danmakuEnabled}
+          onClick={() => setDanmakuEnabled((current) => !current)}
+        >
+          {danmakuEnabled ? "弹幕开" : "弹幕关"}
+        </button>
+        <input
+          aria-label="给当前图片发送弹幕"
+          maxLength={48}
+          placeholder="请发弹幕留下你想说的话吧 (｡･ω･｡)ﾉ♡"
+          value={danmakuDraft}
+          onChange={(event) => setDanmakuDraft(event.target.value)}
+        />
+        <button className="button danmaku-send" type="submit">
+          发送
+        </button>
+      </form>
     </div>
   );
 }
