@@ -15,6 +15,7 @@ const emptyProfile: SiteAccountProfile = {
   gender: "",
   grade: "",
   member_status: "",
+  permission_level: "",
   department: "",
   phone: "",
   email: "",
@@ -85,7 +86,7 @@ export default async function AccountPage() {
         </div>
         <div className="account-summary">
           <strong>{profile.full_name || profile.account}</strong>
-          <span>{[profile.member_status, profile.department, profile.grade].filter(Boolean).join(" / ") || "资料待完善"}</span>
+          <span>{[profile.member_status, profile.permission_level, profile.department, profile.grade].filter(Boolean).join(" / ") || "资料待完善"}</span>
         </div>
       </section>
 
@@ -117,6 +118,10 @@ export default async function AccountPage() {
               <dd>{profile.member_status || "未填写"}</dd>
             </div>
             <div>
+              <dt>权限</dt>
+              <dd>{profile.permission_level || "普通队员"}</dd>
+            </div>
+            <div>
               <dt>部门信息</dt>
               <dd>{profile.department || "未填写"}</dd>
             </div>
@@ -127,6 +132,7 @@ export default async function AccountPage() {
           <span className="eyebrow">EDIT</span>
           <h2>编辑资料</h2>
           <form className="form profile-form" action="/account/profile" method="post">
+            <input name="permission_level" type="hidden" value={profile.permission_level || "普通队员"} />
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="profile-full-name">姓名</label>

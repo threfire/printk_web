@@ -14,7 +14,7 @@ type SeasonPlanPageProps = {
 };
 
 const robotTypes = ["英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种"] as const;
-const planEditorStatuses = new Set(["兵种组长", "队长", "管理员", "老师"]);
+const planEditorPermissions = new Set(["兵种组长", "部门组长", "队长", "管理"]);
 
 const emptyProfile: SiteAccountProfile = {
   account: "",
@@ -22,6 +22,7 @@ const emptyProfile: SiteAccountProfile = {
   gender: "",
   grade: "",
   member_status: "",
+  permission_level: "",
   department: "",
   phone: "",
   email: "",
@@ -183,7 +184,7 @@ export default async function SeasonPlanPage({ searchParams }: SeasonPlanPagePro
     fetchSeasonPlan(period),
     fetchProfile(account),
   ]);
-  const canEdit = Boolean(account) && planEditorStatuses.has(profile.member_status) && !profile.is_disabled;
+  const canEdit = Boolean(account) && planEditorPermissions.has(profile.permission_level) && !profile.is_disabled;
   const hasPlans = planData.plans.length > 0;
   const ok = firstParam(query.ok);
   const error = firstParam(query.error);
@@ -193,7 +194,7 @@ export default async function SeasonPlanPage({ searchParams }: SeasonPlanPagePro
       <section className="section-hero">
         <span className="eyebrow">SEASON PLAN</span>
         <h1>赛季月度规划</h1>
-        <p>{currentMonthTitle}按兵种拆成任务清单，拥有兵种组长身份及以上权限的账号可编辑。</p>
+        <p>{currentMonthTitle}按兵种拆成任务清单，拥有兵种组长及以上权限的账号可编辑。</p>
         {ok ? <div className="message">{ok}</div> : null}
         {error ? <div className="message error">{error}</div> : null}
         <form className="inline-login" action="/season-plan" method="get">

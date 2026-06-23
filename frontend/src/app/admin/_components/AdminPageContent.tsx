@@ -14,6 +14,7 @@ import {
   genderOptions,
   gradeOptions,
   memberStatusOptions,
+  permissionLevelOptions,
   type SiteAccountProfile,
 } from "@/lib/account-profile";
 import { firstParam } from "@/lib/admin-feedback";
@@ -201,6 +202,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
   const accountFilters = {
     keyword: param(params, "keyword"),
     member_status: param(params, "member_status"),
+    permission_level: param(params, "permission_level"),
     department: param(params, "department"),
     state: param(params, "state"),
     image2: param(params, "image2"),
@@ -367,6 +369,12 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
               </select>
             </div>
             <div className="field">
+              <label htmlFor="account-permission-level">权限</label>
+              <select id="account-permission-level" name="permission_level" defaultValue={accountFilters.permission_level}>
+                <OptionList options={permissionLevelOptions} />
+              </select>
+            </div>
+            <div className="field">
               <label htmlFor="account-department">部门</label>
               <select id="account-department" name="department" defaultValue={accountFilters.department}>
                 <OptionList options={departmentOptions} />
@@ -444,6 +452,12 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                           <label htmlFor={`${account.account}-member-status`}>身份</label>
                           <select form={editFormId} id={`${account.account}-member-status`} name="member_status" defaultValue={account.member_status}>
                             <OptionList options={memberStatusOptions} />
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-permission-level`}>权限</label>
+                          <select form={editFormId} id={`${account.account}-permission-level`} name="permission_level" defaultValue={account.permission_level || "普通队员"}>
+                            <OptionList options={permissionLevelOptions} />
                           </select>
                         </div>
                         <div className="field">

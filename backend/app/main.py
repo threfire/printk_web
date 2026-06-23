@@ -287,6 +287,7 @@ def init_db() -> None:
                 gender TEXT DEFAULT '',
                 grade TEXT DEFAULT '',
                 member_status TEXT DEFAULT '',
+                permission_level TEXT DEFAULT '',
                 department TEXT DEFAULT '',
                 phone TEXT DEFAULT '',
                 email TEXT DEFAULT '',
@@ -410,8 +411,8 @@ def init_db() -> None:
         )
         conn.execute(
             """
-            CREATE INDEX IF NOT EXISTS idx_site_account_member_status
-            ON site_account (member_status, image2_allowed, is_disabled)
+            CREATE INDEX IF NOT EXISTS idx_site_account_member_permission
+            ON site_account (member_status, permission_level, image2_allowed, is_disabled)
             """
         )
         conn.execute(
@@ -606,6 +607,7 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
         "gender": "TEXT DEFAULT ''",
         "grade": "TEXT DEFAULT ''",
         "member_status": "TEXT DEFAULT ''",
+        "permission_level": "TEXT DEFAULT ''",
         "department": "TEXT DEFAULT ''",
         "phone": "TEXT DEFAULT ''",
         "email": "TEXT DEFAULT ''",
@@ -619,6 +621,26 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
     for column, definition in profile_columns.items():
         if column not in existing_columns:
             conn.execute(f"ALTER TABLE site_account ADD COLUMN {column} {definition}")
+    conn.execute(
+        """
+        UPDATE site_account
+        SET permission_level = CASE member_status
+            WHEN '管理员' THEN '管理'
+            WHEN '队长' THEN '队长'
+            WHEN '兵种组长' THEN '兵种组长'
+            ELSE COALESCE(NULLIF(permission_level, ''), '普通队员')
+        END
+        WHERE COALESCE(permission_level, '') = ''
+            OR member_status IN ('管理员', '队长', '兵种组长')
+        """
+    )
+    conn.execute(
+        """
+        UPDATE site_account
+        SET member_status = '正式队员'
+        WHERE member_status IN ('管理员', '队长', '兵种组长')
+        """
+    )
     conn.execute(
         """
         UPDATE site_account
@@ -701,8 +723,9 @@ def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
 
 GENDER_OPTIONS = {"", "男", "女", "其他"}
 GRADE_OPTIONS = {"", "大一", "大二", "大三", "大四", "研究生"}
-PLAN_EDITOR_STATUS_OPTIONS = {"兵种组长", "队长", "管理员", "老师"}
-MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "兵种组长", "队长", "管理员", "老队员", "退役队员", "老师"}
+PLAN_EDITOR_PERMISSION_OPTIONS = {"兵种组长", "部门组长", "队长", "管理"}
+MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"}
+PERMISSION_LEVEL_OPTIONS = {"", "普通队员", "兵种组长", "部门组长", "队长", "管理"}
 REWARD_STATUS_OPTIONS = {"正式队员", "老队员"}
 DEPARTMENT_OPTIONS = {"", "电控", "机械", "算法", "运营"}
 SEASON_PLAN_ROBOT_TYPES = {"英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种"}
@@ -728,6 +751,7 @@ def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
         "gender": normalize_choice(profile.gender, "性别", GENDER_OPTIONS),
         "grade": normalize_choice(profile.grade, "年级", GRADE_OPTIONS),
         "member_status": normalize_choice(profile.member_status, "身份信息", MEMBER_STATUS_OPTIONS),
+        "permission_level": normalize_choice(profile.permission_level, "权限", PERMISSION_LEVEL_OPTIONS),
         "department": normalize_choice(profile.department, "部门信息", DEPARTMENT_OPTIONS),
         "phone": normalize_limited_text(profile.phone, "联系电话", 32),
         "email": normalize_limited_text(profile.email, "邮箱", 80),
@@ -755,6 +779,7 @@ def site_account_response(row: sqlite3.Row, include_admin: bool = False) -> dict
         "gender": row["gender"] or "",
         "grade": row["grade"] or "",
         "member_status": row["member_status"] or "",
+        "permission_level": row["permission_level"] or "",
         "department": row["department"] or "",
         "phone": row["phone"] or "",
         "email": row["email"] or "",
@@ -904,14 +929,14 @@ def require_site_plan_editor(payload: "SeasonPlanRequest") -> str:
     account = normalize_account(payload.editor_account)
     with db_connection() as conn:
         row = conn.execute(
-            "SELECT account, member_status, is_disabled FROM site_account WHERE account = ?",
+            "SELECT account, permission_level, is_disabled FROM site_account WHERE account = ?",
             (account,),
         ).fetchone()
     if row is None:
         raise HTTPException(status_code=401, detail="请先登录账号")
     if row["is_disabled"]:
         raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
-    if row["member_status"] not in PLAN_EDITOR_STATUS_OPTIONS:
+    if row["permission_level"] not in PLAN_EDITOR_PERMISSION_OPTIONS:
         raise HTTPException(status_code=403, detail="当前账号没有赛季规划编辑权限")
     return account
 
@@ -1915,6 +1940,7 @@ class SiteAccountProfile(BaseModel):
     gender: str = ""
     grade: str = ""
     member_status: str = ""
+    permission_level: str = ""
     department: str = ""
     phone: str = ""
     email: str = ""
@@ -2147,10 +2173,10 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
         conn.execute(
             """
             INSERT INTO site_account (
-                account, password_hash, full_name, gender, grade, member_status,
+                account, password_hash, full_name, gender, grade, member_status, permission_level,
                 department, phone, email, bio, reward_score, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
             """,
             (
                 account,
@@ -2159,6 +2185,7 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
                 profile["gender"],
                 profile["grade"],
                 profile["member_status"],
+                profile["permission_level"] or "普通队员",
                 profile["department"],
                 profile["phone"],
                 profile["email"],
@@ -2202,7 +2229,10 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
     profile = normalize_site_profile(payload)
     timestamp = now_iso()
     with db_connection() as conn:
-        existing = conn.execute("SELECT account, is_disabled FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        existing = conn.execute(
+            "SELECT account, is_disabled, permission_level FROM site_account WHERE account = ?",
+            (normalized_account,),
+        ).fetchone()
         if existing is None:
             raise HTTPException(status_code=404, detail="账号不存在")
         if existing["is_disabled"]:
@@ -2210,7 +2240,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
         conn.execute(
             """
             UPDATE site_account
-            SET full_name = ?, gender = ?, grade = ?, member_status = ?,
+            SET full_name = ?, gender = ?, grade = ?, member_status = ?, permission_level = ?,
                 department = ?, phone = ?, email = ?, bio = ?,
                 reward_score = CASE WHEN ? IN ('正式队员', '老队员') THEN reward_score ELSE 0 END,
                 updated_at = ?
@@ -2221,6 +2251,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
                 profile["gender"],
                 profile["grade"],
                 profile["member_status"],
+                existing["permission_level"] or "普通队员",
                 profile["department"],
                 profile["phone"],
                 profile["email"],
@@ -2238,12 +2269,14 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
 def list_site_accounts(
     keyword: str = Query(default="", max_length=80),
     member_status: str = Query(default=""),
+    permission_level: str = Query(default=""),
     department: str = Query(default=""),
     state: str = Query(default="all"),
     image2: str = Query(default="all"),
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
     normalized_member_status = normalize_choice(member_status, "身份信息", MEMBER_STATUS_OPTIONS)
+    normalized_permission_level = normalize_choice(permission_level, "权限", PERMISSION_LEVEL_OPTIONS)
     normalized_department = normalize_choice(department, "部门信息", DEPARTMENT_OPTIONS)
     normalized_keyword = keyword.strip()
     if state not in {"all", "enabled", "disabled"}:
@@ -2260,6 +2293,9 @@ def list_site_accounts(
     if normalized_member_status:
         where.append("member_status = ?")
         params.append(normalized_member_status)
+    if normalized_permission_level:
+        where.append("permission_level = ?")
+        params.append(normalized_permission_level)
     if normalized_department:
         where.append("department = ?")
         params.append(normalized_department)
@@ -2326,7 +2362,7 @@ def update_site_account_by_admin(
         conn.execute(
             """
             UPDATE site_account
-            SET full_name = ?, gender = ?, grade = ?, member_status = ?,
+            SET full_name = ?, gender = ?, grade = ?, member_status = ?, permission_level = ?,
                 department = ?, phone = ?, email = ?, bio = ?,
                 reward_score = ?, image2_allowed = ?, is_disabled = ?, admin_note = ?, updated_at = ?
             WHERE account = ?
@@ -2336,6 +2372,7 @@ def update_site_account_by_admin(
                 profile["gender"],
                 profile["grade"],
                 profile["member_status"],
+                profile["permission_level"] or "普通队员",
                 profile["department"],
                 profile["phone"],
                 profile["email"],
