@@ -52,12 +52,12 @@ validate_compose_storage_mount() {
 }
 
 select_docker_command() {
-  if docker compose version >/dev/null 2>&1; then
+  if docker compose ps >/dev/null 2>&1; then
     DOCKER_CMD=(docker)
     return
   fi
 
-  if command -v sudo >/dev/null 2>&1 && sudo docker compose version >/dev/null 2>&1; then
+  if command -v sudo >/dev/null 2>&1 && sudo docker compose ps >/dev/null 2>&1; then
     DOCKER_CMD=(sudo docker)
     return
   fi
