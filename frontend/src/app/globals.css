@@ -1759,8 +1759,7 @@ p {
 }
 
 .forum-thread-list,
-.forum-reply-list,
-.forum-post-layout {
+.forum-reply-list {
   display: grid;
   gap: 0.75rem;
 }
@@ -1775,9 +1774,77 @@ p {
 }
 
 .forum-thread-list,
-.forum-reply-list,
-.forum-post-layout {
+.forum-reply-list {
   margin: 0;
+}
+
+.forum-post-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  align-items: start;
+  gap: 1rem;
+  margin: 0;
+}
+
+.forum-post-main {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.forum-post-body,
+.forum-post-sidebar {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+}
+
+.forum-post-body {
+  padding: 1.15rem;
+}
+
+.forum-post-sidebar {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.forum-post-meta-block {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.forum-post-meta-block strong {
+  font-size: 1.05rem;
+}
+
+.forum-post-meta-block span:last-child,
+.forum-post-meta-grid span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.forum-post-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.forum-post-meta-grid div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.65rem;
+  background: color-mix(in srgb, var(--surface) 58%, transparent);
+}
+
+.forum-post-meta-grid strong {
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
 }
 
 .forum-thread,
@@ -1887,6 +1954,10 @@ p {
   border-radius: var(--radius);
   padding: 1rem;
   background: color-mix(in srgb, var(--surface) 62%, transparent);
+}
+
+.forum-edit-page {
+  max-width: 52rem;
 }
 
 .forum-post-hero h1 {
@@ -3076,11 +3147,13 @@ th {
   .account-layout,
   .account-hero,
   .forum-layout,
+  .forum-post-layout,
   .image2-workbench {
     grid-template-columns: 1fr;
   }
 
-  .forum-sidebar {
+  .forum-sidebar,
+  .forum-post-sidebar {
     position: static;
   }
 
@@ -3170,7 +3243,8 @@ th {
   }
 
   .forum-section-nav,
-  .forum-summary {
+  .forum-summary,
+  .forum-post-meta-grid {
     grid-template-columns: 1fr;
   }
 

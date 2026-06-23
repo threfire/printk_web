@@ -108,99 +108,96 @@ export default async function ForumPostPage({ params, searchParams }: ForumPostP
       </section>
 
       <section className="section forum-post-layout">
-        <article className="forum-post-body">
-          <p>{data.post.content}</p>
-        </article>
+        <main className="forum-post-main">
+          <article className="forum-post-body">
+            <p>{data.post.content}</p>
+          </article>
 
-        {canEditPost ? (
-          <div className="forum-edit-form">
-            <div className="section-heading">
-              <span className="eyebrow">EDIT</span>
-              <h2>编辑帖子</h2>
-            </div>
-            <form className="form" action={`/forum/posts/${data.post.id}`} method="post">
-              <div className="field">
-                <label htmlFor="forum-edit-title">标题</label>
-                <input
-                  id="forum-edit-title"
-                  name="title"
-                  defaultValue={data.post.title}
-                  required
-                  minLength={2}
-                  maxLength={80}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="forum-edit-content">内容</label>
-                <textarea
-                  id="forum-edit-content"
-                  name="content"
-                  defaultValue={data.post.content}
-                  required
-                  rows={7}
-                  maxLength={5000}
-                />
-              </div>
-              <button className="button" type="submit">
-                提交审核
-              </button>
-            </form>
-          </div>
-        ) : null}
-
-        <div className="section-heading">
-          <span className="eyebrow">REPLIES</span>
-          <h2>讨论回复</h2>
-        </div>
-
-        {data.replies.length > 0 ? (
-          <div className="forum-reply-list">
-            {data.replies.map((reply) => (
-              <article className="forum-reply" key={reply.id}>
-                <div className="forum-reply-heading">
-                  <strong>姓名：{reply.author_name}</strong>
-                  <span>{formatTime(reply.created_at)}</span>
-                </div>
-                <p>{reply.content}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="message">当前还没有回复。</div>
-        )}
-
-        <div className="forum-reply-form">
           <div className="section-heading">
-            <span className="eyebrow">REPLY</span>
-            <h2>添加回复</h2>
+            <span className="eyebrow">REPLIES</span>
+            <h2>讨论回复</h2>
           </div>
-          {account ? (
-            <form className="form" action={`/forum/posts/${data.post.id}/replies`} method="post">
-              <div className="field">
-                <label htmlFor="forum-reply-content">回复内容</label>
-                <textarea
-                  id="forum-reply-content"
-                  name="content"
-                  placeholder="补充你的经验、问题或结论"
-                  required
-                  rows={5}
-                  maxLength={2000}
-                />
-              </div>
-              <button className="button" type="submit">
-                提交审核
-              </button>
-            </form>
-          ) : (
-            <div className="message error">
-              请先
-              <Link className="text-button" href="/#account-login">
-                登录账号
-              </Link>
-              后回复。
+
+          {data.replies.length > 0 ? (
+            <div className="forum-reply-list">
+              {data.replies.map((reply) => (
+                <article className="forum-reply" key={reply.id}>
+                  <div className="forum-reply-heading">
+                    <strong>姓名：{reply.author_name}</strong>
+                    <span>{formatTime(reply.created_at)}</span>
+                  </div>
+                  <p>{reply.content}</p>
+                </article>
+              ))}
             </div>
+          ) : (
+            <div className="message">当前还没有回复。</div>
           )}
-        </div>
+
+          <div className="forum-reply-form">
+            <div className="section-heading">
+              <span className="eyebrow">REPLY</span>
+              <h2>添加回复</h2>
+            </div>
+            {account ? (
+              <form className="form" action={`/forum/posts/${data.post.id}/replies`} method="post">
+                <div className="field">
+                  <label htmlFor="forum-reply-content">回复内容</label>
+                  <textarea
+                    id="forum-reply-content"
+                    name="content"
+                    placeholder="补充你的经验、问题或结论"
+                    required
+                    rows={5}
+                    maxLength={2000}
+                  />
+                </div>
+                <button className="button" type="submit">
+                  提交审核
+                </button>
+              </form>
+            ) : (
+              <div className="message error">
+                请先
+                <Link className="text-button" href="/#account-login">
+                  登录账号
+                </Link>
+                后回复。
+              </div>
+            )}
+          </div>
+        </main>
+
+        <aside className="forum-post-sidebar" aria-label="帖子信息">
+          <div className="forum-post-meta-block">
+            <span className="eyebrow">AUTHOR</span>
+            <strong>{data.post.author_name}</strong>
+            <span>{data.post.author_account}</span>
+          </div>
+          <div className="forum-post-meta-grid">
+            <div>
+              <span>回复</span>
+              <strong>{data.post.reply_count}</strong>
+            </div>
+            <div>
+              <span>状态</span>
+              <strong>已通过</strong>
+            </div>
+            <div>
+              <span>发布</span>
+              <strong>{formatTime(data.post.created_at)}</strong>
+            </div>
+            <div>
+              <span>更新</span>
+              <strong>{formatTime(data.post.updated_at)}</strong>
+            </div>
+          </div>
+          {canEditPost ? (
+            <Link className="button" href={`/forum/${data.post.id}/edit`}>
+              编辑
+            </Link>
+          ) : null}
+        </aside>
       </section>
     </div>
   );
