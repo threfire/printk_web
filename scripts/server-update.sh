@@ -4,10 +4,23 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-$HOME/printk}"
 BRANCH="${BRANCH:-master}"
 BACKUP_ROOT="${BACKUP_ROOT:-storage/backups}"
+KEEP_BACKUPS="${KEEP_BACKUPS:-14}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 
 if [ ! -d "$APP_DIR/.git" ]; then
   echo "Git repository not found. Run scripts/server-init.sh first."
+  exit 1
+fi
+
+case "$KEEP_BACKUPS" in
+  ''|*[!0-9]*)
+    echo "KEEP_BACKUPS must be a positive integer."
+    exit 1
+    ;;
+esac
+
+if [ "$KEEP_BACKUPS" -lt 1 ]; then
+  echo "KEEP_BACKUPS must be at least 1."
   exit 1
 fi
 
@@ -52,12 +65,28 @@ backup_container_storage_path() {
   fi
 }
 
+prune_server_backups() {
+  mapfile -t OLD_BACKUPS < <(
+    find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -printf '%T@ %p\n' |
+      sort -rn |
+      sed "1,${KEEP_BACKUPS}d" |
+      cut -d' ' -f2-
+  )
+
+  for OLD_BACKUP in "${OLD_BACKUPS[@]}"; do
+    rm -rf -- "$OLD_BACKUP"
+    echo "Removed old server backup: $OLD_BACKUP"
+  done
+}
+
 backup_host_storage
 
 if sudo docker ps -a --format '{{.Names}}' | grep -qx 'printk-backend'; then
   backup_container_storage_path /app/storage
   backup_container_storage_path /storage
 fi
+
+prune_server_backups
 
 git fetch origin "$BRANCH"
 git checkout "$BRANCH"

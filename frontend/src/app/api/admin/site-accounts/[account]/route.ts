@@ -16,6 +16,22 @@ export async function POST(
   }
 
   const form = await request.formData();
+  const intent = String(form.get("intent") ?? "save");
+  if (intent === "delete") {
+    const response = await fetch(`${API_BASE}/api/admin/site-accounts/${encodeURIComponent(account)}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      redirect(feedbackPath(adminPath, "error", await responseError(response, "账号删除失败")));
+    }
+
+    redirect(feedbackPath(adminPath, "ok", `账号 ${account} 已删除`));
+  }
+
   const payload = {
     ...profileFromForm(form),
     reward_score: Number.parseInt(String(form.get("reward_score") ?? "0"), 10) || 0,

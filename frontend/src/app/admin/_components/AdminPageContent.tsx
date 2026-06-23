@@ -488,16 +488,23 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                       </form>
                     </td>
                     <td>
+                      <input form={editFormId} name="intent" type="hidden" value="save" />
                       <button className="ghost-button" form={editFormId} type="submit">
                         保存
                       </button>
+                      <form action={`/api/admin/site-accounts/${encodeURIComponent(account.account)}`} method="post">
+                        <input name="intent" type="hidden" value="delete" />
+                        <button className="ghost-button" type="submit">
+                          删除
+                        </button>
+                      </form>
                     </td>
                   </tr>
                 );
               })}
               {accountData.accounts.length === 0 ? (
                 <tr>
-                  <td className="empty-cell" colSpan={6}>
+                  <td className="empty-cell" colSpan={7}>
                     当前没有匹配账号
                   </td>
                 </tr>

@@ -2347,6 +2347,33 @@ def update_site_account_by_admin(
     return site_account_response(updated, include_admin=True)
 
 
+@app.delete("/api/admin/site-accounts/{account}")
+def delete_site_account_by_admin(
+    account: str,
+    _: str = Depends(require_admin),
+) -> dict[str, str]:
+    normalized_account = normalize_account(account)
+    with db_connection() as conn:
+        existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        forum_post_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM forum_post WHERE author_account = ?",
+            (normalized_account,),
+        ).fetchone()["total"]
+        forum_reply_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM forum_reply WHERE author_account = ?",
+            (normalized_account,),
+        ).fetchone()["total"]
+        if forum_post_count or forum_reply_count:
+            raise HTTPException(status_code=400, detail="账号存在论坛内容，请先停用账号")
+        conn.execute("DELETE FROM site_account_admin_log WHERE account = ?", (normalized_account,))
+        conn.execute("UPDATE season_plan SET assignee_account = '' WHERE assignee_account = ?", (normalized_account,))
+        conn.execute("UPDATE homepage_danmaku SET author_account = '' WHERE author_account = ?", (normalized_account,))
+        conn.execute("DELETE FROM site_account WHERE account = ?", (normalized_account,))
+    return {"account": normalized_account, "message": "账号已删除"}
+
+
 @app.put("/api/admin/site-accounts/{account}/reward-score")
 def update_site_account_reward_score(
     account: str,

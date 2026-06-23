@@ -66,6 +66,7 @@ docker-compose.yml
 - `deploy/nginx/default.conf`
 - `scripts/server-init.sh`
 - `scripts/server-update.sh`
+- `scripts/sync_server_storage.ps1`
 - `.env.server.example`
 
 ## 服务器环境变量现状
@@ -129,7 +130,7 @@ bash scripts/server-init.sh
 
 当前推荐更新链路：
 
-`本地改代码 -> git commit -> git push origin master -> 服务器 git pull -> docker compose 重建`
+`本地改代码 -> git commit -> git push origin master -> 本地拉取服务器 storage 备份 -> 服务器更新前再次备份 storage -> 服务器 git pull -> docker compose 重建`
 
 本地执行：
 
@@ -138,6 +139,14 @@ git add .
 git commit -m "写本次更新说明"
 git push origin master
 ```
+
+本地执行受保护更新：
+
+```powershell
+.\scripts\sync_server_storage.ps1 -RunServerUpdate
+```
+
+这条命令先把服务器 `~/printk/storage` 拉到 `%USERPROFILE%\printk-server-storage-backups\storage\时间戳`，默认保留最近 14 份本地备份，然后通过 SSH 执行服务器 `scripts/server-update.sh`。
 
 服务器执行：
 
@@ -153,6 +162,41 @@ cd ~/printk
 git pull origin master
 sudo docker compose up -d --build
 ```
+
+## 服务器 storage 备份与恢复
+
+本地只拉取服务器 `storage`：
+
+```powershell
+.\scripts\sync_server_storage.ps1
+```
+
+保留最近 30 份本地备份和服务器更新前备份：
+
+```powershell
+.\scripts\sync_server_storage.ps1 -RunServerUpdate -Keep 30 -ServerKeep 30
+```
+
+恢复顺序固定为：先停容器，再在服务器生成 `pre-restore` 备份，再从本地把选定备份传回 `~/printk/storage/`，最后重启容器。
+
+```bash
+cd ~/printk
+sudo docker compose stop backend frontend nginx
+mkdir -p storage/backups
+tar -C storage --exclude=./backups -czf storage/backups/pre-restore-$(date +%Y%m%d-%H%M%S).tar.gz .
+```
+
+```powershell
+scp -r "$env:USERPROFILE\printk-server-storage-backups\storage\20260623-233000\*" ubuntu@123.207.16.156:~/printk/storage/
+```
+
+```bash
+cd ~/printk
+sudo docker compose up -d
+sudo docker compose ps
+```
+
+账号数据在 `storage/system.db`，首页弹幕数据在同一个数据库的 `homepage_danmaku` 表内；恢复 `storage` 会把数据库、上传文件、归档文件和导出文件一起恢复。
 
 ## 常用运维命令
 
