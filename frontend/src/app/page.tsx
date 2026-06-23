@@ -14,7 +14,12 @@ const robots = [
   "舵轮哨兵机器人",
   "全向轮哨兵机器人",
 ];
-const groups = ["电控组", "机械组", "算法组", "视觉组", "运营组"];
+const memberGroups = [
+  { name: "机械组", members: ["周亦辰", "林嘉航", "何景川", "陈知远", "赵书衡"] },
+  { name: "电控组", members: ["沈奕舟", "梁思源", "许沐阳", "唐若安", "吴景行"] },
+  { name: "算法组", members: ["顾星澜", "秦予白", "叶清和", "宋知夏", "韩若宁"] },
+  { name: "运营组", members: ["陆青禾", "程以然", "姜予棠", "苏明曦", "罗舒然"] },
+];
 const awardPlaceholders = [
   { title: "RoboMaster 赛事奖项", meta: "奖状图片占位" },
   { title: "赛季工程成果", meta: "奖杯图片占位" },
@@ -160,9 +165,12 @@ export default async function Home() {
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
-          <h1>printk机甲大师战队</h1>
+          <h1 className="hero-title">
+            <span className="hero-title-primary">PRINTK</span>
+            <span className="hero-title-secondary">机甲大师战队</span>
+          </h1>
           <p>
-            printk机甲大师战队成立于2024年秋季，位于贵州大学明正楼科技园1楼报告厅，正式队员30多人。战队参加过2025赛季高校联盟赛广西站并获步兵对抗赛季军，参加过2026赛季高校联盟赛重庆站，首次完整参与高校联盟赛的步兵对抗赛、工程挑战赛和3v3对抗赛三个赛项。
+            PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。
           </p>
           <div className="hero-actions">
             <Link className="button" href="/invoices">
@@ -180,7 +188,7 @@ export default async function Home() {
           </div>
           <div className="hero-stats" aria-label="战队概览">
             <div>
-              <strong>5</strong>
+              <strong>4</strong>
               <span>核心组别</span>
             </div>
             <div>
@@ -213,14 +221,17 @@ export default async function Home() {
 
       <section className="section split-section">
         <div className="section-heading">
-          <span className="eyebrow">团队结构</span>
           <h2>队员</h2>
         </div>
-        <div className="card-grid">
-          {groups.map((group) => (
-            <article className="card" key={group}>
-              <h3>{group}</h3>
-              <p>展示组别职责、负责重点和可沉淀资料，方便成员快速找到协作入口。</p>
+        <div className="home-member-grid">
+          {memberGroups.map((group) => (
+            <article className="card home-member-card" key={group.name}>
+              <h3>{group.name}</h3>
+              <ul className="home-member-list" aria-label={`${group.name}成员`}>
+                {group.members.map((member) => (
+                  <li key={member}>{member}</li>
+                ))}
+              </ul>
             </article>
           ))}
         </div>
@@ -228,7 +239,6 @@ export default async function Home() {
 
       <section className="home-awards" aria-labelledby="home-awards-title">
         <div className="home-awards-heading">
-          <span className="eyebrow">团队成果</span>
           <h2 id="home-awards-title">奖项与荣誉展示</h2>
           <p>这里优先轮播展示后台首页内容管理配置的荣誉图片和文案，数据为空时展示占位内容。</p>
         </div>

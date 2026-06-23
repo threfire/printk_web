@@ -743,6 +743,28 @@ h1 {
   line-height: 0.95;
 }
 
+.hero-title {
+  display: grid;
+  gap: 0.34rem;
+  max-width: 12ch;
+  line-height: 0.9;
+}
+
+.hero-title-primary,
+.hero-title-secondary {
+  display: block;
+}
+
+.hero-title-primary {
+  font-size: clamp(4.25rem, 10vw, 8rem);
+  font-weight: 950;
+}
+
+.hero-title-secondary {
+  font-size: clamp(1.65rem, 4.4vw, 3.3rem);
+  line-height: 1.05;
+}
+
 h2 {
   font-size: clamp(1.8rem, 4vw, 3rem);
 }
@@ -1257,6 +1279,36 @@ p {
   min-height: clamp(22rem, 34vw, 30rem);
   object-fit: cover;
   transition: transform 220ms ease, filter 220ms ease;
+}
+
+.home-member-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.home-member-card {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-height: 19rem;
+}
+
+.home-member-list {
+  display: grid;
+  gap: 0.72rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-member-list li {
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  border-radius: calc(var(--radius) - 4px);
+  padding: 0.62rem 0.72rem;
+  background: color-mix(in srgb, var(--surface) 64%, transparent);
+  color: color-mix(in srgb, var(--text) 90%, var(--muted));
+  font-weight: 700;
 }
 
 .member-photo-link:hover .member-photo {
@@ -3212,6 +3264,10 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .home-member-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .reward-podium {
     grid-template-columns: 1fr;
   }
@@ -3320,7 +3376,8 @@ th {
 
   .forum-section-nav,
   .forum-summary,
-  .forum-post-meta-grid {
+  .forum-post-meta-grid,
+  .home-member-grid {
     grid-template-columns: 1fr;
   }
 
