@@ -1882,6 +1882,13 @@ p {
   margin-bottom: 0.65rem;
 }
 
+.forum-edit-form {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+}
+
 .forum-post-hero h1 {
   max-width: 18ch;
 }

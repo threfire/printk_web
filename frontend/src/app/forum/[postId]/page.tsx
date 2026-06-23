@@ -90,6 +90,7 @@ export default async function ForumPostPage({ params, searchParams }: ForumPostP
   }
 
   const { data } = postState;
+  const canEditPost = Boolean(account && account === data.post.author_account);
 
   return (
     <div className="page forum-page">
@@ -110,6 +111,42 @@ export default async function ForumPostPage({ params, searchParams }: ForumPostP
         <article className="forum-post-body">
           <p>{data.post.content}</p>
         </article>
+
+        {canEditPost ? (
+          <div className="forum-edit-form">
+            <div className="section-heading">
+              <span className="eyebrow">EDIT</span>
+              <h2>编辑帖子</h2>
+            </div>
+            <form className="form" action={`/forum/posts/${data.post.id}`} method="post">
+              <div className="field">
+                <label htmlFor="forum-edit-title">标题</label>
+                <input
+                  id="forum-edit-title"
+                  name="title"
+                  defaultValue={data.post.title}
+                  required
+                  minLength={2}
+                  maxLength={80}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="forum-edit-content">内容</label>
+                <textarea
+                  id="forum-edit-content"
+                  name="content"
+                  defaultValue={data.post.content}
+                  required
+                  rows={7}
+                  maxLength={5000}
+                />
+              </div>
+              <button className="button" type="submit">
+                提交审核
+              </button>
+            </form>
+          </div>
+        ) : null}
 
         <div className="section-heading">
           <span className="eyebrow">REPLIES</span>

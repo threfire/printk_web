@@ -1955,6 +1955,12 @@ class ForumPostCreateRequest(BaseModel):
     author_account: str
 
 
+class ForumPostUpdateRequest(BaseModel):
+    title: str
+    content: str
+    author_account: str
+
+
 class ForumReplyCreateRequest(BaseModel):
     content: str
     author_account: str
@@ -2735,6 +2741,58 @@ def create_forum_post(payload: ForumPostCreateRequest) -> dict[str, Any]:
         ).fetchone()
     if row is None:
         raise HTTPException(status_code=500, detail="帖子创建失败")
+    return forum_post_response(row)
+
+
+@app.put("/api/forum/posts/{post_id}")
+def update_forum_post(post_id: str, payload: ForumPostUpdateRequest) -> dict[str, Any]:
+    title = normalize_forum_title(payload.title)
+    content = normalize_forum_content(payload.content)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        author_account = ensure_forum_author(conn, payload.author_account)
+        existing = conn.execute(
+            """
+            SELECT id, author_account, deleted_at
+            FROM forum_post
+            WHERE id = ?
+            """,
+            (post_id,),
+        ).fetchone()
+        if existing is None or existing["deleted_at"]:
+            raise HTTPException(status_code=404, detail="帖子不存在")
+        if existing["author_account"] != author_account:
+            raise HTTPException(status_code=403, detail="只能编辑自己发布的帖子")
+        conn.execute(
+            """
+            UPDATE forum_post
+            SET title = ?,
+                content = ?,
+                status = 'pending',
+                reject_reason = '',
+                reviewed_by = '',
+                reviewed_at = '',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (title, content, timestamp, post_id),
+        )
+        row = conn.execute(
+            """
+            SELECT post.*, account.full_name, COUNT(reply.id) AS reply_count
+            FROM forum_post AS post
+            LEFT JOIN site_account AS account ON account.account = post.author_account
+            LEFT JOIN forum_reply AS reply
+                ON reply.post_id = post.id
+                AND reply.status = ?
+                AND COALESCE(reply.deleted_at, '') = ''
+            WHERE post.id = ?
+            GROUP BY post.id
+            """,
+            (FORUM_PUBLIC_STATUS, post_id),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="帖子不存在")
     return forum_post_response(row)
 
 
