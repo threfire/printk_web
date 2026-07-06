@@ -168,7 +168,8 @@ export default async function Home() {
   const awardItems = buildAwardItems(homepage);
 
   return (
-    <div className="page">
+    <div className="page home-page">
+      <section className="home-showcase">
       {video ? (
         <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
           <video className="season-video-player" controls playsInline preload="metadata">
@@ -179,6 +180,7 @@ export default async function Home() {
 
       <section className="hero">
         <div className="hero-copy">
+          <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
           <h1 className="hero-title">
             <span className="hero-title-primary">PRINTK</span>
             <span className="hero-title-secondary">机甲大师战队</span>
@@ -215,6 +217,7 @@ export default async function Home() {
             </div>
           </div>
         </div>
+      </section>
       </section>
 
       <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} enableInteractive={ENABLE_INTERACTIVE} />
