@@ -9,8 +9,12 @@ import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/season-plan", label: "赛季规划" },
-  { href: "/market", label: "闲置物品展示" },
-  { href: "/forum", label: "论坛" },
+  ...(ENABLE_INTERACTIVE
+    ? [
+        { href: "/market", label: "闲置物品展示" },
+        { href: "/forum", label: "论坛" },
+      ]
+    : []),
 ];
 
 const featureNavItems = [
@@ -40,7 +44,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <nav className="nav-links" aria-label="主导航">
-            {navItems.filter((item) => ENABLE_INTERACTIVE || item.href !== "/forum").map((item) => (
+            {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>
@@ -66,7 +70,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details> : null}
-            <details className="nav-dropdown">
+            {ENABLE_INTERACTIVE ? <details className="nav-dropdown">
               <summary>功能</summary>
               <div className="nav-dropdown-menu">
                 {featureNavItems.map((item) => (
@@ -75,7 +79,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </div>
-            </details>
+            </details> : null}
           </nav>
           <div className="header-actions">
             {accountFeedback ? <span className="account-feedback">{accountFeedback}</span> : null}
@@ -85,14 +89,14 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         {ENABLE_INTERACTIVE ? <AccountModals /> : null}
         {ENABLE_INTERACTIVE && !accountName ? <WelcomeGuestDialog /> : null}
         <main>{children}</main>
-        <Link className="market-quick-link" href="/market" aria-label="跳转到闲置物品展示" title="闲置物品展示">
+        {ENABLE_INTERACTIVE ? <Link className="market-quick-link" href="/market" aria-label="跳转到闲置物品展示" title="闲置物品展示">
           <span className="market-quick-icon" aria-hidden="true">
             <span />
             <span />
             <span />
             <span />
           </span>
-        </Link>
+        </Link> : null}
         <ThemeSwitcher />
       </div>
     </ThemeRoot>
