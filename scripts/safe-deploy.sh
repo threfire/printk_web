@@ -73,6 +73,15 @@ backup_storage() {
   echo "已生成 storage 备份：$backup_dir"
 }
 
+git_remote() {
+  if git -c http.version=HTTP/1.1 "$@"; then
+    return 0
+  fi
+
+  echo "Git remote command failed, retrying with HTTP/1.1..."
+  git -c http.version=HTTP/1.1 "$@"
+}
+
 pull_latest_code() {
   [ -d .git ] || fail "未找到 Git 仓库：$APP_DIR"
 
@@ -82,9 +91,9 @@ pull_latest_code() {
 
   [ -n "$BRANCH" ] || fail "BRANCH 为空；detached HEAD 状态下需要显式设置 BRANCH。"
 
-  git fetch origin "$BRANCH"
+  git_remote fetch origin "$BRANCH"
   git checkout "$BRANCH"
-  git pull --ff-only origin "$BRANCH"
+  git_remote pull --ff-only origin "$BRANCH"
 }
 
 validate_positive_integer LOG_TAIL "$LOG_TAIL"
