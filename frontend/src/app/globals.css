@@ -638,79 +638,28 @@ button {
   padding: 3rem 0 5rem;
 }
 
-.site-frame {
-  position: relative;
-  overflow-x: clip;
-  isolation: isolate;
-}
-
-.site-frame::before {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  content: "";
-  background:
-    linear-gradient(115deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 42%),
-    linear-gradient(245deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 46%),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--line) 30%, transparent) 0 1px, transparent 1px 5.5rem),
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--line) 24%, transparent) 0 1px, transparent 1px 5.5rem);
-  opacity: 0.46;
-  mask-image: linear-gradient(180deg, #000, transparent 86%);
-  pointer-events: none;
-}
-
-.home-page {
-  width: min(1500px, calc(100% - clamp(1rem, 3vw, 3rem)));
-  padding-top: clamp(1rem, 3vw, 2.25rem);
-}
-
-.home-showcase {
-  display: grid;
-  grid-template-columns: minmax(24rem, 0.82fr) minmax(0, 1.18fr);
-  gap: clamp(0.9rem, 1.8vw, 1.35rem);
-  align-items: stretch;
-  min-height: calc(100svh - 7.4rem);
-}
-
 .season-video {
-  position: relative;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 58%),
-    color-mix(in srgb, var(--surface-strong) 84%, transparent);
+  background: var(--surface);
   box-shadow: var(--shadow);
-  animation: home-rise 720ms ease both;
-}
-
-.season-video::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    linear-gradient(180deg, transparent 58%, color-mix(in srgb, var(--bg) 52%, transparent)),
-    repeating-linear-gradient(90deg, transparent 0 3.25rem, color-mix(in srgb, var(--line) 35%, transparent) 3.25rem calc(3.25rem + 1px));
-  opacity: 0.72;
-  pointer-events: none;
 }
 
 .season-video-player {
   display: block;
   width: 100%;
-  height: 100%;
-  min-height: clamp(30rem, 70svh, 48rem);
   aspect-ratio: 16 / 9;
-  max-height: none;
+  max-height: min(66vh, 620px);
   background: #020711;
   object-fit: cover;
 }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(15rem, 0.42fr);
-  margin-top: 0;
-  gap: clamp(0.9rem, 1.6vw, 1.25rem);
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
+  margin-top: 1.25rem;
+  gap: 1.25rem;
   align-items: stretch;
 }
 
@@ -727,40 +676,16 @@ button {
 }
 
 .hero-copy {
-  position: relative;
-  display: grid;
-  align-content: end;
-  overflow: hidden;
-  min-height: clamp(30rem, 70svh, 48rem);
   padding: clamp(1.5rem, 5vw, 4rem);
-  animation: home-rise 780ms 90ms ease both;
-}
-
-.hero-copy::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  border-left: 3px solid color-mix(in srgb, var(--primary) 72%, transparent);
-  background:
-    linear-gradient(120deg, color-mix(in srgb, var(--primary) 18%, transparent), transparent 42%),
-    linear-gradient(0deg, color-mix(in srgb, var(--bg) 46%, transparent), transparent 58%);
-  opacity: 0.78;
-  pointer-events: none;
-}
-
-.hero-copy > * {
-  position: relative;
-  z-index: 1;
 }
 
 .hero-visual {
   position: relative;
   display: grid;
-  min-height: clamp(30rem, 70svh, 48rem);
+  min-height: 480px;
   overflow: hidden;
   place-items: center;
   padding: 2rem;
-  animation: home-rise 840ms 150ms ease both;
 }
 
 .hero-visual::before {
@@ -804,7 +729,6 @@ button {
   box-shadow:
     inset 0 0 36px color-mix(in srgb, var(--accent) 20%, transparent),
     0 0 42px color-mix(in srgb, var(--primary) 22%, transparent);
-  animation: emblem-scan 12s linear infinite;
 }
 
 .hero-stats {
@@ -873,13 +797,12 @@ h1 {
 }
 
 .hero-title-primary {
-  font-size: clamp(3.8rem, 7.2vw, 6.4rem);
+  font-size: clamp(4.25rem, 10vw, 8rem);
   font-weight: 950;
-  text-shadow: 0 0 34px color-mix(in srgb, var(--primary) 28%, transparent);
 }
 
 .hero-title-secondary {
-  font-size: clamp(1.55rem, 3.6vw, 2.75rem);
+  font-size: clamp(1.65rem, 4.4vw, 3.3rem);
   line-height: 1.05;
 }
 
@@ -943,39 +866,6 @@ p {
 .section-hero {
   margin-top: 1.25rem;
   padding: clamp(1.25rem, 4vw, 2.5rem);
-}
-
-.home-page .section {
-  position: relative;
-  overflow: hidden;
-  margin-top: clamp(1rem, 2.2vw, 1.75rem);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 52%),
-    color-mix(in srgb, var(--surface-strong) 74%, transparent);
-  animation: home-section-rise linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 28%;
-}
-
-.home-page .section::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  border-left: 2px solid color-mix(in srgb, var(--accent) 52%, transparent);
-  background: repeating-linear-gradient(90deg, transparent 0 3.25rem, color-mix(in srgb, var(--line) 24%, transparent) 3.25rem calc(3.25rem + 1px));
-  opacity: 0.48;
-  pointer-events: none;
-}
-
-.home-page .section > * {
-  position: relative;
-  z-index: 1;
-}
-
-.home-page .card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
-  gap: clamp(0.75rem, 1.4vw, 1rem);
 }
 
 .section-heading {
@@ -1046,10 +936,7 @@ p {
 .home-carousel-stack {
   display: grid;
   gap: 1rem;
-  margin-top: clamp(1rem, 2.2vw, 1.75rem);
-  animation: home-section-rise linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 28%;
+  margin-top: 1.25rem;
 }
 
 .quote-carousel {
@@ -1120,11 +1007,9 @@ p {
   height: clamp(30rem, 58vw, 46rem);
   margin-top: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 54%),
-    var(--surface);
+  background: var(--surface);
   box-shadow: var(--shadow);
 }
 
@@ -1365,47 +1250,20 @@ p {
 }
 
 .card {
-  position: relative;
-  overflow: hidden;
   flex: 1 1 250px;
-  border: 1px solid color-mix(in srgb, var(--line) 86%, transparent);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--accent) 8%, transparent), transparent 62%),
-    var(--surface-strong);
+  background: var(--surface-strong);
   padding: 1.35rem;
-  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.18);
   transition:
-    transform 220ms cubic-bezier(0.22, 0.64, 0.28, 1),
-    border-color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.card::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  border-top: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 42%);
-  opacity: 0;
-  transition: opacity 180ms ease;
-  pointer-events: none;
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  border-color: color-mix(in srgb, var(--accent) 54%, transparent);
-  box-shadow: 0 28px 68px rgba(0, 0, 0, 0.28);
-}
-
-.card:hover::before {
-  opacity: 1;
-}
-
-.card > * {
-  position: relative;
-  z-index: 1;
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
 }
 
 .home-robot-image {
@@ -1474,7 +1332,7 @@ p {
 
 .home-member-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15.5rem, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -3090,10 +2948,7 @@ th {
 .home-awards {
   display: grid;
   gap: 1.15rem;
-  margin-top: clamp(1.5rem, 3vw, 2.6rem);
-  animation: home-section-rise linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 28%;
+  margin-top: 2.4rem;
 }
 
 .home-awards-heading {
@@ -3118,12 +2973,8 @@ th {
   position: relative;
   min-height: clamp(23rem, 36vw, 30rem);
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--gold) 30%, var(--line));
-  border-radius: var(--radius);
+  border-radius: calc(var(--radius) * 1.2);
   padding: 0;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--gold) 10%, transparent), transparent 56%),
-    color-mix(in srgb, var(--surface-strong) 72%, transparent);
   cursor: grab;
   touch-action: pan-y;
 }
@@ -3285,10 +3136,6 @@ th {
     linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 48%),
     linear-gradient(145deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 62%),
     color-mix(in srgb, var(--surface-strong) 76%, transparent);
-  box-shadow: var(--shadow);
-  animation: home-section-rise linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 30%;
 }
 
 .home-recruitment-copy {
@@ -3361,9 +3208,6 @@ th {
     linear-gradient(135deg, color-mix(in srgb, var(--surface-strong) 72%, transparent), transparent 68%),
     color-mix(in srgb, var(--bg) 92%, black);
   color: var(--text);
-  animation: home-section-rise linear both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 26%;
 }
 
 .home-footer-main {
@@ -3464,25 +3308,6 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .home-showcase {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .home-showcase .season-video {
-    order: 2;
-  }
-
-  .home-showcase .hero {
-    order: 1;
-  }
-
-  .hero-copy,
-  .hero-visual,
-  .season-video-player {
-    min-height: 24rem;
-  }
-
   .home-recruitment {
     grid-template-columns: 1fr;
   }
@@ -3568,20 +3393,6 @@ th {
   .page {
     width: min(100% - 1rem, 1360px);
     padding-top: 1rem;
-  }
-
-  .home-page {
-    width: min(100% - 0.8rem, 1500px);
-  }
-
-  .hero-copy,
-  .hero-visual,
-  .season-video-player {
-    min-height: 20rem;
-  }
-
-  .home-page .card-grid {
-    grid-template-columns: 1fr;
   }
 
   .brand-copy small {
@@ -3733,52 +3544,8 @@ th {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .season-video,
-  .hero-copy,
-  .hero-visual,
-  .home-carousel-stack,
-  .home-page .section,
-  .home-awards,
-  .home-recruitment,
-  .home-thanks,
-  .emblem-ring,
   .home-award-card {
-    animation: none;
     transition: none;
-  }
-}
-
-@keyframes home-rise {
-  from {
-    opacity: 0;
-    transform: translateY(1.2rem);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes home-section-rise {
-  from {
-    opacity: 0.18;
-    transform: translateY(2.2rem) scale(0.985);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes emblem-scan {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
   }
 }
 
