@@ -18,6 +18,7 @@ type HomeCarouselProps = {
   images: CarouselImage[];
   quotes?: CarouselQuote[];
   accountName?: string;
+  enableInteractive?: boolean;
 };
 
 type DanmakuMessage = {
@@ -127,7 +128,7 @@ async function fetchDanmakuMessages(imageKey: string) {
   return messageList(body.messages, imageKey);
 }
 
-export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCarouselProps) {
+export function HomeCarousel({ images, quotes = [], accountName = "", enableInteractive = true }: HomeCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [paused, setPaused] = useState(false);
@@ -177,7 +178,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
   }, [images.length, paused]);
 
   useEffect(() => {
-    if (!activeImageKey) {
+    if (!activeImageKey || !enableInteractive) {
       return undefined;
     }
 
@@ -207,14 +208,14 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
       window.clearTimeout(firstTimer);
       window.clearInterval(timer);
     };
-  }, [activeImageKey]);
+  }, [activeImageKey, enableInteractive]);
 
   if (images.length === 0) {
     return null;
   }
 
   const activeQuoteIndex = quotes.length ? activeIndex % quotes.length : -1;
-  const activeMessages = danmakuByImage[activeImageKey] ?? [];
+  const activeMessages = enableInteractive ? danmakuByImage[activeImageKey] ?? [] : [];
 
   const sendDanmaku = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -317,7 +318,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
         ))}
       </section>
 
-      <form className="danmaku-panel" onSubmit={sendDanmaku}>
+      {enableInteractive ? <form className="danmaku-panel" onSubmit={sendDanmaku}>
         <button
           className="danmaku-toggle"
           type="button"
@@ -336,7 +337,7 @@ export function HomeCarousel({ images, quotes = [], accountName = "" }: HomeCaro
         <button className="button danmaku-send" type="submit">
           发送
         </button>
-      </form>
+      </form> : null}
     </div>
   );
 }

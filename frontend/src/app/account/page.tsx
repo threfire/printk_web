@@ -17,9 +17,12 @@ const emptyProfile: SiteAccountProfile = {
   member_status: "",
   permission_level: "",
   department: "",
+  cohort: "",
+  role: "",
   phone: "",
   email: "",
   bio: "",
+  photo_url: "",
   reward_score: 0,
   reward_eligible: false,
   image2_allowed: false,
@@ -133,6 +136,9 @@ export default async function AccountPage() {
           <h2>编辑资料</h2>
           <form className="form profile-form" action="/account/profile" method="post">
             <input name="permission_level" type="hidden" value={profile.permission_level || "普通队员"} />
+            <input name="cohort" type="hidden" value={profile.cohort} />
+            <input name="role" type="hidden" value={profile.role} />
+            <input name="photo_url" type="hidden" value={profile.photo_url} />
             <div className="form-grid">
               <div className="field">
                 <label htmlFor="profile-full-name">姓名</label>

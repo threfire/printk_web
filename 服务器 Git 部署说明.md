@@ -113,7 +113,7 @@ tar -C storage --exclude=./backups -czf storage/backups/pre-restore-$(date +%Y%m
 然后在本地把选定备份传回服务器，示例：
 
 ```powershell
-scp -r "$env:USERPROFILE\printk-server-storage-backups\storage\20260623-233000\*" ubuntu@123.207.16.156:~/printk/storage/
+scp -r "$env:USERPROFILE\printk-server-storage-backups\storage\20260623-233000\*" ubuntu@175.178.7.75:~/printk/storage/
 ```
 
 最后在服务器重启容器：

@@ -356,7 +356,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
             <strong>{accountData.summary.image2_allowed}</strong>图片权限
           </div>
         </div>
-        <form className="form" action="/admin" method="get">
+        <form className="form" action="/admin/accounts" method="get">
           <div className="form-grid">
             <div className="field">
               <label htmlFor="account-keyword">关键词</label>
@@ -401,7 +401,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
             <button className="button" type="submit">
               筛选
             </button>
-            <Link className="ghost-button" href="/admin">
+            <Link className="ghost-button" href="/admin/accounts">
               清空
             </Link>
           </div>
@@ -461,10 +461,22 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                           </select>
                         </div>
                         <div className="field">
-                          <label htmlFor={`${account.account}-department`}>部门</label>
+                          <label htmlFor={`${account.account}-department`}>分组</label>
                           <select form={editFormId} id={`${account.account}-department`} name="department" defaultValue={account.department}>
                             <OptionList options={departmentOptions} />
                           </select>
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-cohort`}>届别</label>
+                          <input form={editFormId} id={`${account.account}-cohort`} name="cohort" defaultValue={account.cohort} placeholder="例：2026届" />
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-role`}>职责</label>
+                          <input form={editFormId} id={`${account.account}-role`} name="role" defaultValue={account.role} placeholder="例：步兵电控" />
+                        </div>
+                        <div className="field">
+                          <label htmlFor={`${account.account}-photo-url`}>照片</label>
+                          <input form={editFormId} id={`${account.account}-photo-url`} name="photo_url" defaultValue={account.photo_url} placeholder="/home-carousel/team-01.jpeg" />
                         </div>
                         <div className="field">
                           <label htmlFor={`${account.account}-phone`}>电话</label>
@@ -475,7 +487,10 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                           <input form={editFormId} id={`${account.account}-email`} name="email" defaultValue={account.email} />
                         </div>
                       </div>
-                      <input form={editFormId} name="bio" type="hidden" value={account.bio} />
+                      <div className="field">
+                        <label htmlFor={`${account.account}-bio`}>简介</label>
+                        <textarea form={editFormId} id={`${account.account}-bio`} name="bio" defaultValue={account.bio} rows={3} />
+                      </div>
                       <input form={editFormId} name="reward_score" type="hidden" value={account.reward_score} />
                     </td>
                     <td>

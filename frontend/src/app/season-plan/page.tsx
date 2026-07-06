@@ -5,6 +5,7 @@ import { API_BASE, SeasonPlanData, SeasonPlanItem } from "@/lib/api";
 import { firstParam } from "@/lib/admin-feedback";
 import { SiteAccountProfile } from "@/lib/account-profile";
 import { robotRoles } from "@/lib/robots";
+import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 import {
   formatSeasonPlanTitle,
   getCurrentSeasonPlanPeriod,
@@ -27,9 +28,12 @@ const emptyProfile: SiteAccountProfile = {
   member_status: "",
   permission_level: "",
   department: "",
+  cohort: "",
+  role: "",
   phone: "",
   email: "",
   bio: "",
+  photo_url: "",
   reward_score: 0,
   reward_eligible: false,
   image2_allowed: false,
@@ -293,7 +297,7 @@ export default async function SeasonPlanPage({ searchParams }: SeasonPlanPagePro
   const cookieStore = await cookies();
   const account = cookieStore.get("printk-site-account")?.value ?? "";
   const [planData, profile] = await Promise.all([fetchSeasonPlan(period), fetchProfile(account)]);
-  const canEdit = Boolean(account) && planEditorPermissions.has(profile.permission_level) && !profile.is_disabled;
+  const canEdit = ENABLE_INTERACTIVE && Boolean(account) && planEditorPermissions.has(profile.permission_level) && !profile.is_disabled;
   const completedCount = planData.plans.filter((plan) => plan.is_completed).length;
   const totalCount = Math.max(planData.plans.length, 1);
   const ok = firstParam(query.ok);

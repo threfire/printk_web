@@ -1,13 +1,28 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { API_BASE } from "@/lib/api";
 
 type MemberStatus = "active" | "retired";
+
+type PublicMember = {
+  id: string;
+  account: string;
+  name: string;
+  membership_state: MemberStatus;
+  member_status: string;
+  cohort: string;
+  group: string;
+  role: string;
+  grade: string;
+  bio: string;
+  photo_url: string;
+};
 
 type Member = {
   id: string;
   name: string;
   status: MemberStatus;
-  retirementYear?: string;
+  cohort: string;
   group: string;
   role: string;
   grade: string;
@@ -32,66 +47,58 @@ const memberPhotos = [
   "/home-carousel/team-13.jpeg",
 ];
 
-const memberSeeds = [
-  { name: "陈俊轩", group: "队长", role: "队长 / 机械组负责人" },
-  { name: "刘振豪", group: "项管", role: "项目管理" },
-  { name: "张朝阳", group: "项管 / 硬件组", role: "项目管理 / 硬件组负责人" },
-  { name: "曾宰丹", group: "项管 / 运营组", role: "财务 / 项目管理" },
-  { name: "周玉威", group: "机械组", role: "步兵机械" },
-  { name: "敖敬淳", group: "机械组", role: "步兵 / 仿生负责人" },
-  { name: "张鑫豪", group: "机械组", role: "步兵机械" },
-  { name: "赵博文", group: "机械组", role: "步兵机械" },
-  { name: "姚博文", group: "机械组", role: "英雄机械" },
-  { name: "董益辉", group: "机械组", role: "英雄机械" },
-  { name: "练俊轩", group: "机械组", role: "英雄机械" },
-  { name: "唐媛林", group: "机械组", role: "英雄机械" },
-  { name: "石翔", group: "机械组", role: "哨兵机械" },
-  { name: "万易鹏", group: "机械组", role: "哨兵机械" },
-  { name: "仇松", group: "机械组", role: "哨兵机械" },
-  { name: "温浩浩", group: "机械组", role: "工程机械" },
-  { name: "田家豪", group: "机械组", role: "工程机械" },
-  { name: "陆秋奕", group: "机械组", role: "工程机械" },
-  { name: "叶朝天", group: "机械组", role: "工程机械" },
-  { name: "黄锐", group: "电控组", role: "电控组负责人" },
-  { name: "欧鸥", group: "电控组", role: "步兵电控" },
-  { name: "杨明鑫", group: "电控组", role: "步兵 / 仿生电控" },
-  { name: "敖毅", group: "电控组", role: "步兵电控" },
-  { name: "杜佳佳", group: "电控组", role: "步兵电控" },
-  { name: "罗俊俊", group: "电控组", role: "步兵 / 英雄电控" },
-  { name: "陈杰", group: "电控组", role: "哨兵负责人" },
-  { name: "杨尚靖", group: "电控组", role: "哨兵电控" },
-  { name: "何哲", group: "电控组", role: "工程电控" },
-  { name: "肖哲", group: "电控组", role: "工程电控" },
-  { name: "周柏森", group: "电控组", role: "仿生电控" },
-  { name: "陈星", group: "电控组", role: "仿生电控" },
-  { name: "王硕", group: "硬件组", role: "硬件设计" },
-  { name: "曹睿中", group: "硬件组", role: "硬件设计" },
-  { name: "黄皓", group: "硬件组", role: "硬件调试" },
-  { name: "杨嘉雯", group: "硬件组", role: "硬件调试" },
-  { name: "张荣勋", group: "算法组", role: "算法组负责人" },
-  { name: "杨阳", group: "算法组", role: "算法开发" },
-  { name: "杨胜娟", group: "运营组", role: "运营组负责人" },
-  { name: "石娟", group: "运营组", role: "运营协作" },
-];
+function memberDomId(value: string) {
+  return `member-${value.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+}
 
-const members: Member[] = memberSeeds.map((member, index) => ({
-  id: `member-${index + 1}`,
-  name: member.name,
-  status: "active",
-  group: member.group,
-  role: member.role,
-  grade: "现役队员",
-  photo: memberPhotos[index % memberPhotos.length],
-  summary: `${member.group} · ${member.role}`,
-  details: `${member.name}在战队架构中负责${member.role}方向，当前归属${member.group}。`,
-  focus: [member.group, member.role, "队内协作"],
-}));
+function uniqueItems(items: string[]) {
+  return Array.from(new Set(items.filter(Boolean)));
+}
 
-const activeMembers = members.filter((member) => member.status === "active");
-const retiredMembers = members.filter((member) => member.status === "retired");
-const retirementYears = Array.from(new Set(retiredMembers.map((member) => member.retirementYear ?? "往届"))).sort(
-  (a, b) => Number(b) - Number(a),
-);
+function toMember(member: PublicMember, index: number): Member {
+  const group = member.group || "未分组";
+  const role = member.role || "队员";
+  const cohort = member.cohort || "未填写届别";
+  const grade = member.grade || member.member_status || "队员";
+  const name = member.name || member.account;
+  return {
+    id: memberDomId(member.id || member.account || String(index)),
+    name,
+    status: member.membership_state,
+    cohort,
+    group,
+    role,
+    grade,
+    photo: member.photo_url || memberPhotos[index % memberPhotos.length],
+    summary: uniqueItems([cohort, group, role]).join(" · "),
+    details: member.bio || `${name}在战队中负责${role}方向，当前归属${group}。`,
+    focus: uniqueItems([cohort, group, role]),
+  };
+}
+
+async function fetchMembers(): Promise<Member[]> {
+  const response = await fetch(`${API_BASE}/api/members`, { cache: "no-store" });
+  if (!response.ok) {
+    return [];
+  }
+  const data = (await response.json()) as { members?: PublicMember[] };
+  return (data.members ?? []).map(toMember);
+}
+
+function statusText(member: Member) {
+  return member.status === "active" ? "在队队员" : `${member.cohort} 退队`;
+}
+
+function MemberPhoto({ member, className, detail = false }: { member: Member; className: string; detail?: boolean }) {
+  return (
+    <img
+      className={className}
+      src={member.photo}
+      alt={`${member.name}${detail ? "详细照片" : "风采照片"}`}
+      loading="lazy"
+    />
+  );
+}
 
 function MemberWall({ members, sectionId }: { members: Member[]; sectionId: string }) {
   return (
@@ -99,16 +106,9 @@ function MemberWall({ members, sectionId }: { members: Member[]; sectionId: stri
       {members.map((member) => (
         <article className="member-photo-card" key={member.id}>
           <Link className="member-photo-link" href={`/members#${member.id}`}>
-            <Image
-              className="member-photo"
-              src={member.photo}
-              alt={`${member.name}风采照片`}
-              width={520}
-              height={620}
-              sizes="(max-width: 760px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            />
+            <MemberPhoto className="member-photo" member={member} />
             <div className="member-basic">
-              <span className="badge">{member.status === "active" ? "现役队员" : `${member.retirementYear} 退役`}</span>
+              <span className="badge">{statusText(member)}</span>
               <h3>{member.name}</h3>
               <p>{member.group} / {member.role}</p>
               <p>{member.summary}</p>
@@ -117,16 +117,9 @@ function MemberWall({ members, sectionId }: { members: Member[]; sectionId: stri
           <div className="member-detail-overlay" id={member.id}>
             <Link className="member-detail-dismiss" href={`/members#${sectionId}`} aria-label="关闭详情" />
             <article className="member-detail-card" role="dialog" aria-labelledby={`${member.id}-title`}>
-              <Image
-                className="member-detail-photo"
-                src={member.photo}
-                alt={`${member.name}详细照片`}
-                width={760}
-                height={520}
-                sizes="(max-width: 760px) 100vw, 42vw"
-              />
+              <MemberPhoto className="member-detail-photo" detail member={member} />
               <div className="member-detail-copy">
-                <span className="badge">{member.status === "active" ? "现役队员" : `${member.retirementYear} 退役队员`}</span>
+                <span className="badge">{statusText(member)}</span>
                 <h3 id={`${member.id}-title`}>{member.name}</h3>
                 <p className="member-detail-role">{member.grade} / {member.group} / {member.role}</p>
                 <p>{member.details}</p>
@@ -147,7 +140,14 @@ function MemberWall({ members, sectionId }: { members: Member[]; sectionId: stri
   );
 }
 
-export default function MembersPage() {
+export default async function MembersPage() {
+  const members = await fetchMembers();
+  const activeMembers = members.filter((member) => member.status === "active");
+  const retiredMembers = members.filter((member) => member.status === "retired");
+  const retirementYears = Array.from(new Set(retiredMembers.map((member) => member.cohort))).sort((a, b) =>
+    b.localeCompare(a, "zh-CN"),
+  );
+
   return (
     <div className="page">
       <section className="section-hero" id="all-members">
@@ -159,24 +159,24 @@ export default function MembersPage() {
       <section className="section member-section" id="active-members">
         <div className="section-heading">
           <span className="eyebrow">ACTIVE</span>
-          <h2>现役队员</h2>
+          <h2>在队队员</h2>
         </div>
-        <MemberWall members={activeMembers} sectionId="active-members" />
+        {activeMembers.length ? <MemberWall members={activeMembers} sectionId="active-members" /> : <p className="muted">当前没有在队队员资料。</p>}
       </section>
 
       <section className="section member-section" id="retired-members">
         <div className="section-heading">
           <span className="eyebrow">ALUMNI</span>
-          <h2>退役队员</h2>
+          <h2>退队队员</h2>
         </div>
         {retiredMembers.length ? (
           <div className="retired-year-list">
             {retirementYears.map((year) => {
-              const yearMembers = retiredMembers.filter((member) => (member.retirementYear ?? "往届") === year);
+              const yearMembers = retiredMembers.filter((member) => member.cohort === year);
               return (
                 <section className="retired-year-group" id={`retired-${year}`} key={year}>
                   <div className="retired-year-heading">
-                    <h3>{year} 年退役队员</h3>
+                    <h3>{year} 退队队员</h3>
                     <span>{yearMembers.length} 人</span>
                   </div>
                   <MemberWall members={yearMembers} sectionId={`retired-${year}`} />
@@ -185,7 +185,7 @@ export default function MembersPage() {
             })}
           </div>
         ) : (
-          <p className="muted">当前按现有架构展示现役队员资料。</p>
+          <p className="muted">当前没有退队队员资料。</p>
         )}
       </section>
     </div>

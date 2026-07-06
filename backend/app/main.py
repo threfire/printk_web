@@ -18,9 +18,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from openpyxl import Workbook, load_workbook
 from pydantic import BaseModel
 
@@ -51,9 +51,12 @@ AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://127.0.0.1:3000,http://localhost:3000")
+SITE_MODE = os.getenv("SITE_MODE", "test").strip().lower()
+ENABLE_WRITE_API = os.getenv("ENABLE_WRITE_API", "false").strip().lower() in {"1", "true", "yes", "on"}
 AGENT_LOCK = threading.Lock()
 FORUM_PUBLIC_STATUS = "approved"
 FORUM_CONTENT_STATUSES = {"pending", "approved", "rejected", "hidden"}
+MARKET_ITEM_STATUSES = {"available", "sold", "delisted"}
 HOME_ASSET_KINDS = {"video", "image"}
 HOME_VIDEO_MIME_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
 HOME_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
@@ -289,9 +292,12 @@ def init_db() -> None:
                 member_status TEXT DEFAULT '',
                 permission_level TEXT DEFAULT '',
                 department TEXT DEFAULT '',
+                cohort TEXT DEFAULT '',
+                role TEXT DEFAULT '',
                 phone TEXT DEFAULT '',
                 email TEXT DEFAULT '',
                 bio TEXT DEFAULT '',
+                photo_url TEXT DEFAULT '',
                 reward_score INTEGER NOT NULL DEFAULT 0,
                 image2_allowed INTEGER NOT NULL DEFAULT 0,
                 is_disabled INTEGER NOT NULL DEFAULT 0,
@@ -340,6 +346,25 @@ def init_db() -> None:
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL DEFAULT '',
                 FOREIGN KEY (post_id) REFERENCES forum_post(id),
+                FOREIGN KEY (author_account) REFERENCES site_account(account)
+            );
+
+            CREATE TABLE IF NOT EXISTS flea_market_item (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                image_src TEXT DEFAULT '',
+                image_alt TEXT DEFAULT '',
+                author_account TEXT NOT NULL,
+                team TEXT DEFAULT '',
+                location TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'available',
+                summary TEXT NOT NULL,
+                detail TEXT NOT NULL,
+                contact TEXT NOT NULL,
+                tags TEXT DEFAULT '[]',
+                delisted_at TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
                 FOREIGN KEY (author_account) REFERENCES site_account(account)
             );
 
@@ -436,8 +461,26 @@ def init_db() -> None:
         )
         conn.execute(
             """
+            CREATE INDEX IF NOT EXISTS idx_site_account_public_members
+            ON site_account (is_disabled, member_status, cohort, department, updated_at DESC)
+            """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_site_account_admin_log_account
             ON site_account_admin_log (account, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_flea_market_public
+            ON flea_market_item (status, delisted_at, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_flea_market_author
+            ON flea_market_item (author_account, updated_at DESC)
             """
         )
         conn.execute(
@@ -622,9 +665,12 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
         "member_status": "TEXT DEFAULT ''",
         "permission_level": "TEXT DEFAULT ''",
         "department": "TEXT DEFAULT ''",
+        "cohort": "TEXT DEFAULT ''",
+        "role": "TEXT DEFAULT ''",
         "phone": "TEXT DEFAULT ''",
         "email": "TEXT DEFAULT ''",
         "bio": "TEXT DEFAULT ''",
+        "photo_url": "TEXT DEFAULT ''",
         "reward_score": "INTEGER NOT NULL DEFAULT 0",
         "image2_allowed": "INTEGER NOT NULL DEFAULT 0",
         "is_disabled": "INTEGER NOT NULL DEFAULT 0",
@@ -748,7 +794,7 @@ PLAN_EDITOR_PERMISSION_OPTIONS = {"兵种组长", "部门组长", "队长", "管
 MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"}
 PERMISSION_LEVEL_OPTIONS = {"", "普通队员", "兵种组长", "部门组长", "队长", "管理"}
 REWARD_STATUS_OPTIONS = {"正式队员", "老队员"}
-DEPARTMENT_OPTIONS = {"", "电控", "机械", "算法", "运营"}
+DEPARTMENT_OPTIONS = {"", "队长", "项管", "机械组", "电控组", "硬件组", "算法组", "运营组", "电控", "机械", "算法", "运营"}
 SEASON_PLAN_ROBOT_TYPES = {"英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种"}
 
 
@@ -766,6 +812,13 @@ def normalize_choice(value: str, field_name: str, allowed_values: set[str]) -> s
     return text
 
 
+def normalize_photo_url(value: str) -> str:
+    text = normalize_limited_text(value, "成员照片", 300)
+    if text and not (text.startswith("/") or text.startswith("http://") or text.startswith("https://")):
+        raise HTTPException(status_code=400, detail="成员照片必须是 / 开头路径或 http(s) 链接")
+    return text
+
+
 def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
     return {
         "full_name": normalize_limited_text(profile.full_name, "姓名", 32),
@@ -774,9 +827,12 @@ def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
         "member_status": normalize_choice(profile.member_status, "身份信息", MEMBER_STATUS_OPTIONS),
         "permission_level": normalize_choice(profile.permission_level, "权限", PERMISSION_LEVEL_OPTIONS),
         "department": normalize_choice(profile.department, "部门信息", DEPARTMENT_OPTIONS),
+        "cohort": normalize_limited_text(profile.cohort, "届别", 32),
+        "role": normalize_limited_text(profile.role, "职责", 80),
         "phone": normalize_limited_text(profile.phone, "联系电话", 32),
         "email": normalize_limited_text(profile.email, "邮箱", 80),
         "bio": normalize_limited_text(profile.bio, "个人说明", 200),
+        "photo_url": normalize_photo_url(profile.photo_url),
     }
 
 
@@ -802,9 +858,12 @@ def site_account_response(row: sqlite3.Row, include_admin: bool = False) -> dict
         "member_status": row["member_status"] or "",
         "permission_level": row["permission_level"] or "",
         "department": row["department"] or "",
+        "cohort": row["cohort"] or "",
+        "role": row["role"] or "",
         "phone": row["phone"] or "",
         "email": row["email"] or "",
         "bio": row["bio"] or "",
+        "photo_url": row["photo_url"] or "",
         "reward_score": row["reward_score"] if eligible else 0,
         "reward_eligible": eligible,
         "image2_allowed": bool(row["image2_allowed"]),
@@ -901,6 +960,103 @@ def normalize_forum_status(value: str) -> str:
     if status not in FORUM_CONTENT_STATUSES:
         raise HTTPException(status_code=400, detail="论坛状态格式错误")
     return status
+
+
+def market_author_name(row: sqlite3.Row) -> str:
+    return row["full_name"] or row["author_account"]
+
+
+def market_status_label(status: str) -> str:
+    return {
+        "available": "可联系流转",
+        "sold": "已出",
+        "delisted": "已下架",
+    }.get(status, "可联系流转")
+
+
+def market_tags(value: str) -> list[str]:
+    try:
+        tags = json.loads(value or "[]")
+    except json.JSONDecodeError:
+        tags = []
+    if not isinstance(tags, list):
+        return []
+    return [str(tag) for tag in tags if str(tag).strip()]
+
+
+def flea_market_item_response(row: sqlite3.Row) -> dict[str, Any]:
+    status = row["status"] if row["status"] in MARKET_ITEM_STATUSES else "available"
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "image_src": row["image_src"] or "/robots/engineering-robot.png",
+        "image_alt": row["image_alt"] or row["name"],
+        "author_account": row["author_account"],
+        "owner": market_author_name(row),
+        "team": row["team"] or row["department"] or "",
+        "location": row["location"],
+        "status": status,
+        "status_text": market_status_label(status),
+        "summary": row["summary"],
+        "detail": row["detail"],
+        "contact": row["contact"],
+        "tags": market_tags(row["tags"]),
+        "delisted_at": row["delisted_at"] if "delisted_at" in row.keys() else "",
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def normalize_market_name(value: str) -> str:
+    name = value.strip()
+    if len(name) < 2 or len(name) > 60:
+        raise HTTPException(status_code=400, detail="物品名称长度需为 2 到 60 个字符")
+    return name
+
+
+def normalize_market_text(value: str, field_name: str, max_length: int) -> str:
+    text = value.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail=f"{field_name}不能为空")
+    if len(text) > max_length:
+        raise HTTPException(status_code=400, detail=f"{field_name}不能超过 {max_length} 个字符")
+    return text
+
+
+def normalize_market_image_src(value: str) -> str:
+    image_src = value.strip() or "/robots/engineering-robot.png"
+    if len(image_src) > 200:
+        raise HTTPException(status_code=400, detail="图片路径不能超过 200 个字符")
+    if not image_src.startswith("/"):
+        raise HTTPException(status_code=400, detail="图片路径需使用站内路径")
+    return image_src
+
+
+def normalize_market_tags(value: str) -> str:
+    raw_tags = value.replace("，", ",").replace("、", ",").split(",")
+    tags: list[str] = []
+    for raw_tag in raw_tags:
+        tag = raw_tag.strip()
+        if not tag:
+            continue
+        if len(tag) > 16:
+            raise HTTPException(status_code=400, detail="单个标签不能超过 16 个字符")
+        if tag not in tags:
+            tags.append(tag)
+    if len(tags) > 6:
+        raise HTTPException(status_code=400, detail="标签最多填写 6 个")
+    return json.dumps(tags, ensure_ascii=False)
+
+
+def normalize_market_status(value: str) -> str:
+    status = value.strip()
+    if status not in MARKET_ITEM_STATUSES:
+        raise HTTPException(status_code=400, detail="物品状态格式错误")
+    return status
+
+
+def ensure_market_author(conn: sqlite3.Connection, account: str) -> str:
+    return ensure_forum_author(conn, account)
 
 
 def validate_site_password(password: str) -> str:
@@ -1964,9 +2120,12 @@ class SiteAccountProfile(BaseModel):
     member_status: str = ""
     permission_level: str = ""
     department: str = ""
+    cohort: str = ""
+    role: str = ""
     phone: str = ""
     email: str = ""
     bio: str = ""
+    photo_url: str = ""
 
 
 class SiteAccountRequest(BaseModel):
@@ -2024,6 +2183,26 @@ class ForumModerationRequest(BaseModel):
     reject_reason: str = ""
     is_pinned: bool | None = None
     is_locked: bool | None = None
+
+
+class FleaMarketItemCreateRequest(BaseModel):
+    name: str
+    image_src: str = ""
+    location: str
+    summary: str
+    detail: str
+    contact: str
+    tags: str = ""
+    author_account: str
+
+
+class FleaMarketItemUpdateRequest(FleaMarketItemCreateRequest):
+    pass
+
+
+class FleaMarketStatusRequest(BaseModel):
+    author_account: str
+    status: str
 
 
 class SeasonPlanItem(BaseModel):
@@ -2105,6 +2284,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def write_api_gate(request: Request, call_next):
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"} and (SITE_MODE == "test" or not ENABLE_WRITE_API):
+        return JSONResponse({"detail": "feature disabled"}, status_code=503)
+    return await call_next(request)
 
 
 @app.get("/api/health")
@@ -2201,9 +2387,9 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
             """
             INSERT INTO site_account (
                 account, password_hash, full_name, gender, grade, member_status, permission_level,
-                department, phone, email, bio, reward_score, created_at, updated_at
+                department, cohort, role, phone, email, bio, photo_url, reward_score, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
             """,
             (
                 account,
@@ -2214,9 +2400,12 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
                 profile["member_status"],
                 profile["permission_level"] or "普通队员",
                 profile["department"],
+                profile["cohort"],
+                profile["role"],
                 profile["phone"],
                 profile["email"],
                 profile["bio"],
+                profile["photo_url"],
                 timestamp,
                 timestamp,
             ),
@@ -2268,7 +2457,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
             """
             UPDATE site_account
             SET full_name = ?, gender = ?, grade = ?, member_status = ?, permission_level = ?,
-                department = ?, phone = ?, email = ?, bio = ?,
+                department = ?, cohort = ?, role = ?, phone = ?, email = ?, bio = ?, photo_url = ?,
                 reward_score = CASE WHEN ? IN ('正式队员', '老队员') THEN reward_score ELSE 0 END,
                 updated_at = ?
             WHERE account = ?
@@ -2280,9 +2469,12 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
                 profile["member_status"],
                 existing["permission_level"] or "普通队员",
                 profile["department"],
+                profile["cohort"],
+                profile["role"],
                 profile["phone"],
                 profile["email"],
                 profile["bio"],
+                profile["photo_url"],
                 profile["member_status"],
                 timestamp,
                 normalized_account,
@@ -2290,6 +2482,54 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
         )
         row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
     return site_account_response(row)
+
+
+PUBLIC_MEMBER_STATUSES = {"梯队队员", "正式队员", "老队员", "退役队员", "老师"}
+RETIRED_MEMBER_STATUSES = {"老队员", "退役队员"}
+
+
+def member_response(row: sqlite3.Row) -> dict[str, Any]:
+    member_status = row["member_status"] or ""
+    membership_state = "retired" if member_status in RETIRED_MEMBER_STATUSES else "active"
+    return {
+        "id": row["account"],
+        "account": row["account"],
+        "name": row["full_name"] or row["account"],
+        "membership_state": membership_state,
+        "member_status": member_status,
+        "cohort": row["cohort"] or "",
+        "group": row["department"] or "",
+        "role": row["role"] or row["permission_level"] or "",
+        "grade": row["grade"] or "",
+        "bio": row["bio"] or "",
+        "photo_url": row["photo_url"] or "",
+        "updated_at": row["updated_at"],
+    }
+
+
+@app.get("/api/members")
+def list_public_members() -> dict[str, Any]:
+    placeholders = ",".join("?" for _ in PUBLIC_MEMBER_STATUSES)
+    with db_connection() as conn:
+        rows = conn.execute(
+            f"""
+            SELECT account, full_name, grade, member_status, permission_level,
+                department, cohort, role, bio, photo_url, updated_at
+            FROM site_account
+            WHERE is_disabled = 0
+                AND member_status IN ({placeholders})
+                AND COALESCE(full_name, '') <> ''
+            ORDER BY
+                CASE WHEN member_status IN ('老队员', '退役队员') THEN 1 ELSE 0 END,
+                cohort DESC,
+                department ASC,
+                updated_at DESC,
+                account ASC
+            LIMIT 300
+            """,
+            tuple(sorted(PUBLIC_MEMBER_STATUSES)),
+        ).fetchall()
+    return {"members": [member_response(row) for row in rows]}
 
 
 @app.get("/api/admin/site-accounts")
@@ -2314,9 +2554,9 @@ def list_site_accounts(
     where = ["1 = 1"]
     params: list[Any] = []
     if normalized_keyword:
-        where.append("(account LIKE ? OR full_name LIKE ? OR phone LIKE ? OR email LIKE ?)")
+        where.append("(account LIKE ? OR full_name LIKE ? OR phone LIKE ? OR email LIKE ? OR cohort LIKE ? OR role LIKE ?)")
         like_value = f"%{normalized_keyword}%"
-        params.extend([like_value, like_value, like_value, like_value])
+        params.extend([like_value, like_value, like_value, like_value, like_value, like_value])
     if normalized_member_status:
         where.append("member_status = ?")
         params.append(normalized_member_status)
@@ -2390,7 +2630,7 @@ def update_site_account_by_admin(
             """
             UPDATE site_account
             SET full_name = ?, gender = ?, grade = ?, member_status = ?, permission_level = ?,
-                department = ?, phone = ?, email = ?, bio = ?,
+                department = ?, cohort = ?, role = ?, phone = ?, email = ?, bio = ?, photo_url = ?,
                 reward_score = ?, image2_allowed = ?, is_disabled = ?, admin_note = ?, updated_at = ?
             WHERE account = ?
             """,
@@ -2401,9 +2641,12 @@ def update_site_account_by_admin(
                 profile["member_status"],
                 profile["permission_level"] or "普通队员",
                 profile["department"],
+                profile["cohort"],
+                profile["role"],
                 profile["phone"],
                 profile["email"],
                 profile["bio"],
+                profile["photo_url"],
                 reward_score,
                 1 if payload.image2_allowed else 0,
                 1 if payload.is_disabled else 0,
@@ -2435,8 +2678,12 @@ def delete_site_account_by_admin(
             "SELECT COUNT(*) AS total FROM forum_reply WHERE author_account = ?",
             (normalized_account,),
         ).fetchone()["total"]
-        if forum_post_count or forum_reply_count:
-            raise HTTPException(status_code=400, detail="账号存在论坛内容，请先停用账号")
+        market_item_count = conn.execute(
+            "SELECT COUNT(*) AS total FROM flea_market_item WHERE author_account = ?",
+            (normalized_account,),
+        ).fetchone()["total"]
+        if forum_post_count or forum_reply_count or market_item_count:
+            raise HTTPException(status_code=400, detail="账号存在前台内容，请先停用账号")
         conn.execute("DELETE FROM site_account_admin_log WHERE account = ?", (normalized_account,))
         conn.execute("UPDATE season_plan SET assignee_account = '' WHERE assignee_account = ?", (normalized_account,))
         conn.execute("UPDATE homepage_danmaku SET author_account = '' WHERE author_account = ?", (normalized_account,))
@@ -2750,6 +2997,199 @@ def delete_forum_reply(reply_id: str, _: str = Depends(require_admin)) -> dict[s
         )
         conn.execute("UPDATE forum_post SET updated_at = ? WHERE id = ?", (timestamp, existing["post_id"]))
     return {"id": reply_id}
+
+
+@app.get("/api/market/items")
+def list_flea_market_items(
+    author_account: str = Query(default=""),
+    include_delisted: bool = Query(default=False),
+    limit: int = Query(default=100, ge=1, le=200),
+) -> dict[str, Any]:
+    where = ["1 = 1"]
+    params: list[Any] = []
+    with db_connection() as conn:
+        if author_account.strip():
+            account = ensure_market_author(conn, author_account)
+            where.append("item.author_account = ?")
+            params.append(account)
+            if not include_delisted:
+                where.append("item.status != 'delisted'")
+        else:
+            where.append("item.status != 'delisted'")
+        params.append(limit)
+        rows = conn.execute(
+            f"""
+            SELECT
+                item.*,
+                account.full_name,
+                account.department
+            FROM flea_market_item AS item
+            LEFT JOIN site_account AS account ON account.account = item.author_account
+            WHERE {' AND '.join(where)}
+            ORDER BY
+                CASE item.status
+                    WHEN 'available' THEN 0
+                    WHEN 'sold' THEN 1
+                    ELSE 2
+                END,
+                item.created_at DESC
+            LIMIT ?
+            """,
+            params,
+        ).fetchall()
+    return {"items": [flea_market_item_response(row) for row in rows]}
+
+
+@app.get("/api/market/items/{item_id}")
+def get_flea_market_item(
+    item_id: str,
+    viewer_account: str = Query(default=""),
+) -> dict[str, Any]:
+    with db_connection() as conn:
+        viewer = ensure_market_author(conn, viewer_account) if viewer_account.strip() else ""
+        row = conn.execute(
+            """
+            SELECT
+                item.*,
+                account.full_name,
+                account.department
+            FROM flea_market_item AS item
+            LEFT JOIN site_account AS account ON account.account = item.author_account
+            WHERE item.id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="物品不存在")
+    if row["status"] == "delisted" and row["author_account"] != viewer:
+        raise HTTPException(status_code=404, detail="物品不存在")
+    return {"item": flea_market_item_response(row)}
+
+
+@app.post("/api/market/items")
+def create_flea_market_item(payload: FleaMarketItemCreateRequest) -> dict[str, Any]:
+    name = normalize_market_name(payload.name)
+    image_src = normalize_market_image_src(payload.image_src)
+    location = normalize_market_text(payload.location, "存放位置", 120)
+    summary = normalize_market_text(payload.summary, "简介", 180)
+    detail = normalize_market_text(payload.detail, "详细信息", 2000)
+    contact = normalize_market_text(payload.contact, "联系方式", 120)
+    tags = normalize_market_tags(payload.tags)
+    timestamp = now_iso()
+    item_id = uuid.uuid4().hex
+    with db_connection() as conn:
+        author_account = ensure_market_author(conn, payload.author_account)
+        account = conn.execute(
+            "SELECT full_name, department FROM site_account WHERE account = ?",
+            (author_account,),
+        ).fetchone()
+        team = account["department"] if account else ""
+        conn.execute(
+            """
+            INSERT INTO flea_market_item (
+                id, name, image_src, image_alt, author_account, team, location, status,
+                summary, detail, contact, tags, delisted_at, created_at, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'available', ?, ?, ?, ?, '', ?, ?)
+            """,
+            (item_id, name, image_src, name, author_account, team, location, summary, detail, contact, tags, timestamp, timestamp),
+        )
+        row = conn.execute(
+            """
+            SELECT item.*, account.full_name, account.department
+            FROM flea_market_item AS item
+            LEFT JOIN site_account AS account ON account.account = item.author_account
+            WHERE item.id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=500, detail="物品发布失败")
+    return {"item": flea_market_item_response(row)}
+
+
+@app.put("/api/market/items/{item_id}")
+def update_flea_market_item(item_id: str, payload: FleaMarketItemUpdateRequest) -> dict[str, Any]:
+    name = normalize_market_name(payload.name)
+    image_src = normalize_market_image_src(payload.image_src)
+    location = normalize_market_text(payload.location, "存放位置", 120)
+    summary = normalize_market_text(payload.summary, "简介", 180)
+    detail = normalize_market_text(payload.detail, "详细信息", 2000)
+    contact = normalize_market_text(payload.contact, "联系方式", 120)
+    tags = normalize_market_tags(payload.tags)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        author_account = ensure_market_author(conn, payload.author_account)
+        existing = conn.execute(
+            "SELECT id, author_account FROM flea_market_item WHERE id = ?",
+            (item_id,),
+        ).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="物品不存在")
+        if existing["author_account"] != author_account:
+            raise HTTPException(status_code=403, detail="只能编辑自己发布的物品")
+        conn.execute(
+            """
+            UPDATE flea_market_item
+            SET name = ?,
+                image_src = ?,
+                image_alt = ?,
+                location = ?,
+                summary = ?,
+                detail = ?,
+                contact = ?,
+                tags = ?,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (name, image_src, name, location, summary, detail, contact, tags, timestamp, item_id),
+        )
+        row = conn.execute(
+            """
+            SELECT item.*, account.full_name, account.department
+            FROM flea_market_item AS item
+            LEFT JOIN site_account AS account ON account.account = item.author_account
+            WHERE item.id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+    return {"item": flea_market_item_response(row)}
+
+
+@app.put("/api/market/items/{item_id}/status")
+def update_flea_market_item_status(item_id: str, payload: FleaMarketStatusRequest) -> dict[str, Any]:
+    status = normalize_market_status(payload.status)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        author_account = ensure_market_author(conn, payload.author_account)
+        existing = conn.execute(
+            "SELECT id, author_account FROM flea_market_item WHERE id = ?",
+            (item_id,),
+        ).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="物品不存在")
+        if existing["author_account"] != author_account:
+            raise HTTPException(status_code=403, detail="只能处理自己发布的物品")
+        conn.execute(
+            """
+            UPDATE flea_market_item
+            SET status = ?,
+                delisted_at = ?,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (status, timestamp if status == "delisted" else "", timestamp, item_id),
+        )
+        row = conn.execute(
+            """
+            SELECT item.*, account.full_name, account.department
+            FROM flea_market_item AS item
+            LEFT JOIN site_account AS account ON account.account = item.author_account
+            WHERE item.id = ?
+            """,
+            (item_id,),
+        ).fetchone()
+    return {"item": flea_market_item_response(row)}
 
 
 @app.get("/api/forum/posts")

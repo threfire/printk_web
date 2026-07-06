@@ -33,12 +33,12 @@ docker-compose.yml
 
 - 云服务器：腾讯云轻量应用服务器
 - 操作系统：Ubuntu 22.04 Docker 镜像
-- 公网 IP：`123.207.16.156`
-- SSH 登录模板：`ssh ubuntu@123.207.16.156`
+- 公网 IP：`175.178.7.75`
+- SSH 登录模板：`ssh ubuntu@175.178.7.75`
 - 域名：`gzuprintk.cn`
 - DNS：
-  - `@ -> 123.207.16.156`
-  - `www -> 123.207.16.156`
+  - `@ -> 175.178.7.75`
+  - `www -> 175.178.7.75`
 
 当前容器：
 
@@ -48,10 +48,10 @@ docker-compose.yml
 
 当前访问入口：
 
-- IP 入口：`http://123.207.16.156`
+- IP 入口：`http://175.178.7.75`
 - 域名入口：`http://gzuprintk.cn`
 - 域名入口：`http://www.gzuprintk.cn`
-- 后端健康检查：`http://123.207.16.156:8000/api/health`
+- 后端健康检查：`http://175.178.7.75:8000/api/health`
 
 当前反向代理链路：
 
@@ -73,7 +73,7 @@ docker-compose.yml
 服务器 `.env` 当前至少包含以下字段：
 
 ```env
-FRONTEND_ORIGIN=http://123.207.16.156,http://gzuprintk.cn,http://www.gzuprintk.cn
+FRONTEND_ORIGIN=http://175.178.7.75,http://gzuprintk.cn,http://www.gzuprintk.cn
 INTERNAL_API_BASE_URL=http://backend:8000
 NEXT_PUBLIC_API_BASE_URL=/
 ADMIN_PASSWORD=***
@@ -127,9 +127,9 @@ bash scripts/server-init.sh
 
 ## 后续更新流程
 
-当前推荐更新链路：
+日常更新链路：
 
-`本地改代码 -> git commit -> git push origin master -> 本地拉取服务器 storage 备份 -> 服务器更新前再次备份 storage -> 服务器 git pull -> docker compose 重建`
+`本地改代码 -> git commit -> git push origin master -> SSH 控制远程服务器 -> 进入 ~/printk -> 轻量化备份 storage -> 拉取最新代码 -> docker compose 重建`
 
 本地执行：
 
@@ -139,7 +139,17 @@ git commit -m "写本次更新说明"
 git push origin master
 ```
 
-本地执行受保护更新：
+服务器日常轻量化更新：
+
+```bash
+ssh ubuntu@175.178.7.75
+cd ~/printk
+bash scripts/safe-deploy.sh
+```
+
+`scripts/safe-deploy.sh` 会先校验 `docker-compose.yml` 中的 `./storage:/app/storage` 挂载，再备份服务器本机 `storage/`，备份时排除 `storage/backups/`，随后拉取当前分支最新代码并执行 `docker compose up -d --build`。日常更新使用这条路径即可保留账号、弹幕、论坛、上传文件、站点媒体和业务数据库等持久数据。
+
+需要把服务器 `storage` 同步到本地时，再执行受保护更新：
 
 ```powershell
 .\scripts\sync_server_storage.ps1 -RunServerUpdate
@@ -147,14 +157,14 @@ git push origin master
 
 这条命令先把服务器 `~/printk/storage` 拉到 `%USERPROFILE%\printk-server-storage-backups\storage\时间戳`，默认保留最近 14 份本地备份，然后通过 SSH 执行服务器 `scripts/server-update.sh`。
 
-服务器执行：
+需要在服务器执行完整容器内 storage 同步时：
 
 ```bash
 cd ~/printk
 bash scripts/server-update.sh
 ```
 
-如果只想手动更新，也可以执行：
+需要手动更新时：
 
 ```bash
 cd ~/printk
@@ -186,7 +196,7 @@ tar -C storage --exclude=./backups -czf storage/backups/pre-restore-$(date +%Y%m
 ```
 
 ```powershell
-scp -r "$env:USERPROFILE\printk-server-storage-backups\storage\20260623-233000\*" ubuntu@123.207.16.156:~/printk/storage/
+scp -r "$env:USERPROFILE\printk-server-storage-backups\storage\20260623-233000\*" ubuntu@175.178.7.75:~/printk/storage/
 ```
 
 ```bash

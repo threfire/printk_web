@@ -4,6 +4,7 @@ import { AccountDialog, AccountModals } from "@/components/AccountDialog";
 import { ThemeRoot, ThemeSwitcher } from "@/components/ThemeRoot";
 import { WelcomeGuestDialog } from "@/components/WelcomeGuestDialog";
 import { robotRoles } from "@/lib/robots";
+import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
 const navItems = [
   { href: "/", label: "首页" },
@@ -39,7 +40,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <nav className="nav-links" aria-label="主导航">
-            {navItems.map((item) => (
+            {navItems.filter((item) => ENABLE_INTERACTIVE || item.href !== "/forum").map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>
@@ -55,7 +56,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details>
-            <details className="nav-dropdown">
+            {ENABLE_INTERACTIVE ? <details className="nav-dropdown">
               <summary>队员</summary>
               <div className="nav-dropdown-menu">
                 {memberNavItems.map((item) => (
@@ -64,7 +65,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </div>
-            </details>
+            </details> : null}
             <details className="nav-dropdown">
               <summary>功能</summary>
               <div className="nav-dropdown-menu">
@@ -78,11 +79,11 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="header-actions">
             {accountFeedback ? <span className="account-feedback">{accountFeedback}</span> : null}
-            <AccountDialog accountName={accountName} />
+            {ENABLE_INTERACTIVE ? <AccountDialog accountName={accountName} /> : null}
           </div>
         </header>
-        <AccountModals />
-        {accountName ? null : <WelcomeGuestDialog />}
+        {ENABLE_INTERACTIVE ? <AccountModals /> : null}
+        {ENABLE_INTERACTIVE && !accountName ? <WelcomeGuestDialog /> : null}
         <main>{children}</main>
         <Link className="market-quick-link" href="/market" aria-label="跳转到闲置物品展示" title="闲置物品展示">
           <span className="market-quick-icon" aria-hidden="true">

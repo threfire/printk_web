@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
 import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
+import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
 const robots = [
   { name: "舵轮英雄机器人" },
@@ -185,14 +186,14 @@ export default async function Home() {
           <p>
             PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。
           </p>
-          <div className="hero-actions">
+          {ENABLE_INTERACTIVE ? <div className="hero-actions">
             <Link className="button" href="/invoices">
               进入报销管理
             </Link>
             <Link className="ghost-button" href="/season-plan">
               查看赛季规划
             </Link>
-          </div>
+          </div> : null}
         </div>
         <div className="hero-visual" aria-label="战队徽展示区">
           <div className="emblem-stage">
@@ -216,7 +217,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} />
+      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} enableInteractive={ENABLE_INTERACTIVE} />
 
       <section className="section split-section">
         <div className="section-heading">
@@ -292,7 +293,7 @@ export default async function Home() {
             <Link href="/season-plan">赛季规划</Link>
             <Link href="/robots">兵种展示</Link>
             <Link href="/members">队员资料</Link>
-            <Link href="/forum">论坛交流</Link>
+            {ENABLE_INTERACTIVE ? <Link href="/forum">论坛交流</Link> : null}
           </nav>
           <div className="home-footer-contact">
             <span>联系我们</span>

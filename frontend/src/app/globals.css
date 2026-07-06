@@ -4306,6 +4306,20 @@ th {
   padding: 1rem;
 }
 
+.flea-market-compose {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.flea-market-form {
+  max-width: 980px;
+}
+
+.flea-market-feedback {
+  margin-top: 1rem;
+}
+
 .flea-market-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
@@ -4363,6 +4377,48 @@ th {
 .flea-market-card-copy small {
   color: var(--muted);
   font-weight: 800;
+}
+
+.flea-market-manage-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.flea-market-manage-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+}
+
+.flea-market-manage-item > div:first-child {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.flea-market-manage-item strong {
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+}
+
+.flea-market-manage-item small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.flea-market-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.flea-market-actions form {
+  display: contents;
 }
 
 .flea-market-detail-page {
@@ -4522,6 +4578,10 @@ th {
   .flea-market-card {
     grid-template-rows: minmax(12rem, auto) auto;
     min-height: 19rem;
+  }
+
+  .flea-market-manage-item {
+    grid-template-columns: 1fr;
   }
 
   .flea-market-detail-image {

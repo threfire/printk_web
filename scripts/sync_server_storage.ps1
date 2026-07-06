@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Remote = "ubuntu@123.207.16.156",
+    [string]$Remote = "ubuntu@175.178.7.75",
     [string]$RemoteStorage = "~/printk/storage",
     [string]$RemoteAppDir = "~/printk",
     [string]$BackupRoot = "$env:USERPROFILE\printk-server-storage-backups",

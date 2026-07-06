@@ -5,11 +5,13 @@ services:
     container_name: printk-backend
     restart: unless-stopped
     environment:
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://123.207.16.156,http://gzuprintk.cn,http://www.gzuprintk.cn}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://175.178.7.75,http://gzuprintk.cn,http://www.gzuprintk.cn}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-wrprintk}
       GROUP_LEADER_PASSWORD: ${GROUP_LEADER_PASSWORD:-group123}
       SECRET_KEY: ${SECRET_KEY:-material-agent-secret}
       STORAGE_DIR: /app/storage
+      SITE_MODE: ${SITE_MODE:-test}
+      ENABLE_WRITE_API: ${ENABLE_WRITE_API:-false}
     ports:
       - "8000:8000"
     volumes:
@@ -25,6 +27,9 @@ services:
     environment:
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/}
+      SITE_MODE: ${SITE_MODE:-test}
+      ENABLE_INTERACTIVE: ${ENABLE_INTERACTIVE:-false}
+      ENABLE_WRITE_API: ${ENABLE_WRITE_API:-false}
     ports:
       - "3000:3000"
 

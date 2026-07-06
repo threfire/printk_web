@@ -2,7 +2,7 @@ export const genderOptions = ["男", "女", "其他"] as const;
 export const gradeOptions = ["大一", "大二", "大三", "大四", "研究生"] as const;
 export const memberStatusOptions = ["非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"] as const;
 export const permissionLevelOptions = ["普通队员", "兵种组长", "部门组长", "队长", "管理"] as const;
-export const departmentOptions = ["电控", "机械", "算法", "运营"] as const;
+export const departmentOptions = ["队长", "项管", "机械组", "电控组", "硬件组", "算法组", "运营组", "电控", "机械", "算法", "运营"] as const;
 
 export type SiteAccountProfile = {
   account: string;
@@ -12,9 +12,12 @@ export type SiteAccountProfile = {
   member_status: string;
   permission_level: string;
   department: string;
+  cohort: string;
+  role: string;
   phone: string;
   email: string;
   bio: string;
+  photo_url: string;
   reward_score: number;
   reward_eligible: boolean;
   image2_allowed: boolean;
@@ -33,8 +36,11 @@ export function profileFromForm(formData: FormData) {
     member_status: String(formData.get("member_status") ?? "").trim(),
     permission_level: String(formData.get("permission_level") ?? "").trim(),
     department: String(formData.get("department") ?? "").trim(),
+    cohort: String(formData.get("cohort") ?? "").trim(),
+    role: String(formData.get("role") ?? "").trim(),
     phone: String(formData.get("phone") ?? "").trim(),
     email: String(formData.get("email") ?? "").trim(),
     bio: String(formData.get("bio") ?? "").trim(),
+    photo_url: String(formData.get("photo_url") ?? "").trim(),
   };
 }
