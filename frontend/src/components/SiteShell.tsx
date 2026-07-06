@@ -8,6 +8,7 @@ import { robotRoles } from "@/lib/robots";
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/season-plan", label: "赛季规划" },
+  { href: "/market", label: "跳蚤市场" },
   { href: "/forum", label: "论坛" },
 ];
 
@@ -84,6 +85,14 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         <AccountModals />
         {accountName ? null : <WelcomeGuestDialog />}
         <main>{children}</main>
+        <Link className="market-quick-link" href="/market" aria-label="跳转到跳蚤市场" title="跳蚤市场">
+          <span className="market-quick-icon" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </span>
+        </Link>
         <ThemeSwitcher />
       </div>
     </ThemeRoot>
