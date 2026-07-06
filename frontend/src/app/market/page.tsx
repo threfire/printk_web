@@ -7,7 +7,7 @@ export default function MarketPage() {
     <div className="page flea-market-page">
       <section className="section-hero flea-market-hero">
         <span className="eyebrow">IDLE FLOW</span>
-        <h1>跳蚤市场</h1>
+        <h1>闲置物品展示</h1>
         <p>队内闲置物品展示信息流，成员通过发布人联系完成物品流转。</p>
       </section>
 

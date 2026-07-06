@@ -8,13 +8,12 @@ import { robotRoles } from "@/lib/robots";
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/season-plan", label: "赛季规划" },
-  { href: "/market", label: "跳蚤市场" },
+  { href: "/market", label: "闲置物品展示" },
   { href: "/forum", label: "论坛" },
 ];
 
 const featureNavItems = [
-  { href: "/invoices", label: "发票管理" },
-  { href: "/image2", label: "图片工具" },
+  { href: "/invoices", label: "报销资料管理" },
   { href: "/admin", label: "管理后台" },
 ];
 
@@ -85,7 +84,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         <AccountModals />
         {accountName ? null : <WelcomeGuestDialog />}
         <main>{children}</main>
-        <Link className="market-quick-link" href="/market" aria-label="跳转到跳蚤市场" title="跳蚤市场">
+        <Link className="market-quick-link" href="/market" aria-label="跳转到闲置物品展示" title="闲置物品展示">
           <span className="market-quick-icon" aria-hidden="true">
             <span />
             <span />

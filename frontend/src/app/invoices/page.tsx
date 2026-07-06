@@ -102,8 +102,8 @@ export default function InvoicesPage() {
   return (
     <div className="page">
       <section className="section-hero">
-        <span className="eyebrow">INVOICE SYSTEM</span>
-        <h1>发票管理</h1>
+        <span className="eyebrow">REIMBURSEMENT FILES</span>
+        <h1>报销资料管理</h1>
         <p>成员在这里上传固定格式的 .xlsx 发票表格，发票信息直接来自表格字段。</p>
         <div className="hero-actions">
           <a className="ghost-button" href={downloadUrl("/api/invoices/template")}>

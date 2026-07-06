@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/SiteShell";
 
 export const metadata: Metadata = {
   title: "PRINTK 机器人战队门户",
-  description: "团队展示、赛季规划与发票管理系统",
+  description: "团队展示、赛季规划与报销资料管理系统",
 };
 
 export default function RootLayout({

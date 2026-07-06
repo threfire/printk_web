@@ -1,11 +1,11 @@
-# PRINTK 团队门户与发票管理系统
+# PRINTK 团队门户与报销资料管理系统
 
 本项目已经从单体 Flask 方案推进到 `Next.js + FastAPI + Docker Compose + Nginx` 架构，当前代码与服务器部署链路已经打通。
 
 ## 当前项目结构
 
 ```text
-frontend/     Next.js 前端，负责团队门户、图片工具、账号页面、发票管理页面、管理后台页面
+frontend/     Next.js 前端，负责团队门户、账号页面、报销资料管理页面、管理后台页面
 backend/      FastAPI 后端，负责接口、SQLite、本地文件处理、审核逻辑
 deploy/nginx/ Nginx 反向代理配置
 storage/      本地数据目录，存放数据库、上传文件、导出文件、日志
@@ -23,7 +23,6 @@ docker-compose.yml
 - 成员上传 `.xlsx` 采购表格
 - 本地审核与入库流程
 - 管理后台批次确认、驳回、出库
-- 图片工具页面
 - GitHub 仓库拉取部署
 - Docker Compose 容器部署
 - Nginx 反向代理入口

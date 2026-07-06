@@ -187,7 +187,7 @@ export default async function Home() {
           </p>
           <div className="hero-actions">
             <Link className="button" href="/invoices">
-              进入发票管理
+              进入报销管理
             </Link>
             <Link className="ghost-button" href="/season-plan">
               查看赛季规划

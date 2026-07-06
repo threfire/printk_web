@@ -67,7 +67,7 @@ export default async function MarketItemPage({ params }: { params: Promise<{ ite
             </div>
           </dl>
           <Link className="ghost-button" href="/market">
-            返回跳蚤市场
+            返回闲置物品展示
           </Link>
         </aside>
       </section>
