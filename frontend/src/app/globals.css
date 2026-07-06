@@ -447,6 +447,13 @@ button {
   line-height: 1;
 }
 
+.account-modal-note {
+  margin: -0.35rem 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
 .account-modal-form {
   display: grid;
   gap: 0.65rem;

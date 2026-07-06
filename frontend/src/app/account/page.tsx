@@ -60,13 +60,13 @@ export default async function AccountPage() {
         <section className="section-hero">
           <span className="eyebrow">ACCOUNT</span>
           <h1>个人中心</h1>
-          <p>登录账号后可维护姓名、年级、战队身份和部门信息。</p>
+          <p>队员账号用于队内资料维护与协作权限管理，登录后可维护姓名、年级、战队身份和部门信息。</p>
           <div className="hero-actions">
             <Link className="button" href="/#account-login">
-              登录
+              队员账号登录
             </Link>
             <Link className="ghost-button" href="/#account-register">
-              注册
+              队员账号注册
             </Link>
           </div>
         </section>

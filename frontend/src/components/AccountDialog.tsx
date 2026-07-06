@@ -19,10 +19,10 @@ export function AccountDialog({ accountName }: { accountName: string }) {
   return (
     <div className="account-panel" id="account">
       <a className="account-tab account-tab-primary" href="#account-login">
-        登录
+        队员登录
       </a>
       <a className="account-tab" href="#account-register">
-        注册
+        队员注册
       </a>
     </div>
   );
@@ -47,11 +47,12 @@ function AccountModal({ mode }: { mode: AccountMode }) {
       <a className="account-modal-dismiss" href="#account" aria-label="关闭" />
       <section className={`account-modal ${isRegister ? "account-modal-wide" : ""}`} aria-modal="true" aria-labelledby={titleId} role="dialog">
         <div className="account-modal-heading">
-          <h2 id={titleId}>{isRegister ? "注册账号" : "登录账号"}</h2>
+          <h2 id={titleId}>{isRegister ? "队员账号注册" : "队员账号登录"}</h2>
           <a className="account-modal-close" href="#account" aria-label="关闭">
             ×
           </a>
         </div>
+        <p className="account-modal-note">队员账号用于队内资料维护与协作权限管理。</p>
         <form className="account-modal-form" action={isRegister ? "/account/register" : "/account/login"} method="post">
           <label htmlFor={`${modalId}-name`}>账号</label>
           <input id={`${modalId}-name`} name="account" placeholder="账号名称" autoComplete="username" required />
@@ -119,11 +120,11 @@ function AccountModal({ mode }: { mode: AccountMode }) {
             </>
           ) : null}
           <button className="button" type="submit">
-            {isRegister ? "注册" : "登录"}
+            {isRegister ? "注册队员账号" : "登录队员账号"}
           </button>
         </form>
         <a className="account-switch" href={isRegister ? "#account-login" : "#account-register"}>
-          {isRegister ? "已有账号，点击登录" : "没有账号，点击注册"}
+          {isRegister ? "已有队员账号，点击登录" : "没有队员账号，点击注册"}
         </a>
       </section>
     </div>
