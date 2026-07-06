@@ -3,8 +3,8 @@ import "./globals.css";
 import { SiteShell } from "@/components/SiteShell";
 
 export const metadata: Metadata = {
-  title: "PRINTK 机器人战队门户",
-  description: "团队展示、赛季规划与报销资料管理系统",
+  title: "机器人学习记录 - 贵州大学 PRINTK 战队展示网站",
+  description: "机器人学习记录、战队展示、赛季规划与队内资料管理",
 };
 
 export default function RootLayout({
