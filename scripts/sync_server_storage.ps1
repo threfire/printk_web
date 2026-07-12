@@ -102,7 +102,7 @@ function New-ScpBaseArguments {
         $arguments.Add("-i")
         $arguments.Add($IdentityFile)
     }
-    return $arguments
+    return ,$arguments
 }
 
 function New-SshBaseArguments {
@@ -115,7 +115,7 @@ function New-SshBaseArguments {
         $arguments.Add("-i")
         $arguments.Add($IdentityFile)
     }
-    return $arguments
+    return ,$arguments
 }
 
 function Write-RestoreInstructions {
