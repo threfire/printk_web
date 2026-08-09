@@ -1,3 +1,335 @@
-export default function Home() {
-  return <main>正在备案中</main>;
+import Image from "next/image";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
+import { HomeCarousel } from "@/components/HomeCarousel";
+import { API_BASE, type HomepageContentData } from "@/lib/api";
+import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
+
+const robots = [
+  { name: "舵轮英雄机器人" },
+  { name: "全向轮英雄机器人" },
+  { name: "舵轮步兵机器人" },
+  { name: "全向轮步兵机器人" },
+  {
+    name: "六轴工程机器人",
+    image: {
+      src: "/robots/engineering-robot.png",
+      alt: "PRINTK 六轴工程机器人",
+    },
+  },
+  { name: "舵轮哨兵机器人" },
+  { name: "全向轮哨兵机器人" },
+];
+const memberGroups = [
+  { name: "队长与项管", members: ["陈俊轩", "刘振豪", "张朝阳", "曾宰丹"] },
+  {
+    name: "机械组",
+    members: ["周玉威", "敖敬淳", "张鑫豪", "赵博文", "姚博文", "董益辉", "练俊轩", "唐媛林", "石翔", "万易鹏", "仇松", "温浩浩", "田家豪", "陆秋奕", "叶朝天"],
+  },
+  {
+    name: "电控组",
+    members: ["黄锐", "欧鸥", "杨明鑫", "敖毅", "杜佳佳", "罗俊俊", "陈杰", "杨尚靖", "何哲", "肖哲", "周柏森", "陈星"],
+  },
+  { name: "硬件组", members: ["张朝阳", "王硕", "曹睿中", "黄皓", "杨嘉雯"] },
+  { name: "算法组", members: ["张荣勋", "杨阳"] },
+  { name: "运营组", members: ["杨胜娟", "曾宰丹", "石娟"] },
+];
+const awardPlaceholders = [
+  { title: "RoboMaster 赛事奖项", meta: "奖状图片占位" },
+  { title: "赛季工程成果", meta: "奖杯图片占位" },
+  { title: "校级竞赛荣誉", meta: "证书图片占位" },
+  { title: "技术创新成果", meta: "奖项图片占位" },
+  { title: "团队建设荣誉", meta: "合影图片占位" },
+  { title: "年度贡献奖项", meta: "荣誉图片占位" },
+];
+
+const carouselImages = [
+  { src: "/home-carousel/team-01.jpeg", alt: "PRINTK 成员在实验室演示康复机器人设备" },
+  { src: "/home-carousel/team-02.jpeg", alt: "PRINTK 队员在赛事实地交流" },
+  { src: "/home-carousel/team-03.jpeg", alt: "PRINTK 队员在场馆内讨论比赛细节" },
+  { src: "/home-carousel/team-04.jpeg", alt: "PRINTK 成员在赛场调试机器人" },
+  { src: "/home-carousel/team-05.jpeg", alt: "PRINTK 队员在比赛现场观察机器人状态" },
+  { src: "/home-carousel/team-06.jpeg", alt: "PRINTK 队员在场边关注比赛进程" },
+  { src: "/home-carousel/team-07.jpeg", alt: "PRINTK 成员在场馆通道集合" },
+  { src: "/home-carousel/team-08.png", alt: "PRINTK 战队赛季全员合影" },
+  { src: "/home-carousel/team-09.jpg", alt: "PRINTK 战队在 RoboMaster 现场合影" },
+  { src: "/home-carousel/team-10.jpg", alt: "PRINTK 成员围绕机器人开展线下交流" },
+  { src: "/home-carousel/team-11.jpg", alt: "PRINTK 队员围绕电脑集中讨论调试方案" },
+  { src: "/home-carousel/team-12.jpeg", alt: "PRINTK 战队与机器人在赛场内合影留念" },
+  { src: "/home-carousel/team-13.jpeg", alt: "PRINTK 队员在比赛现场近距离调试机器人" },
+];
+
+const carouselQuotes = [
+  { text: "道路且长，行则将至。", source: "PRINTK 赛季口号" },
+  { text: "为青春赋予荣光，让思考拥有力量。", source: "RoboMaster 赛事理念" },
+  { text: "服务全球青年工程师成为追求极致、有实干精神的梦想家", source: "RoboMaster 高校系列赛" },
+  { text: "崇尚科学与创新，擅于反思，勇于实践，热爱分享。", source: "RoboMaster 赛事理念" },
+  { text: "初心高于胜负，每一份努力都值得被肯定。", source: "RoboMaster 组织奖文案" },
+  { text: "以学术价值为根基，培养具备工程思维、拥有实干精神的综合素质人才", source: "RoboMaster 赛事愿景" },
+  { text: "勇于创新、追求极致、崇尚实干、具备视野和远见", source: "RoboMaster 专属招聘通道" },
+];
+
+const fallbackHomepage: HomepageContentData = {
+  video: {
+    id: "fallback-video",
+    kind: "video",
+    url: "/season-promo.mp4",
+    original_filename: "欢送老登之夜.mp4",
+    mime_type: "video/mp4",
+    size_bytes: 6233758,
+    alt: "赛季宣传视频",
+    display_order: 1,
+    is_enabled: true,
+    created_at: "",
+    updated_at: "",
+  },
+  videos: [],
+  images: carouselImages.map((image, index) => ({
+    id: `fallback-image-${index + 1}`,
+    kind: "image",
+    url: image.src,
+    original_filename: image.src.split("/").pop() ?? "",
+    mime_type: "",
+    size_bytes: 0,
+    alt: image.alt,
+    display_order: index + 1,
+    is_enabled: true,
+    created_at: "",
+    updated_at: "",
+  })),
+  quotes: carouselQuotes.map((quote, index) => ({
+    id: `fallback-quote-${index + 1}`,
+    text: quote.text,
+    source: quote.source,
+    display_order: index + 1,
+    is_enabled: true,
+    created_at: "",
+    updated_at: "",
+  })),
+};
+
+async function fetchHomepageContent() {
+  try {
+    const response = await fetch(`${API_BASE}/api/homepage`, { cache: "no-store" });
+    if (!response.ok) {
+      return fallbackHomepage;
+    }
+    return (await response.json()) as HomepageContentData;
+  } catch {
+    return fallbackHomepage;
+  }
+}
+
+function buildAwardItems(homepage: HomepageContentData): HomeAwardItem[] {
+  if (homepage === fallbackHomepage) {
+    return awardPlaceholders;
+  }
+
+  if (!homepage.images.length && !homepage.quotes.length) {
+    return awardPlaceholders;
+  }
+
+  const itemCount = Math.max(homepage.images.length, homepage.quotes.length);
+  return Array.from({ length: itemCount }, (_, index) => {
+    const image = homepage.images.length ? homepage.images[index % homepage.images.length] : undefined;
+    const quote = homepage.quotes.length ? homepage.quotes[index % homepage.quotes.length] : undefined;
+    const imageLabel = image?.alt || image?.original_filename || "";
+    const title = quote?.source || imageLabel || awardPlaceholders[index % awardPlaceholders.length].title;
+    const meta = quote?.text || imageLabel || awardPlaceholders[index % awardPlaceholders.length].meta;
+
+    return {
+      title,
+      meta,
+      image: image
+        ? {
+            src: image.url,
+            alt: imageLabel || title,
+          }
+        : undefined,
+    };
+  });
+}
+
+export default async function Home() {
+  const cookieStore = await cookies();
+  const accountName = cookieStore.get("printk-site-account")?.value ?? "";
+  const homepage = await fetchHomepageContent();
+  const video = homepage.video ?? fallbackHomepage.video;
+  const carouselImageItems = (homepage.images.length ? homepage.images : fallbackHomepage.images).map((image) => ({
+    imageKey: image.id,
+    src: image.url,
+    alt: image.alt || image.original_filename || "战队图片展示",
+  }));
+  const quoteItems = (homepage.quotes.length ? homepage.quotes : fallbackHomepage.quotes).map((quote) => ({
+    text: quote.text,
+    source: quote.source,
+  }));
+  const awardItems = buildAwardItems(homepage);
+
+  return (
+    <div className="page">
+      {video ? (
+        <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
+          <video className="season-video-player" controls playsInline preload="metadata">
+            <source src={video.url} type={video.mime_type || "video/mp4"} />
+          </video>
+        </section>
+      ) : null}
+
+      <section className="hero">
+        <div className="hero-copy">
+          <h1 className="hero-title">
+            <span className="hero-title-primary">PRINTK</span>
+            <span className="hero-title-secondary">机甲大师战队</span>
+          </h1>
+          <p>
+            PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。
+          </p>
+          {ENABLE_INTERACTIVE ? <div className="hero-actions">
+            <Link className="button" href="/invoices">
+              进入报销管理
+            </Link>
+            <Link className="ghost-button" href="/season-plan">
+              查看赛季规划
+            </Link>
+          </div> : null}
+        </div>
+        <div className="hero-visual" aria-label="战队徽展示区">
+          <div className="emblem-stage">
+            <Image className="emblem-image" src="/team-logo.jpg" alt="PRINTK 战队徽" width={360} height={360} priority />
+            <div className="emblem-ring" />
+          </div>
+          <div className="hero-stats" aria-label="战队概览">
+            <div>
+              <strong>4</strong>
+              <span>核心组别</span>
+            </div>
+            <div>
+              <strong>7</strong>
+              <span>兵种方向</span>
+            </div>
+            <div>
+              <strong>2026</strong>
+              <span>赛季规划</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} enableInteractive={ENABLE_INTERACTIVE} />
+
+      <section className="section split-section">
+        <div className="section-heading">
+          <h2>兵种展示</h2>
+        </div>
+        <div className="card-grid">
+          {robots.map((robot) => (
+            <article className="card home-robot-card" key={robot.name}>
+              {robot.image ? (
+                <Image className="home-robot-image" src={robot.image.src} alt={robot.image.alt} width={873} height={655} />
+              ) : null}
+              <h3>{robot.name}</h3>
+              <p>资料按赛季归档，展示兵种定位、负责组别、当前重点和交付物。</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section split-section">
+        <div className="section-heading">
+          <h2>队员</h2>
+        </div>
+        <div className="home-member-grid">
+          {memberGroups.map((group) => (
+            <article className="card home-member-card" key={group.name}>
+              <h3>{group.name}</h3>
+              <ul className="home-member-list" aria-label={`${group.name}成员`}>
+                {group.members.map((member) => (
+                  <li key={member}>{member}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="home-awards" aria-labelledby="home-awards-title">
+        <div className="home-awards-heading">
+          <h2 id="home-awards-title">奖项与荣誉展示</h2>
+          <p>这里优先轮播展示后台首页内容管理配置的荣誉图片和文案，数据为空时展示占位内容。</p>
+        </div>
+        <HomeAwardsCarousel awards={awardItems} />
+      </section>
+
+      <section className="home-recruitment" aria-labelledby="home-recruitment-title">
+        <div className="home-recruitment-copy">
+          <span className="eyebrow">2028 赛季招新</span>
+          <h2 id="home-recruitment-title">加入 PRINTK，把热爱做成能上场的机器人</h2>
+          <p>
+            欢迎对机器人、工程实践和赛事运营感兴趣的同学加入招新群。机械、电控、算法、视觉、运营方向都会在群内发布介绍、训练安排和报名信息。
+          </p>
+          <div className="home-recruitment-tags" aria-label="招新方向">
+            <span>机械结构</span>
+            <span>电控开发</span>
+            <span>算法视觉</span>
+            <span>运营宣传</span>
+          </div>
+        </div>
+        <div className="home-recruitment-qr">
+          <Image src="/recruitment-qr.png" alt="PRINTK 2028 赛季招新群二维码" width={820} height={820} />
+          <p>扫码加入 28 赛季招新群</p>
+        </div>
+      </section>
+
+      <footer className="home-thanks" aria-labelledby="home-footer-title">
+        <div className="home-footer-main">
+          <div className="home-footer-brand">
+            <span className="eyebrow">PRINTK ROBOMASTER TEAM</span>
+            <h2 id="home-footer-title">贵州大学 PRINTK 机器人战队</h2>
+            <p>面向 RoboMaster 赛季训练、工程沉淀和团队协作的统一门户。</p>
+          </div>
+          <nav className="home-footer-nav" aria-label="首页底部导航">
+            <Link href="/season-plan">赛季规划</Link>
+            <Link href="/robots">兵种展示</Link>
+            <Link href="/members">队员资料</Link>
+            {ENABLE_INTERACTIVE ? <Link href="/forum">论坛交流</Link> : null}
+          </nav>
+          {ENABLE_INTERACTIVE ? <div className="home-footer-contact">
+            <span>联系我们</span>
+            <strong>微信 hy15186081202</strong>
+            <a href="#home-contact">打开联系窗口</a>
+          </div> : null}
+        </div>
+        <div className="home-footer-bottom">
+          <p>致谢：感谢指导老师、历届队员、测试同学与开源社区的支持。</p>
+          <p>© 2026 PRINTK RoboMaster Team</p>
+        </div>
+      </footer>
+
+      {ENABLE_INTERACTIVE ? <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
+        联系我们
+      </a> : null}
+      {ENABLE_INTERACTIVE ? <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
+        <span className="home-reward-mark" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+      </Link> : null}
+      {ENABLE_INTERACTIVE ? <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
+        <a className="home-contact-dismiss" href="#" aria-label="关闭联系我们弹窗" />
+        <div className="home-contact-dialog">
+          <div className="account-modal-heading">
+            <h2 id="home-contact-title">联系我们</h2>
+            <a className="account-modal-close" href="#" aria-label="关闭联系我们弹窗">
+              ×
+            </a>
+          </div>
+          <p>有任何问题请联系微信号</p>
+          <strong className="home-contact-wechat">hy15186081202</strong>
+        </div>
+      </div> : null}
+    </div>
+  );
 }
