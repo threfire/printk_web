@@ -6,35 +6,6 @@ import { HomeCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
-const robots = [
-  { name: "舵轮英雄机器人" },
-  { name: "全向轮英雄机器人" },
-  { name: "舵轮步兵机器人" },
-  { name: "全向轮步兵机器人" },
-  {
-    name: "六轴工程机器人",
-    image: {
-      src: "/robots/engineering-robot.png",
-      alt: "PRINTK 六轴工程机器人",
-    },
-  },
-  { name: "舵轮哨兵机器人" },
-  { name: "全向轮哨兵机器人" },
-];
-const memberGroups = [
-  { name: "队长与项管", members: ["陈俊轩", "刘振豪", "张朝阳", "曾宰丹"] },
-  {
-    name: "机械组",
-    members: ["周玉威", "敖敬淳", "张鑫豪", "赵博文", "姚博文", "董益辉", "练俊轩", "唐媛林", "石翔", "万易鹏", "仇松", "温浩浩", "田家豪", "陆秋奕", "叶朝天"],
-  },
-  {
-    name: "电控组",
-    members: ["黄锐", "欧鸥", "杨明鑫", "敖毅", "杜佳佳", "罗俊俊", "陈杰", "杨尚靖", "何哲", "肖哲", "周柏森", "陈星"],
-  },
-  { name: "硬件组", members: ["张朝阳", "王硕", "曹睿中", "黄皓", "杨嘉雯"] },
-  { name: "算法组", members: ["张荣勋", "杨阳"] },
-  { name: "运营组", members: ["杨胜娟", "曾宰丹", "石娟"] },
-];
 const awardPlaceholders = [
   { title: "RoboMaster 赛事奖项", meta: "奖状图片占位" },
   { title: "赛季工程成果", meta: "奖杯图片占位" },
@@ -42,6 +13,14 @@ const awardPlaceholders = [
   { title: "技术创新成果", meta: "奖项图片占位" },
   { title: "团队建设荣誉", meta: "合影图片占位" },
   { title: "年度贡献奖项", meta: "荣誉图片占位" },
+];
+
+const recruitmentGroups = [
+  { name: "机械组", summary: "负责结构设计、加工装配与整机维护。" },
+  { name: "电控组", summary: "负责电气系统、嵌入式控制与整车联调。" },
+  { name: "硬件组", summary: "负责电路板、传感器和硬件链路验证。" },
+  { name: "算法组", summary: "负责视觉识别、运动控制与数据复盘。" },
+  { name: "运营组", summary: "负责赛事运营、宣传内容与团队协作。" },
 ];
 
 const carouselImages = [
@@ -165,6 +144,7 @@ export default async function Home() {
     text: quote.text,
     source: quote.source,
   }));
+  const mottoItems = quoteItems.length ? quoteItems : carouselQuotes;
   const awardItems = buildAwardItems(homepage);
 
   return (
@@ -217,42 +197,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} enableInteractive />
-
-      <section className="section split-section">
-        <div className="section-heading">
-          <h2>兵种展示</h2>
-        </div>
-        <div className="card-grid">
-          {robots.map((robot) => (
-            <article className="card home-robot-card" key={robot.name}>
-              {robot.image ? (
-                <Image className="home-robot-image" src={robot.image.src} alt={robot.image.alt} width={873} height={655} />
-              ) : null}
-              <h3>{robot.name}</h3>
-              <p>资料按赛季归档，展示兵种定位、负责组别、当前重点和交付物。</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section split-section">
-        <div className="section-heading">
-          <h2>队员</h2>
-        </div>
-        <div className="home-member-grid">
-          {memberGroups.map((group) => (
-            <article className="card home-member-card" key={group.name}>
-              <h3>{group.name}</h3>
-              <ul className="home-member-list" aria-label={`${group.name}成员`}>
-                {group.members.map((member) => (
-                  <li key={member}>{member}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
+      <HomeCarousel images={carouselImageItems} accountName={accountName} enableInteractive />
 
       <section className="home-awards" aria-labelledby="home-awards-title">
         <div className="home-awards-heading">
@@ -262,23 +207,49 @@ export default async function Home() {
         <HomeAwardsCarousel awards={awardItems} />
       </section>
 
+      <section className="home-motto" aria-labelledby="home-motto-title">
+        <div className="home-motto-heading">
+          <span className="eyebrow">TEAM MOTTO</span>
+          <h2 id="home-motto-title">把每一次训练，变成下一次上场的底气</h2>
+        </div>
+        <div className="home-motto-list">
+          {mottoItems.map((quote) => (
+            <blockquote key={`${quote.source}-${quote.text}`}>
+              <p>{quote.text}</p>
+              <cite>{quote.source}</cite>
+            </blockquote>
+          ))}
+        </div>
+      </section>
+
       <section className="home-recruitment" aria-labelledby="home-recruitment-title">
-        <div className="home-recruitment-copy">
+        <div className="home-recruitment-heading">
           <span className="eyebrow">2028 赛季招新</span>
           <h2 id="home-recruitment-title">加入 PRINTK，把热爱做成能上场的机器人</h2>
-          <p>
-            欢迎对机器人、工程实践和赛事运营感兴趣的同学加入招新群。机械、电控、算法、视觉、运营方向都会在群内发布介绍、训练安排和报名信息。
-          </p>
-          <div className="home-recruitment-tags" aria-label="招新方向">
-            <span>机械结构</span>
-            <span>电控开发</span>
-            <span>算法视觉</span>
-            <span>运营宣传</span>
-          </div>
+          <p>从赛事认知到分组实践，找到适合自己的方向，和队友一起把想法做成真正能上场的机器人。</p>
+        </div>
+        <div className="home-recruitment-blocks">
+          <article className="home-recruitment-block">
+            <span className="home-recruitment-kicker">01 / ABOUT THE EVENT</span>
+            <h3>RoboMaster 机甲大师赛事介绍</h3>
+            <p>RoboMaster 机甲大师赛是国内顶尖大学生工科竞技赛事，被誉为青年工程师的培育摇篮。赛事主要分为机甲对抗赛、人工智能挑战赛、单项技能赛等多个赛道，综合考验机械结构设计、电控编程、机器视觉算法与团队运营能力。</p>
+          </article>
+          <article className="home-recruitment-block">
+            <span className="home-recruitment-kicker">02 / JOIN PRINTK</span>
+            <h3>PRINTK 五大组别</h3>
+            <div className="home-recruitment-groups">
+              {recruitmentGroups.map((group) => (
+                <div key={group.name}>
+                  <strong>{group.name}</strong>
+                  <p>{group.summary}</p>
+                </div>
+              ))}
+            </div>
+          </article>
         </div>
         <div className="home-recruitment-qr">
           <Image src="/recruitment-qr.png" alt="PRINTK 2028 赛季招新群二维码" width={820} height={820} />
-          <p>扫码加入 28 赛季招新群</p>
+          <p>扫码进群即可报名咨询</p>
         </div>
       </section>
 

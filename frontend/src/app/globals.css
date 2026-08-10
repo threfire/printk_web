@@ -1310,7 +1310,7 @@ p {
 .member-photo-link {
   position: relative;
   display: grid;
-  min-height: clamp(22rem, 34vw, 30rem);
+  aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -1325,7 +1325,6 @@ p {
 .member-photo {
   width: 100%;
   height: 100%;
-  min-height: clamp(22rem, 34vw, 30rem);
   object-fit: cover;
   transition: transform 220ms ease, filter 220ms ease;
 }
@@ -1446,6 +1445,92 @@ p {
 
 .member-detail-copy h3 {
   font-size: clamp(1.6rem, 3vw, 2.45rem);
+}
+
+.member-profile-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.member-profile-header h1,
+.member-profile-header p {
+  margin: 0;
+}
+
+.member-profile-header h1 {
+  margin-top: 0.55rem;
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  line-height: 0.95;
+}
+
+.member-profile-header p {
+  margin-top: 0.75rem;
+  color: var(--muted);
+}
+
+.member-profile-card {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.9fr) minmax(18rem, 1fr);
+  gap: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(0.8rem, 2vw, 1.25rem);
+  background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.member-profile-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.member-profile-copy {
+  display: grid;
+  align-content: center;
+  gap: 0.85rem;
+  padding: clamp(0.3rem, 2vw, 1rem);
+}
+
+.member-profile-copy h2,
+.member-profile-copy p {
+  margin: 0;
+}
+
+.member-profile-copy h2 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+}
+
+.member-profile-role {
+  color: var(--muted);
+}
+
+.member-profile-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.35rem;
+}
+
+.member-profile-facts div {
+  display: grid;
+  gap: 0.3rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.65rem;
+}
+
+.member-profile-facts span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.member-profile-facts strong {
+  line-height: 1.55;
 }
 
 .member-detail-role {
@@ -3123,11 +3208,67 @@ th {
   line-height: 1.5;
 }
 
+.home-motto {
+  display: grid;
+  gap: 1.15rem;
+  margin-top: 2.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 48%, var(--line));
+  padding-top: 2.4rem;
+}
+
+.home-motto-heading {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.home-motto-heading h2 {
+  max-width: 18ch;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.04;
+}
+
+.home-motto-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.home-motto-list blockquote {
+  display: grid;
+  align-content: space-between;
+  gap: 1.2rem;
+  min-height: 8rem;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
+}
+
+.home-motto-list p,
+.home-motto-list cite {
+  margin: 0;
+}
+
+.home-motto-list p {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.home-motto-list cite {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-style: normal;
+}
+
 .home-recruitment {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(14rem, 0.58fr);
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.34fr);
   gap: clamp(1.25rem, 4vw, 2.5rem);
-  align-items: center;
+  align-items: start;
   margin-top: 2.4rem;
   border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
   border-radius: var(--radius);
@@ -3138,44 +3279,84 @@ th {
     color-mix(in srgb, var(--surface-strong) 76%, transparent);
 }
 
-.home-recruitment-copy {
+.home-recruitment-heading {
   display: grid;
-  gap: 0.9rem;
+  grid-column: 1 / -1;
+  gap: 0.7rem;
 }
 
-.home-recruitment-copy h2 {
+.home-recruitment-heading h2 {
   max-width: 15ch;
   margin: 0;
   font-size: clamp(2rem, 5vw, 3.6rem);
   line-height: 1.06;
 }
 
-.home-recruitment-copy p {
-  max-width: 42rem;
+.home-recruitment-heading p,
+.home-recruitment-block p {
   margin: 0;
   color: color-mix(in srgb, var(--text) 82%, var(--muted));
-  font-size: 1rem;
   line-height: 1.8;
 }
 
-.home-recruitment-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+.home-recruitment-blocks {
+  display: grid;
+  grid-column: 1;
+  gap: 0.85rem;
 }
 
-.home-recruitment-tags span {
-  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
+.home-recruitment-block {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 0.42rem 0.62rem;
-  background: color-mix(in srgb, var(--accent-soft) 70%, transparent);
+  padding: 1rem;
+  background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
+}
+
+.home-recruitment-block h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+}
+
+.home-recruitment-kicker {
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.home-recruitment-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.home-recruitment-groups div {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.7rem;
+}
+
+.home-recruitment-groups strong,
+.home-recruitment-groups p {
+  display: block;
+}
+
+.home-recruitment-groups strong {
   color: var(--text);
+}
+
+.home-recruitment-groups p {
+  margin-top: 0.25rem;
   font-size: 0.88rem;
-  font-weight: 800;
+  line-height: 1.55;
 }
 
 .home-recruitment-qr {
   display: grid;
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
   justify-items: center;
   gap: 0.85rem;
   min-width: 0;
@@ -3312,6 +3493,16 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .home-recruitment-blocks,
+  .home-recruitment-qr {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .home-recruitment-qr {
+    justify-self: start;
+  }
+
   .home-member-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3322,6 +3513,10 @@ th {
 
   .home-footer-main {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .member-profile-card {
+    grid-template-columns: 1fr;
   }
 
   .account-layout,
@@ -3528,9 +3723,18 @@ th {
     grid-template-columns: 1fr;
   }
 
+  .member-profile-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .member-profile-facts {
+    grid-template-columns: 1fr;
+  }
+
   .member-photo-link,
   .member-photo {
-    min-height: 24rem;
+    min-height: 0;
   }
 
   .member-detail-overlay {

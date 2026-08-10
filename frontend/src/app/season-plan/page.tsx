@@ -114,11 +114,13 @@ async function fetchProfile(account: string): Promise<SiteAccountProfile> {
   }
 }
 
-function planForDay(plans: SeasonPlanItem[], day: number) {
+function milestoneForDay(plans: SeasonPlanItem[], day: number, totalDays: number) {
   if (plans.length === 0) {
     return null;
   }
-  return plans[(day - 1) % plans.length];
+  const index = Math.min(plans.length - 1, Math.floor(((day - 1) * plans.length) / totalDays));
+  const milestoneDay = Math.max(1, Math.round(((index + 1) * totalDays) / (plans.length + 1)));
+  return day === milestoneDay ? plans[index] : null;
 }
 
 function dayTone(plan: SeasonPlanItem | null, day: number) {
@@ -126,9 +128,9 @@ function dayTone(plan: SeasonPlanItem | null, day: number) {
     return "done";
   }
   if (plan) {
-    return day % 5 === 0 ? "risk" : "active";
+    return "active";
   }
-  return day % 6 === 0 ? "quiet" : "blank";
+  return "blank";
 }
 
 function emptyPlan(index: number): SeasonPlanItem {
@@ -222,7 +224,7 @@ function MonthBoard({ period, plans }: { period: SeasonPlanPeriod; plans: Season
       </div>
       <div className="month-grid" style={{ "--month-offset": firstOffset } as CSSProperties}>
         {monthDays.map(({ day, weekday, weekIndex }) => {
-          const plan = planForDay(plans, day);
+          const plan = milestoneForDay(plans, day, monthDays.length);
           const tone = dayTone(plan, day);
           return (
             <Link
@@ -232,8 +234,12 @@ function MonthBoard({ period, plans }: { period: SeasonPlanPeriod; plans: Season
             >
               <span className="month-cell-day">{day}</span>
               <span className="month-cell-week">周{weekNames[weekday]}</span>
-              <strong>{plan?.task_title || "机动维护"}</strong>
-              <small>{plan?.robot_type || robotTypes[day % robotTypes.length]}</small>
+              {plan ? (
+                <>
+                  <strong>{plan.task_title}</strong>
+                  <small>{plan.status}</small>
+                </>
+              ) : null}
             </Link>
           );
         })}
@@ -257,14 +263,14 @@ function WeekZoom({
     <section className="week-zoom" aria-label="周视图">
       <div className="week-days">
         {days.map(({ day, weekday }) => {
-          const plan = planForDay(plans, day);
+          const plan = milestoneForDay(plans, day, getMonthDays(period).length);
           return (
             <article className="week-day-card" key={day}>
               <div>
                 <span>{period.month} 月 {day} 日</span>
                 <strong>周{weekNames[weekday]}</strong>
               </div>
-              <p>{plan?.task_title || "当天规划待补充"}</p>
+              <p>{plan?.task_title || "无关键节点"}</p>
             </article>
           );
         })}
@@ -273,12 +279,12 @@ function WeekZoom({
         <span className="eyebrow">DAY FOCUS</span>
         <h2>当天规划与进度点</h2>
         {days.map(({ day }) => {
-          const plan = planForDay(plans, day);
+          const plan = milestoneForDay(plans, day, getMonthDays(period).length);
           return (
             <div className="week-progress-row" key={day}>
               <span>{day}</span>
               <strong>{plan?.robot_type || "公共任务"}</strong>
-              <p>{plan?.target || "补充当天目标、验收口径和风险备注。"}</p>
+              <p>{plan?.target || "当前日期不标注日常细碎任务。"}</p>
             </div>
           );
         })}

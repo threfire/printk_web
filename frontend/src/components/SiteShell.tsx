@@ -9,13 +9,12 @@ import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/season-plan", label: "赛季规划" },
-  { href: "/market", label: "闲置物品展示" },
-  { href: "/forum", label: "论坛" },
 ];
 
 const featureNavItems = [
   { href: "/invoices", label: "报销资料管理" },
   { href: "/admin", label: "管理后台" },
+  { href: "/market", label: "闲置物品展示" },
 ];
 
 const memberNavItems = [
@@ -40,11 +39,22 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <nav className="nav-links" aria-label="主导航">
-            {navItems.filter((item) => ENABLE_INTERACTIVE || item.href !== "/forum").map((item) => (
+            {navItems.map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>
             ))}
+            <details className="nav-dropdown">
+              <summary>功能</summary>
+              <div className="nav-dropdown-menu">
+                {featureNavItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </details>
+            {ENABLE_INTERACTIVE ? <Link href="/forum">论坛</Link> : null}
             <details className="nav-dropdown">
               <summary>兵种</summary>
               <div className="nav-dropdown-menu">
@@ -60,16 +70,6 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
               <summary>队员</summary>
               <div className="nav-dropdown-menu">
                 {memberNavItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </details>
-            <details className="nav-dropdown">
-              <summary>功能</summary>
-              <div className="nav-dropdown-menu">
-                {featureNavItems.map((item) => (
                   <Link key={item.href} href={item.href}>
                     {item.label}
                   </Link>

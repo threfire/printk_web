@@ -20,6 +20,7 @@ type PublicMember = {
 
 type Member = {
   id: string;
+  domId: string;
   name: string;
   status: MemberStatus;
   cohort: string;
@@ -61,8 +62,10 @@ function toMember(member: PublicMember, index: number): Member {
   const cohort = member.cohort || "未填写届别";
   const grade = member.grade || member.member_status || "队员";
   const name = member.name || member.account;
+  const id = member.id || member.account || String(index);
   return {
-    id: memberDomId(member.id || member.account || String(index)),
+    id,
+    domId: memberDomId(id),
     name,
     status: member.membership_state,
     cohort,
@@ -105,7 +108,7 @@ function MemberWall({ members, sectionId }: { members: Member[]; sectionId: stri
     <div className="member-wall">
       {members.map((member) => (
         <article className="member-photo-card" key={member.id}>
-          <Link className="member-photo-link" href={`/members#${member.id}`}>
+          <Link className="member-photo-link" href={`/members/${encodeURIComponent(member.id)}`}>
             <MemberPhoto className="member-photo" member={member} />
             <div className="member-basic">
               <span className="badge">{statusText(member)}</span>
@@ -114,13 +117,13 @@ function MemberWall({ members, sectionId }: { members: Member[]; sectionId: stri
               <p>{member.summary}</p>
             </div>
           </Link>
-          <div className="member-detail-overlay" id={member.id}>
+          <div className="member-detail-overlay" id={member.domId}>
             <Link className="member-detail-dismiss" href={`/members#${sectionId}`} aria-label="关闭详情" />
-            <article className="member-detail-card" role="dialog" aria-labelledby={`${member.id}-title`}>
+            <article className="member-detail-card" role="dialog" aria-labelledby={`${member.domId}-title`}>
               <MemberPhoto className="member-detail-photo" detail member={member} />
               <div className="member-detail-copy">
                 <span className="badge">{statusText(member)}</span>
-                <h3 id={`${member.id}-title`}>{member.name}</h3>
+                <h3 id={`${member.domId}-title`}>{member.name}</h3>
                 <p className="member-detail-role">{member.grade} / {member.group} / {member.role}</p>
                 <p>{member.details}</p>
                 <div className="member-focus-list">
@@ -153,7 +156,7 @@ export default async function MembersPage() {
       <section className="section-hero" id="all-members">
         <span className="eyebrow">MEMBERS</span>
         <h1>队员</h1>
-        <p>照片墙展示全体队员基础信息；点击照片后进入详细资料，查看队员经历、负责方向和资料沉淀。</p>
+        <p>统一头像卡片展示全体队员姓名与队内职务；点击卡片进入专属详情页，记录项目经历、负责机型、参与赛事与成长履历。</p>
       </section>
 
       <section className="section member-section" id="active-members">
