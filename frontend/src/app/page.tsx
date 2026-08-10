@@ -268,6 +268,15 @@ export default async function Home() {
         <div className="home-footer-bottom">
           <p>致谢：感谢指导老师、历届队员、测试同学与开源社区的支持。</p>
           <p>© 2026 PRINTK RoboMaster Team</p>
+          <div className="home-records" aria-label="备案信息">
+            <a href="https://beian.miit.gov.cn/" rel="noreferrer" target="_blank">
+              黔ICP备2026012872号-1
+            </a>
+            <a href="https://beian.mps.gov.cn/#/query/webSearch?code=52011102003163" rel="noreferrer" target="_blank">
+              <Image src="/police-record-icon.png" alt="" width={18} height={20} />
+              贵公网安备52011102003163号
+            </a>
+          </div>
         </div>
       </footer>
 

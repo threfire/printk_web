@@ -3420,6 +3420,32 @@ th {
   padding-top: 1rem;
 }
 
+.home-records {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  align-items: center;
+}
+
+.home-records a {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.home-records a:hover {
+  color: var(--accent);
+}
+
+.home-records img {
+  width: 18px;
+  height: 20px;
+  object-fit: contain;
+}
+
 .recent-batch .message {
   display: grid;
   gap: 0.35rem;
