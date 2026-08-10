@@ -3228,42 +3228,6 @@ th {
   line-height: 1.04;
 }
 
-.home-motto-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 0.75rem;
-}
-
-.home-motto-list blockquote {
-  display: grid;
-  align-content: space-between;
-  gap: 1.2rem;
-  min-height: 8rem;
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1rem;
-  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
-}
-
-.home-motto-list p,
-.home-motto-list cite {
-  margin: 0;
-}
-
-.home-motto-list p {
-  color: var(--text);
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.55;
-}
-
-.home-motto-list cite {
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-style: normal;
-}
-
 .home-recruitment {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.34fr);

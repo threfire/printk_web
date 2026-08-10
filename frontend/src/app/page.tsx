@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
-import { HomeCarousel } from "@/components/HomeCarousel";
+import { HomeCarousel, HomeQuoteCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
@@ -212,14 +212,7 @@ export default async function Home() {
           <span className="eyebrow">TEAM MOTTO</span>
           <h2 id="home-motto-title">把每一次训练，变成下一次上场的底气</h2>
         </div>
-        <div className="home-motto-list">
-          {mottoItems.map((quote) => (
-            <blockquote key={`${quote.source}-${quote.text}`}>
-              <p>{quote.text}</p>
-              <cite>{quote.source}</cite>
-            </blockquote>
-          ))}
-        </div>
+        <HomeQuoteCarousel quotes={mottoItems} />
       </section>
 
       <section className="home-recruitment" aria-labelledby="home-recruitment-title">

@@ -16,7 +16,6 @@ type CarouselQuote = {
 
 type HomeCarouselProps = {
   images: CarouselImage[];
-  quotes?: CarouselQuote[];
   accountName?: string;
   enableInteractive?: boolean;
 };
@@ -128,7 +127,45 @@ async function fetchDanmakuMessages(imageKey: string) {
   return messageList(body.messages, imageKey);
 }
 
-export function HomeCarousel({ images, quotes = [], accountName = "", enableInteractive = true }: HomeCarouselProps) {
+export function HomeQuoteCarousel({ quotes }: { quotes: CarouselQuote[] }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused || quotes.length < 2) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      startTransition(() => {
+        setActiveIndex((current) => (current + 1) % quotes.length);
+      });
+    }, AUTOPLAY_DELAY_MS);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [paused, quotes.length]);
+
+  if (!quotes.length) {
+    return null;
+  }
+
+  return (
+    <section className="quote-carousel" aria-label="RoboMaster 赛事文案" aria-live="polite" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="quote-carousel-track">
+        {quotes.map((quote, index) => (
+          <figure className="quote-slide" data-active={index === activeIndex ? "true" : "false"} key={quote.text}>
+            <blockquote>{quote.text}</blockquote>
+            <figcaption>{quote.source}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function HomeCarousel({ images, accountName = "", enableInteractive = true }: HomeCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [paused, setPaused] = useState(false);
@@ -214,7 +251,6 @@ export function HomeCarousel({ images, quotes = [], accountName = "", enableInte
     return null;
   }
 
-  const activeQuoteIndex = quotes.length ? activeIndex % quotes.length : -1;
   const activeMessages = enableInteractive ? danmakuByImage[activeImageKey] ?? [] : [];
 
   const sendDanmaku = async (event: FormEvent<HTMLFormElement>) => {
@@ -265,19 +301,6 @@ export function HomeCarousel({ images, quotes = [], accountName = "", enableInte
 
   return (
     <div className="home-carousel-stack" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      {quotes.length ? (
-        <section className="quote-carousel" aria-label="RoboMaster 赛事文案" aria-live="polite">
-          <div className="quote-carousel-track">
-            {quotes.map((quote, index) => (
-              <figure className="quote-slide" data-active={index === activeQuoteIndex ? "true" : "false"} key={quote.text}>
-                <blockquote>{quote.text}</blockquote>
-                <figcaption>{quote.source}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
       <section className="image-carousel" aria-label="战队图片展示">
         <button className="carousel-nav carousel-nav-prev" type="button" aria-label="上一张" onClick={goPrev}>
           <span aria-hidden="true">&lsaquo;</span>
