@@ -9,12 +9,8 @@ import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
 const navItems = [
   { href: "/", label: "首页" },
   { href: "/season-plan", label: "赛季规划" },
-  ...(ENABLE_INTERACTIVE
-    ? [
-        { href: "/market", label: "闲置物品展示" },
-        { href: "/forum", label: "论坛" },
-      ]
-    : []),
+  { href: "/market", label: "闲置物品展示" },
+  { href: "/forum", label: "论坛" },
 ];
 
 const featureNavItems = [
@@ -44,7 +40,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           <nav className="nav-links" aria-label="主导航">
-            {navItems.map((item) => (
+            {navItems.filter((item) => ENABLE_INTERACTIVE || item.href !== "/forum").map((item) => (
               <Link key={item.href} href={item.href}>
                 {item.label}
               </Link>
@@ -60,7 +56,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details>
-            {ENABLE_INTERACTIVE ? <details className="nav-dropdown">
+            <details className="nav-dropdown">
               <summary>队员</summary>
               <div className="nav-dropdown-menu">
                 {memberNavItems.map((item) => (
@@ -69,7 +65,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </div>
-            </details> : null}
+            </details>
             {ENABLE_INTERACTIVE ? <details className="nav-dropdown">
               <summary>功能</summary>
               <div className="nav-dropdown-menu">
@@ -89,14 +85,14 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         {ENABLE_INTERACTIVE ? <AccountModals /> : null}
         {ENABLE_INTERACTIVE && !accountName ? <WelcomeGuestDialog /> : null}
         <main>{children}</main>
-        {ENABLE_INTERACTIVE ? <Link className="market-quick-link" href="/market" aria-label="跳转到闲置物品展示" title="闲置物品展示">
+        <Link className="market-quick-link" href="/market" aria-label="跳转到闲置物品展示" title="闲置物品展示">
           <span className="market-quick-icon" aria-hidden="true">
             <span />
             <span />
             <span />
             <span />
           </span>
-        </Link> : null}
+        </Link>
         <ThemeSwitcher />
       </div>
     </ThemeRoot>

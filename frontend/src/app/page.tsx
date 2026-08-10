@@ -295,11 +295,11 @@ export default async function Home() {
             <Link href="/members">队员资料</Link>
             {ENABLE_INTERACTIVE ? <Link href="/forum">论坛交流</Link> : null}
           </nav>
-          {ENABLE_INTERACTIVE ? <div className="home-footer-contact">
+          <div className="home-footer-contact">
             <span>联系我们</span>
             <strong>微信 hy15186081202</strong>
             <a href="#home-contact">打开联系窗口</a>
-          </div> : null}
+          </div>
         </div>
         <div className="home-footer-bottom">
           <p>致谢：感谢指导老师、历届队员、测试同学与开源社区的支持。</p>
@@ -307,17 +307,17 @@ export default async function Home() {
         </div>
       </footer>
 
-      {ENABLE_INTERACTIVE ? <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
+      <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
         联系我们
-      </a> : null}
-      {ENABLE_INTERACTIVE ? <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
+      </a>
+      <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
         <span className="home-reward-mark" aria-hidden="true">
           <span />
           <span />
           <span />
         </span>
-      </Link> : null}
-      {ENABLE_INTERACTIVE ? <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
+      </Link>
+      <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
         <a className="home-contact-dismiss" href="#" aria-label="关闭联系我们弹窗" />
         <div className="home-contact-dialog">
           <div className="account-modal-heading">
@@ -329,7 +329,7 @@ export default async function Home() {
           <p>有任何问题请联系微信号</p>
           <strong className="home-contact-wechat">hy15186081202</strong>
         </div>
-      </div> : null}
+      </div>
     </div>
   );
 }
