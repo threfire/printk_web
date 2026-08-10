@@ -66,7 +66,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details>
-            {ENABLE_INTERACTIVE ? <details className="nav-dropdown">
+            <details className="nav-dropdown">
               <summary>功能</summary>
               <div className="nav-dropdown-menu">
                 {featureNavItems.map((item) => (
@@ -75,7 +75,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </div>
-            </details> : null}
+            </details>
           </nav>
           <div className="header-actions">
             {accountFeedback ? <span className="account-feedback">{accountFeedback}</span> : null}
