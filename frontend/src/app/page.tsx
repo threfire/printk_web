@@ -217,7 +217,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} enableInteractive={ENABLE_INTERACTIVE} />
+      <HomeCarousel images={carouselImageItems} quotes={quoteItems} accountName={accountName} enableInteractive />
 
       <section className="section split-section">
         <div className="section-heading">
