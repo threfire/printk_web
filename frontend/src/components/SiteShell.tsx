@@ -4,7 +4,7 @@ import { AccountDialog, AccountModals } from "@/components/AccountDialog";
 import { ThemeRoot, ThemeSwitcher } from "@/components/ThemeRoot";
 import { WelcomeGuestDialog } from "@/components/WelcomeGuestDialog";
 import { robotRoles } from "@/lib/robots";
-import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
+import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
 const navItems = [
   { href: "/", label: "首页" },
@@ -54,7 +54,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details>
-            {ENABLE_INTERACTIVE ? <Link href="/forum">论坛</Link> : null}
+            {ENABLE_FORUM ? <Link href="/forum">论坛</Link> : null}
             <details className="nav-dropdown">
               <summary>兵种</summary>
               <div className="nav-dropdown-menu">

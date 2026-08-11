@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
 import { HomeCarousel, HomeQuoteCarousel } from "@/components/HomeCarousel";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
-import { ENABLE_INTERACTIVE } from "@/lib/site-mode";
+import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
 const awardPlaceholders = [
   { title: "RoboMaster 赛事奖项", meta: "奖状图片占位" },
@@ -257,7 +257,7 @@ export default async function Home() {
             <Link href="/season-plan">赛季规划</Link>
             <Link href="/robots">兵种展示</Link>
             <Link href="/members">队员资料</Link>
-            {ENABLE_INTERACTIVE ? <Link href="/forum">论坛交流</Link> : null}
+            {ENABLE_FORUM ? <Link href="/forum">论坛交流</Link> : null}
           </nav>
           <div className="home-footer-contact">
             <span>联系我们</span>

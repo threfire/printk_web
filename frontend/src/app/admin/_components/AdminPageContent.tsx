@@ -18,6 +18,7 @@ import {
   type SiteAccountProfile,
 } from "@/lib/account-profile";
 import { firstParam } from "@/lib/admin-feedback";
+import { ENABLE_FORUM } from "@/lib/site-mode";
 
 type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -249,7 +250,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
             <strong>管理后台</strong>
           </div>
           <nav className="admin-side-nav">
-            {adminNavItems.map((item) => (
+            {adminNavItems.filter((item) => ENABLE_FORUM || item.section !== "forum").map((item) => (
               <Link aria-current={item.section === "materials" ? "page" : undefined} href={item.href} key={item.href}>
                 {item.label}
               </Link>
@@ -284,7 +285,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
           <strong>管理后台</strong>
         </div>
         <nav className="admin-side-nav">
-          {adminNavItems.map((item) => (
+          {adminNavItems.filter((item) => ENABLE_FORUM || item.section !== "forum").map((item) => (
             <Link aria-current={item.section === section ? "page" : undefined} href={item.href} key={item.href}>
               {item.label}
             </Link>

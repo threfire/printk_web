@@ -10,8 +10,8 @@ services:
       GROUP_LEADER_PASSWORD: ${GROUP_LEADER_PASSWORD:-group123}
       SECRET_KEY: ${SECRET_KEY:-material-agent-secret}
       STORAGE_DIR: /app/storage
-      SITE_MODE: ${SITE_MODE:-test}
-      ENABLE_WRITE_API: ${ENABLE_WRITE_API:-false}
+      SITE_MODE: ${SITE_MODE:-full}
+      ENABLE_WRITE_API: ${ENABLE_WRITE_API:-true}
     ports:
       - "8000:8000"
     volumes:
@@ -27,9 +27,11 @@ services:
     environment:
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8000}
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/}
-      SITE_MODE: ${SITE_MODE:-test}
-      ENABLE_INTERACTIVE: ${ENABLE_INTERACTIVE:-false}
-      ENABLE_WRITE_API: ${ENABLE_WRITE_API:-false}
+      SITE_MODE: ${SITE_MODE:-full}
+      ENABLE_INTERACTIVE: ${ENABLE_INTERACTIVE:-true}
+      ENABLE_WRITE_API: ${ENABLE_WRITE_API:-true}
+      ENABLE_FORUM: ${ENABLE_FORUM:-false}
+      ENABLE_IMAGE2: ${ENABLE_IMAGE2:-false}
     ports:
       - "3000:3000"
 
