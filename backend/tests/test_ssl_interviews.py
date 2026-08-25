@@ -1,0 +1,100 @@
+from __future__ import annotations
+
+import asyncio
+import os
+import tempfile
+import unittest
+from datetime import datetime, timedelta
+
+
+class SSLInterviewFlowTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.storage = tempfile.TemporaryDirectory()
+        os.environ["STORAGE_DIR"] = cls.storage.name
+        os.environ["ENABLE_WRITE_API"] = "true"
+        from backend.app import main
+
+        cls.main = main
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.storage.cleanup()
+
+    def test_submit_review_message_and_csv(self) -> None:
+        main = self.main
+        main.register_site_account(
+            main.SiteAccountRegisterRequest(
+                account="ssl-test-user",
+                password="test1234",
+                full_name="测试同学",
+                grade="大二",
+            )
+        )
+        interview_time = (datetime.now() + timedelta(days=2)).replace(second=0, microsecond=0).isoformat(timespec="minutes")
+        application = main.submit_ssl_interview_application(
+            main.SSLInterviewApplicationRequest(
+                applicant_account="ssl-test-user",
+                self_intro="具备机器人控制项目经验，希望参与多机协同开发。",
+                interview_direction="算法",
+                interview_time=interview_time,
+            )
+        )
+        self.assertEqual(application["status"], "pending")
+
+        reviewed = main.review_ssl_interview_application(
+            application["id"],
+            main.SSLInterviewReviewRequest(status="approved", interview_location="工程训练中心 302"),
+            "admin",
+        )
+        self.assertEqual(reviewed["status"], "approved")
+        messages = main.list_site_messages("ssl-test-user", 50)["messages"]
+        self.assertIn(interview_time.replace("T", " "), messages[0]["content"])
+        self.assertIn("工程训练中心 302", messages[0]["content"])
+
+        response = main.export_ssl_interview_applications("admin")
+
+        async def read_body() -> bytes:
+            return b"".join([chunk async for chunk in response.body_iterator])
+
+        csv_content = asyncio.run(read_body()).decode("utf-8-sig")
+        self.assertIn("姓名,年级,面试方向,面试时间", csv_content)
+        self.assertIn("测试同学,大二,算法", csv_content)
+
+    def test_rejection_requires_reason_and_sends_message(self) -> None:
+        main = self.main
+        main.register_site_account(
+            main.SiteAccountRegisterRequest(
+                account="ssl-reject-user",
+                password="test1234",
+                full_name="申请同学",
+                grade="大一",
+            )
+        )
+        interview_time = (datetime.now() + timedelta(days=3)).replace(second=0, microsecond=0).isoformat(timespec="minutes")
+        application = main.submit_ssl_interview_application(
+            main.SSLInterviewApplicationRequest(
+                applicant_account="ssl-reject-user",
+                self_intro="希望参与机械结构设计。",
+                interview_direction="机械",
+                interview_time=interview_time,
+            )
+        )
+        with self.assertRaises(main.HTTPException):
+            main.review_ssl_interview_application(
+                application["id"],
+                main.SSLInterviewReviewRequest(status="rejected"),
+                "admin",
+            )
+        reviewed = main.review_ssl_interview_application(
+            application["id"],
+            main.SSLInterviewReviewRequest(status="rejected", rejection_reason="当前基础与本轮岗位要求未匹配"),
+            "admin",
+        )
+        self.assertEqual(reviewed["status"], "rejected")
+        messages = main.list_site_messages("ssl-reject-user", 50)["messages"]
+        self.assertIn("当前基础与本轮岗位要求未匹配", messages[0]["content"])
+
+
+if __name__ == "__main__":
+    unittest.main()

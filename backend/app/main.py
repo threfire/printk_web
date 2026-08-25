@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import csv
 import hashlib
 import hmac
 import io
@@ -56,6 +57,8 @@ ENABLE_WRITE_API = os.getenv("ENABLE_WRITE_API", "true").strip().lower() in {"1"
 AGENT_LOCK = threading.Lock()
 FORUM_PUBLIC_STATUS = "approved"
 FORUM_CONTENT_STATUSES = {"pending", "approved", "rejected", "hidden"}
+SSL_APPLICATION_STATUSES = {"pending", "approved", "rejected"}
+SSL_INTERVIEW_DIRECTIONS = {"机械", "电控", "硬件", "算法", "视觉", "运营"}
 MARKET_ITEM_STATUSES = {"available", "sold", "delisted"}
 HOME_ASSET_KINDS = {"video", "image"}
 HOME_VIDEO_MIME_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
@@ -316,6 +319,33 @@ def init_db() -> None:
                 FOREIGN KEY (account) REFERENCES site_account(account)
             );
 
+            CREATE TABLE IF NOT EXISTS ssl_interview_application (
+                id TEXT PRIMARY KEY,
+                applicant_account TEXT NOT NULL UNIQUE,
+                self_intro TEXT NOT NULL,
+                interview_direction TEXT NOT NULL,
+                interview_time TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                interview_location TEXT DEFAULT '',
+                rejection_reason TEXT DEFAULT '',
+                reviewed_by TEXT DEFAULT '',
+                reviewed_at TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (applicant_account) REFERENCES site_account(account)
+            );
+
+            CREATE TABLE IF NOT EXISTS site_message (
+                id TEXT PRIMARY KEY,
+                recipient_account TEXT NOT NULL,
+                category TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                related_id TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (recipient_account) REFERENCES site_account(account)
+            );
+
             CREATE TABLE IF NOT EXISTS forum_post (
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
@@ -469,6 +499,18 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_site_account_admin_log_account
             ON site_account_admin_log (account, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_ssl_interview_status_time
+            ON ssl_interview_application (status, interview_time, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_site_message_recipient_created
+            ON site_message (recipient_account, created_at DESC)
             """
         )
         conn.execute(
@@ -875,6 +917,49 @@ def site_account_response(row: sqlite3.Row, include_admin: bool = False) -> dict
     if include_admin:
         data["admin_note"] = row["admin_note"] or ""
     return data
+
+
+def ssl_application_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "applicant_account": row["applicant_account"],
+        "full_name": row["full_name"] if "full_name" in row.keys() else "",
+        "grade": row["grade"] if "grade" in row.keys() else "",
+        "self_intro": row["self_intro"],
+        "interview_direction": row["interview_direction"],
+        "interview_time": row["interview_time"],
+        "status": row["status"],
+        "interview_location": row["interview_location"] or "",
+        "rejection_reason": row["rejection_reason"] or "",
+        "reviewed_by": row["reviewed_by"] or "",
+        "reviewed_at": row["reviewed_at"] or "",
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def site_message_response(row: sqlite3.Row) -> dict[str, str]:
+    return {
+        "id": row["id"],
+        "category": row["category"],
+        "title": row["title"],
+        "content": row["content"],
+        "related_id": row["related_id"] or "",
+        "created_at": row["created_at"],
+    }
+
+
+def require_active_site_account(conn: sqlite3.Connection, account: str) -> sqlite3.Row:
+    normalized_account = normalize_account(account)
+    row = conn.execute(
+        "SELECT account, full_name, grade, is_disabled FROM site_account WHERE account = ?",
+        (normalized_account,),
+    ).fetchone()
+    if row is None:
+        raise HTTPException(status_code=401, detail="请先注册并登录 PRINTK 战队账号")
+    if row["is_disabled"]:
+        raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
+    return row
 
 
 def account_admin_log(conn: sqlite3.Connection, account: str, action: str, detail: str = "") -> None:
@@ -2185,6 +2270,19 @@ class ForumModerationRequest(BaseModel):
     is_locked: bool | None = None
 
 
+class SSLInterviewApplicationRequest(BaseModel):
+    applicant_account: str
+    self_intro: str
+    interview_direction: str
+    interview_time: str
+
+
+class SSLInterviewReviewRequest(BaseModel):
+    status: str
+    interview_location: str = ""
+    rejection_reason: str = ""
+
+
 class FleaMarketItemCreateRequest(BaseModel):
     name: str
     image_src: str = ""
@@ -2482,6 +2580,224 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
         )
         row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
     return site_account_response(row)
+
+
+@app.post("/api/ssl/applications", status_code=201)
+def submit_ssl_interview_application(payload: SSLInterviewApplicationRequest) -> dict[str, Any]:
+    self_intro = normalize_limited_text(payload.self_intro, "自我简介", 1000)
+    if not self_intro:
+        raise HTTPException(status_code=400, detail="请填写自我简介")
+    direction = normalize_choice(payload.interview_direction, "面试方向", SSL_INTERVIEW_DIRECTIONS)
+    interview_time = normalize_limited_text(payload.interview_time, "面试时间", 32)
+    try:
+        parsed_time = datetime.fromisoformat(interview_time)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="面试时间格式错误") from exc
+    if parsed_time <= datetime.now():
+        raise HTTPException(status_code=400, detail="请选择当前时间之后的面试时间")
+
+    timestamp = now_iso()
+    with db_connection() as conn:
+        account_row = require_active_site_account(conn, payload.applicant_account)
+        if not (account_row["full_name"] or "").strip() or not (account_row["grade"] or "").strip():
+            raise HTTPException(status_code=400, detail="请先在个人中心完善姓名和年级")
+        existing = conn.execute(
+            "SELECT id, status FROM ssl_interview_application WHERE applicant_account = ?",
+            (account_row["account"],),
+        ).fetchone()
+        if existing and existing["status"] in {"pending", "approved"}:
+            raise HTTPException(status_code=409, detail="当前已有待审核或已通过的面试申请")
+        if existing:
+            application_id = existing["id"]
+            conn.execute(
+                """
+                UPDATE ssl_interview_application
+                SET self_intro = ?, interview_direction = ?, interview_time = ?, status = 'pending',
+                    interview_location = '', rejection_reason = '', reviewed_by = '', reviewed_at = '', updated_at = ?
+                WHERE id = ?
+                """,
+                (self_intro, direction, parsed_time.isoformat(timespec="minutes"), timestamp, application_id),
+            )
+            conn.execute(
+                "DELETE FROM site_message WHERE category = 'ssl_interview' AND related_id = ?",
+                (application_id,),
+            )
+        else:
+            application_id = uuid.uuid4().hex
+            conn.execute(
+                """
+                INSERT INTO ssl_interview_application (
+                    id, applicant_account, self_intro, interview_direction, interview_time,
+                    status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
+                """,
+                (
+                    application_id,
+                    account_row["account"],
+                    self_intro,
+                    direction,
+                    parsed_time.isoformat(timespec="minutes"),
+                    timestamp,
+                    timestamp,
+                ),
+            )
+        row = conn.execute(
+            """
+            SELECT application.*, account.full_name, account.grade
+            FROM ssl_interview_application AS application
+            JOIN site_account AS account ON account.account = application.applicant_account
+            WHERE application.id = ?
+            """,
+            (application_id,),
+        ).fetchone()
+    return ssl_application_response(row)
+
+
+@app.get("/api/ssl/applications/{account}")
+def get_ssl_interview_application(account: str) -> dict[str, Any]:
+    with db_connection() as conn:
+        account_row = require_active_site_account(conn, account)
+        row = conn.execute(
+            """
+            SELECT application.*, account.full_name, account.grade
+            FROM ssl_interview_application AS application
+            JOIN site_account AS account ON account.account = application.applicant_account
+            WHERE application.applicant_account = ?
+            """,
+            (account_row["account"],),
+        ).fetchone()
+    return {"application": ssl_application_response(row) if row else None}
+
+
+@app.get("/api/site-messages/{account}")
+def list_site_messages(account: str, limit: int = Query(default=50, ge=1, le=100)) -> dict[str, Any]:
+    with db_connection() as conn:
+        account_row = require_active_site_account(conn, account)
+        rows = conn.execute(
+            """
+            SELECT id, category, title, content, related_id, created_at
+            FROM site_message
+            WHERE recipient_account = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (account_row["account"], limit),
+        ).fetchall()
+    return {"messages": [site_message_response(row) for row in rows]}
+
+
+@app.get("/api/admin/ssl/applications")
+def list_ssl_interview_applications(
+    status: str = Query(default=""),
+    limit: int = Query(default=20, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    normalized_status = normalize_choice(status, "申请状态", SSL_APPLICATION_STATUSES | {""})
+    where_sql = "WHERE application.status = ?" if normalized_status else ""
+    parameters: list[Any] = [normalized_status] if normalized_status else []
+    with db_connection() as conn:
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM ssl_interview_application AS application {where_sql}",
+            parameters,
+        ).fetchone()[0]
+        rows = conn.execute(
+            f"""
+            SELECT application.*, account.full_name, account.grade
+            FROM ssl_interview_application AS application
+            JOIN site_account AS account ON account.account = application.applicant_account
+            {where_sql}
+            ORDER BY CASE application.status WHEN 'pending' THEN 0 ELSE 1 END,
+                     application.interview_time, application.created_at DESC
+            LIMIT ? OFFSET ?
+            """,
+            [*parameters, limit, offset],
+        ).fetchall()
+    return {"applications": [ssl_application_response(row) for row in rows], "total": total}
+
+
+@app.put("/api/admin/ssl/applications/{application_id}")
+def review_ssl_interview_application(
+    application_id: str,
+    payload: SSLInterviewReviewRequest,
+    reviewer: str = Depends(require_admin),
+) -> dict[str, Any]:
+    status = normalize_choice(payload.status, "审核状态", {"approved", "rejected"})
+    location = normalize_limited_text(payload.interview_location, "面试地点", 120)
+    reason = normalize_limited_text(payload.rejection_reason, "未通过原因", 500)
+    if status == "approved" and not location:
+        raise HTTPException(status_code=400, detail="通过申请时请填写面试地点")
+    if status == "rejected" and not reason:
+        raise HTTPException(status_code=400, detail="拒绝申请时请填写未通过原因")
+
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute(
+            "SELECT * FROM ssl_interview_application WHERE id = ?",
+            (application_id,),
+        ).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="面试申请不存在")
+        conn.execute(
+            """
+            UPDATE ssl_interview_application
+            SET status = ?, interview_location = ?, rejection_reason = ?,
+                reviewed_by = ?, reviewed_at = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (status, location if status == "approved" else "", reason if status == "rejected" else "", reviewer, timestamp, timestamp, application_id),
+        )
+        if status == "approved":
+            title = "SSL 部面试申请已通过"
+            content = f"面试时间：{existing['interview_time'].replace('T', ' ')}；面试地点：{location}。请按时参加。"
+        else:
+            title = "SSL 部面试申请结果"
+            content = f"本次申请未通过。原因：{reason}"
+        conn.execute("DELETE FROM site_message WHERE category = 'ssl_interview' AND related_id = ?", (application_id,))
+        conn.execute(
+            """
+            INSERT INTO site_message (id, recipient_account, category, title, content, related_id, created_at)
+            VALUES (?, ?, 'ssl_interview', ?, ?, ?, ?)
+            """,
+            (uuid.uuid4().hex, existing["applicant_account"], title, content, application_id, timestamp),
+        )
+        row = conn.execute(
+            """
+            SELECT application.*, account.full_name, account.grade
+            FROM ssl_interview_application AS application
+            JOIN site_account AS account ON account.account = application.applicant_account
+            WHERE application.id = ?
+            """,
+            (application_id,),
+        ).fetchone()
+    return ssl_application_response(row)
+
+
+@app.get("/api/admin/ssl/applications/export.csv")
+def export_ssl_interview_applications(_: str = Depends(require_admin)) -> StreamingResponse:
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT account.full_name, account.grade, application.interview_direction, application.interview_time
+            FROM ssl_interview_application AS application
+            JOIN site_account AS account ON account.account = application.applicant_account
+            ORDER BY application.interview_time, application.created_at
+            """
+        ).fetchall()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["姓名", "年级", "面试方向", "面试时间"])
+    writer.writerows(
+        [row["full_name"], row["grade"], row["interview_direction"], row["interview_time"].replace("T", " ")]
+        for row in rows
+    )
+    content = ("\ufeff" + output.getvalue()).encode("utf-8")
+    filename = quote("SSL部面试申请.csv")
+    return StreamingResponse(
+        iter([content]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+    )
 
 
 PUBLIC_MEMBER_STATUSES = {"梯队队员", "正式队员", "老队员", "退役队员", "老师"}

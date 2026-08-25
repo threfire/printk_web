@@ -90,6 +90,7 @@ export default async function AccountPage() {
         <div className="account-summary">
           <strong>{profile.full_name || profile.account}</strong>
           <span>{[profile.member_status, profile.permission_level, profile.department, profile.grade].filter(Boolean).join(" / ") || "资料待完善"}</span>
+          <Link className="text-button" href="/account/messages">站内消息</Link>
         </div>
       </section>
 

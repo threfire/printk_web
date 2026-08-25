@@ -143,6 +143,37 @@ export type ForumInboxData = {
   replies: ForumInboxReply[];
 };
 
+export type SSLInterviewApplication = {
+  id: string;
+  applicant_account: string;
+  full_name: string;
+  grade: string;
+  self_intro: string;
+  interview_direction: string;
+  interview_time: string;
+  status: "pending" | "approved" | "rejected";
+  interview_location: string;
+  rejection_reason: string;
+  reviewed_by: string;
+  reviewed_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SSLApplicationListData = {
+  applications: SSLInterviewApplication[];
+  total: number;
+};
+
+export type SiteMessage = {
+  id: string;
+  category: string;
+  title: string;
+  content: string;
+  related_id: string;
+  created_at: string;
+};
+
 export type HomepageAsset = {
   id: string;
   kind: "video" | "image";

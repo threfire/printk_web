@@ -8,6 +8,7 @@ import {
   DashboardData,
   type ForumManagementData,
   type HomepageContentData,
+  type SSLApplicationListData,
 } from "@/lib/api";
 import {
   departmentOptions,
@@ -24,7 +25,7 @@ type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export type AdminSection = "overview" | "home" | "accounts" | "rewards" | "forum" | "materials" | "batch";
+export type AdminSection = "overview" | "home" | "accounts" | "rewards" | "forum" | "ssl" | "materials" | "batch";
 
 type AdminPageContentProps = AdminPageProps & {
   section: AdminSection;
@@ -38,6 +39,7 @@ const adminNavItems = [
   { href: "/admin/accounts", label: "账号管理", section: "accounts" },
   { href: "/admin/rewards", label: "奖励分", section: "rewards" },
   { href: "/admin/forum", label: "论坛审核", section: "forum" },
+  { href: "/admin/ssl", label: "SSL 面试", section: "ssl" },
   { href: "/admin/materials", label: "发票审核", section: "materials" },
 ] satisfies Array<{ href: string; label: string; section: AdminSection }>;
 
@@ -47,6 +49,7 @@ const adminSectionTitles: Record<AdminSection, string> = {
   accounts: "账号管理",
   rewards: "奖励分管理",
   forum: "论坛审核",
+  ssl: "SSL 面试管理",
   materials: "发票审核",
   batch: "批次复核",
 };
@@ -57,6 +60,7 @@ const adminSectionDescriptions: Record<AdminSection, string> = {
   accounts: "筛选账号、调整资料和工具权限",
   rewards: "管理正式队员和老队员账号的奖励分",
   forum: "审核帖子与回复内容",
+  ssl: "审核申请、发送结果并导出面试名单",
   materials: "处理入库批次、库内明细和报销表",
   batch: "查看单个批次的复核明细",
 };
@@ -67,6 +71,7 @@ const adminReturnPaths: Record<AdminSection, string> = {
   accounts: "/admin/accounts",
   rewards: "/admin/rewards",
   forum: "/admin/forum",
+  ssl: "/admin/ssl",
   materials: "/admin/materials",
   batch: "/admin/materials",
 };
@@ -137,6 +142,15 @@ async function fetchHomepageManagement(token: string): Promise<HomepageContentDa
     return null;
   }
   return response.json() as Promise<HomepageContentData>;
+}
+
+async function fetchSSLApplications(token: string): Promise<SSLApplicationListData | null> {
+  const response = await fetch(`${API_BASE}/api/admin/ssl/applications?limit=200`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  return response.json() as Promise<SSLApplicationListData>;
 }
 
 function param(params: Record<string, string | string[] | undefined>, key: string) {
@@ -212,14 +226,15 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
   const accountData = token ? await fetchAccounts(token, accountFilters) : null;
   const forumData = token ? await fetchForumManagement(token) : null;
   const homepageData = token ? await fetchHomepageManagement(token) : null;
+  const sslData = token ? await fetchSSLApplications(token) : null;
   const ok = firstParam(params.ok);
   const error = firstParam(params.error);
 
-  if (token && (!dashboard || !accountData || !forumData || !homepageData)) {
+  if (token && (!dashboard || !accountData || !forumData || !homepageData || !sslData)) {
     redirect("/api/admin/logout");
   }
 
-  if (!dashboard || !accountData || !forumData || !homepageData) {
+  if (!dashboard || !accountData || !forumData || !homepageData || !sslData) {
     return (
       <div className="page">
         <section className="section-hero">
@@ -809,6 +824,63 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
           </table>
         </div>
       </section>
+        ) : null}
+
+        {section === "ssl" ? (
+          <section className="section admin-section">
+            <div className="section-heading ssl-admin-heading">
+              <div>
+                <span className="eyebrow">SSL INTERVIEWS</span>
+                <h2>面试申请</h2>
+                <p>共 {sslData.total} 份申请，审核结果会自动写入申请人的站内消息。</p>
+              </div>
+              <a className="button" href="/api/admin/ssl/export">导出 CSV</a>
+            </div>
+            <div className="table-wrap">
+              <table className="ssl-admin-table">
+                <thead>
+                  <tr>
+                    <th>申请人</th>
+                    <th>方向与时间</th>
+                    <th>自我简介</th>
+                    <th>状态</th>
+                    <th>审核操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sslData.applications.map((application) => (
+                    <tr key={application.id}>
+                      <td><strong>{application.full_name || application.applicant_account}</strong><div>{application.grade || "年级待完善"}</div></td>
+                      <td><strong>{application.interview_direction}</strong><div>{formatDateTime(application.interview_time)}</div></td>
+                      <td><p className="ssl-admin-intro">{application.self_intro}</p></td>
+                      <td>
+                        <span className={`ssl-status-badge ${application.status}`}>
+                          {application.status === "pending" ? "待审核" : application.status === "approved" ? "已通过" : "未通过"}
+                        </span>
+                        {application.interview_location ? <div>{application.interview_location}</div> : null}
+                        {application.rejection_reason ? <div>{application.rejection_reason}</div> : null}
+                      </td>
+                      <td>
+                        <div className="ssl-review-actions">
+                          <form action={`/api/admin/ssl/applications/${encodeURIComponent(application.id)}`} method="post">
+                            <input name="status" type="hidden" value="approved" />
+                            <input name="interview_location" placeholder="面试地点" maxLength={120} required />
+                            <button className="ghost-button" type="submit">通过并发送消息</button>
+                          </form>
+                          <form action={`/api/admin/ssl/applications/${encodeURIComponent(application.id)}`} method="post">
+                            <input name="status" type="hidden" value="rejected" />
+                            <input name="rejection_reason" placeholder="未通过原因" maxLength={500} required />
+                            <button className="ghost-button" type="submit">拒绝并发送消息</button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {sslData.applications.length === 0 ? <tr><td className="empty-cell" colSpan={5}>当前没有面试申请</td></tr> : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
         ) : null}
 
         {section === "materials" ? (
