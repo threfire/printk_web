@@ -43,14 +43,16 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
 
   return (
     <div className="page ssl-page">
+      <div className="ssl-arena-grid" aria-hidden="true" />
       <section className="ssl-intro" aria-labelledby="ssl-title">
         <div className="ssl-intro-copy">
-          <span className="eyebrow">ROBOCUP SMALL SIZE LEAGUE</span>
-          <h1 id="ssl-title">SSL 部</h1>
-          <p>
+          <div className="ssl-kicker"><span>PRINTK / RECRUITMENT</span><b>2026</b></div>
+          <h1 id="ssl-title"><span>RoboCup</span> <strong>SSL</strong></h1>
+          <p className="ssl-slogan">让算法驱动机器人，让协作决定胜负</p>
+          <p className="ssl-lead">
             RoboCup 小型组足球赛以全自主轮式机器人为参赛主体，机器人通过视觉、无线通信、路径规划与实时控制完成协同对抗。
           </p>
-          <p>
+          <p className="ssl-detail">
             SSL 部围绕机械结构、电控硬件、嵌入式控制、视觉感知、决策算法和赛事运营开展研发，成员将在真实赛场节奏中完成系统联调与迭代。
           </p>
           <div className="ssl-tags" aria-label="SSL 部研发方向">
@@ -68,13 +70,31 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
             height={872}
             priority
           />
+          <div className="ssl-target-frame" aria-hidden="true"><span /><span /><span /><span /></div>
+          <figcaption><b>LIVE VISION</b><span>SMALL SIZE LEAGUE / AUTONOMOUS SYSTEM</span></figcaption>
         </figure>
+      </section>
+
+      <section className="ssl-capabilities" aria-label="SSL 部研发方向">
+        {[
+          ["01", "CV", "计算机视觉"],
+          ["02", "CTRL", "运动控制"],
+          ["03", "EMB", "嵌入式系统"],
+          ["04", "MECH", "机械设计"],
+          ["05", "AI", "战术算法"],
+        ].map(([index, code, label]) => (
+          <article key={code}>
+            <small>{index}</small><strong>{code}</strong><span>{label}</span>
+          </article>
+        ))}
       </section>
 
       <section className="section ssl-application" aria-labelledby="ssl-application-title">
         <div className="section-heading">
-          <span className="eyebrow">INTERVIEW</span>
-          <h2 id="ssl-application-title">面试申请</h2>
+          <div>
+            <span className="eyebrow">JOIN THE SQUAD / INTERVIEW</span>
+            <h2 id="ssl-application-title">加入我们 · 驰骋世界赛场</h2>
+          </div>
           <p>填写个人经历与意向方向，选择可参加面试的时间。</p>
         </div>
         {ok ? <div className="message" role="status">{ok}</div> : null}
