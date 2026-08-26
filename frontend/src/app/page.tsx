@@ -50,6 +50,17 @@ const carouselQuotes = [
 ];
 
 const fallbackHomepage: HomepageContentData = {
+  profile: {
+    team_name: "PRINTK 机甲大师战队",
+    team_intro: "PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。",
+    stats: [
+      { value: "4", label: "核心组别" },
+      { value: "7", label: "兵种方向" },
+      { value: "2026", label: "赛季规划" },
+    ],
+    awards: awardPlaceholders.map((award) => ({ ...award, image_url: "", image_alt: "" })),
+    updated_at: "",
+  },
   recruitment_banner: {
     text: "2027赛季招新中",
     action_text: "点击跳转",
@@ -107,33 +118,15 @@ async function fetchHomepageContent() {
 }
 
 function buildAwardItems(homepage: HomepageContentData): HomeAwardItem[] {
-  if (homepage === fallbackHomepage) {
+  if (!homepage.profile.awards.length) {
     return awardPlaceholders;
   }
 
-  if (!homepage.images.length && !homepage.quotes.length) {
-    return awardPlaceholders;
-  }
-
-  const itemCount = Math.max(homepage.images.length, homepage.quotes.length);
-  return Array.from({ length: itemCount }, (_, index) => {
-    const image = homepage.images.length ? homepage.images[index % homepage.images.length] : undefined;
-    const quote = homepage.quotes.length ? homepage.quotes[index % homepage.quotes.length] : undefined;
-    const imageLabel = image?.alt || image?.original_filename || "";
-    const title = quote?.source || imageLabel || awardPlaceholders[index % awardPlaceholders.length].title;
-    const meta = quote?.text || imageLabel || awardPlaceholders[index % awardPlaceholders.length].meta;
-
-    return {
-      title,
-      meta,
-      image: image
-        ? {
-            src: image.url,
-            alt: imageLabel || title,
-          }
-        : undefined,
-    };
-  });
+  return homepage.profile.awards.map((award) => ({
+    title: award.title,
+    meta: award.meta,
+    image: award.image_url ? { src: award.image_url, alt: award.image_alt || award.title } : undefined,
+  }));
 }
 
 export default async function Home() {
@@ -172,12 +165,9 @@ export default async function Home() {
       <section className="hero">
         <div className="hero-copy">
           <h1 className="hero-title">
-            <span className="hero-title-primary">PRINTK</span>
-            <span className="hero-title-secondary">机甲大师战队</span>
+            <span className="hero-title-primary">{homepage.profile.team_name}</span>
           </h1>
-          <p>
-            PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。
-          </p>
+          <p>{homepage.profile.team_intro}</p>
           {ENABLE_INTERACTIVE ? <div className="hero-actions">
             <Link className="button" href="/invoices">
               进入报销管理
@@ -193,18 +183,12 @@ export default async function Home() {
             <div className="emblem-ring" />
           </div>
           <div className="hero-stats" aria-label="战队概览">
-            <div>
-              <strong>4</strong>
-              <span>核心组别</span>
-            </div>
-            <div>
-              <strong>7</strong>
-              <span>兵种方向</span>
-            </div>
-            <div>
-              <strong>2026</strong>
-              <span>赛季规划</span>
-            </div>
+            {homepage.profile.stats.map((stat) => (
+              <div key={stat.label}>
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -214,16 +198,12 @@ export default async function Home() {
       <section className="home-awards" aria-labelledby="home-awards-title">
         <div className="home-awards-heading">
           <h2 id="home-awards-title">奖项与荣誉展示</h2>
-          <p>这里优先轮播展示后台首页内容管理配置的荣誉图片和文案，数据为空时展示占位内容。</p>
+          <p>记录 PRINTK 在赛场、工程实践与团队建设中的阶段成果。</p>
         </div>
         <HomeAwardsCarousel awards={awardItems} />
       </section>
 
-      <section className="home-motto" aria-labelledby="home-motto-title">
-        <div className="home-motto-heading">
-          <span className="eyebrow">TEAM MOTTO</span>
-          <h2 id="home-motto-title">把每一次训练，变成下一次上场的底气</h2>
-        </div>
+      <section className="home-motto" aria-label="团队口号">
         <HomeQuoteCarousel quotes={mottoItems} />
       </section>
 

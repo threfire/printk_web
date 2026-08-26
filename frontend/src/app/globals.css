@@ -3328,7 +3328,101 @@ th {
 }
 
 .admin-recruitment-banner-form {
+  grid-template-columns: minmax(13rem, 0.7fr) minmax(22rem, 1.5fr) auto;
+  align-items: end;
+  min-height: 0 !important;
   margin-bottom: 1rem;
+}
+
+.admin-recruitment-banner-form .section-heading,
+.admin-home-profile-form .section-heading {
+  margin: 0;
+}
+
+.admin-recruitment-banner-form .account-switch {
+  width: auto;
+  margin-top: 0.35rem;
+}
+
+.admin-recruitment-banner-form .button {
+  white-space: nowrap;
+}
+
+.admin-home-profile-form {
+  min-height: 0 !important;
+  margin-bottom: 1.35rem;
+}
+
+.admin-home-profile-form > .section-heading {
+  align-items: center;
+}
+
+.admin-home-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-home-editor-card {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.9rem;
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+}
+
+.admin-home-editor-card legend {
+  padding: 0 0.4rem;
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.admin-home-stat-grid,
+.admin-home-awards-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.admin-home-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-home-stat-editor,
+.admin-home-award-editor {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  border-radius: var(--radius);
+  padding: 0.7rem;
+  background: color-mix(in srgb, var(--bg) 34%, transparent);
+}
+
+.admin-home-awards-editor {
+  grid-column: 1 / -1;
+}
+
+.admin-home-awards-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-home-award-editor strong {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.admin-home-profile-form .field {
+  gap: 0.3rem;
+}
+
+.admin-home-profile-form input,
+.admin-home-profile-form textarea {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.65rem;
 }
 
 .home-motto-heading {
@@ -3354,8 +3448,9 @@ th {
   border-radius: var(--radius);
   padding: clamp(1.25rem, 4vw, 2.4rem);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 48%),
-    linear-gradient(145deg, color-mix(in srgb, var(--primary) 12%, transparent), transparent 62%),
+    linear-gradient(90deg, rgba(3, 9, 20, 0.94) 0%, rgba(3, 9, 20, 0.72) 48%, rgba(3, 9, 20, 0.16) 100%),
+    linear-gradient(180deg, rgba(3, 9, 20, 0.08) 0%, rgba(3, 9, 20, 0.84) 78%, rgba(3, 9, 20, 0.96) 100%),
+    url("/recruitment-background-candidates/recruitment-bg-cold-tech.png") center top / cover no-repeat,
     color-mix(in srgb, var(--surface-strong) 76%, transparent);
 }
 
@@ -3672,6 +3767,15 @@ th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .admin-recruitment-banner-form,
+  .admin-home-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-home-awards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .account-hero {
     align-items: stretch;
   }
@@ -3770,6 +3874,11 @@ th {
   .admin-overview .stats,
   #accounts .stats,
   .admin-page .admin-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-home-stat-grid,
+  .admin-home-awards-grid {
     grid-template-columns: 1fr;
   }
 

@@ -212,12 +212,33 @@ export type HomepageRecruitmentBanner = {
   updated_at: string;
 };
 
+export type HomepageStat = {
+  value: string;
+  label: string;
+};
+
+export type HomepageAward = {
+  title: string;
+  meta: string;
+  image_url: string;
+  image_alt: string;
+};
+
+export type HomepageProfile = {
+  team_name: string;
+  team_intro: string;
+  stats: HomepageStat[];
+  awards: HomepageAward[];
+  updated_at: string;
+};
+
 export type HomepageContentData = {
   video: HomepageAsset | null;
   videos: HomepageAsset[];
   images: HomepageAsset[];
   quotes: HomepageQuote[];
   recruitment_banner: HomepageRecruitmentBanner | null;
+  profile: HomepageProfile;
 };
 
 export type RewardRankingItem = {

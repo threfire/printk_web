@@ -135,6 +135,32 @@ class SSLInterviewFlowTest(unittest.TestCase):
         admin_banner = main.get_homepage_content(include_disabled=True)["recruitment_banner"]
         self.assertEqual(admin_banner["text"], "长期招新")
 
+    def test_homepage_profile_content_can_be_updated(self) -> None:
+        main = self.main
+        updated = main.update_homepage_profile(
+            main.HomepageProfileUpdate(
+                team_name="PRINTK 测试战队",
+                team_intro="用于验证首页内容管理。",
+                stats=[
+                    main.HomepageStatItem(value="5", label="核心组别"),
+                    main.HomepageStatItem(value="8", label="兵种方向"),
+                    main.HomepageStatItem(value="2027", label="赛季规划"),
+                ],
+                awards=[
+                    main.HomepageAwardItem(
+                        title="联盟赛季军",
+                        meta="2025 高校联盟赛广西站",
+                        image_url="/award.jpg",
+                        image_alt="联盟赛季军奖状",
+                    )
+                ],
+            )
+        )
+        self.assertEqual(updated["team_name"], "PRINTK 测试战队")
+        homepage = main.get_homepage_content()
+        self.assertEqual(homepage["profile"]["stats"][2]["value"], "2027")
+        self.assertEqual(homepage["profile"]["awards"][0]["title"], "联盟赛季军")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,13 +2,19 @@
 
 import Image from "next/image";
 import { type FormEvent, useState } from "react";
-import type { HomepageAsset, HomepageContentData, HomepageQuote, HomepageRecruitmentBanner } from "@/lib/api";
+import type { HomepageAsset, HomepageContentData, HomepageProfile, HomepageQuote, HomepageRecruitmentBanner } from "@/lib/api";
 
 type AdminHomepageContentProps = {
   initialData: HomepageContentData;
 };
 
-type SubmitKind = "save-banner" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
+type SubmitKind = "save-banner" | "save-profile" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
+
+const blankAward = { title: "", meta: "", image_url: "", image_alt: "" };
+
+function awardSlots(profile: HomepageProfile) {
+  return [...profile.awards, ...Array.from({ length: Math.max(0, 6 - profile.awards.length) }, () => ({ ...blankAward }))];
+}
 
 function formatDateTime(value: unknown) {
   if (!value) {
@@ -66,6 +72,7 @@ async function submitHomepageForm<T>(form: HTMLFormElement): Promise<T> {
 }
 
 export function AdminHomepageContent({ initialData }: AdminHomepageContentProps) {
+  const [profile, setProfile] = useState(initialData.profile);
   const [recruitmentBanner, setRecruitmentBanner] = useState<HomepageRecruitmentBanner>(() => initialData.recruitment_banner ?? {
     text: "2027赛季招新中",
     action_text: "点击跳转",
@@ -117,6 +124,13 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         const banner = await submitHomepageForm<HomepageRecruitmentBanner>(form);
         setRecruitmentBanner(banner);
         setFeedback({ type: "ok", text: "招新公告栏已保存" });
+        return;
+      }
+
+      if (kind === "save-profile") {
+        const updatedProfile = await submitHomepageForm<HomepageProfile>(form);
+        setProfile(updatedProfile);
+        setFeedback({ type: "ok", text: "首页基础内容已保存" });
         return;
       }
 
@@ -190,6 +204,83 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         <button className="button" type="submit" disabled={isBusy("save-banner", "/api/admin/homepage/recruitment-banner")}>
           保存招新公告栏
         </button>
+      </form>
+
+      <form className="form admin-content-form admin-home-profile-form" action="/api/admin/homepage/profile" method="post" onSubmit={(event) => handleSubmit(event, "save-profile") }>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">HOMEPAGE PROFILE</span>
+            <h3>战队介绍与首页概览</h3>
+          </div>
+          <button className="button" type="submit" disabled={isBusy("save-profile", "/api/admin/homepage/profile") }>
+            保存首页基础内容
+          </button>
+        </div>
+
+        <div className="admin-home-settings-grid">
+          <fieldset className="admin-home-editor-card admin-home-identity-card">
+            <legend>战队名与简介</legend>
+            <div className="field">
+              <label htmlFor="home-team-name">战队名</label>
+              <input id="home-team-name" name="team_name" defaultValue={profile.team_name} maxLength={80} required />
+            </div>
+            <div className="field">
+              <label htmlFor="home-team-intro">战队简介</label>
+              <textarea id="home-team-intro" name="team_intro" defaultValue={profile.team_intro} rows={5} maxLength={1000} required />
+            </div>
+          </fieldset>
+
+          <fieldset className="admin-home-editor-card">
+            <legend>首页概览小窗口</legend>
+            <div className="admin-home-stat-grid">
+              {profile.stats.map((stat, index) => (
+                <div className="admin-home-stat-editor" key={`${stat.label}-${index}`}>
+                  <div className="field">
+                    <label htmlFor={`home-stat-value-${index}`}>数值</label>
+                    <input id={`home-stat-value-${index}`} name="stat_value" defaultValue={stat.value} maxLength={24} required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-stat-label-${index}`}>名称</label>
+                    <input id={`home-stat-label-${index}`} name="stat_label" defaultValue={stat.label} maxLength={32} required />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="admin-home-editor-card admin-home-awards-editor">
+            <legend>奖项与荣誉展示</legend>
+            <div className="admin-home-awards-grid">
+              {awardSlots(profile).map((award, index) => (
+                <article className="admin-home-award-editor" key={`${award.title}-${index}`}>
+                  <strong>荣誉 {index + 1}</strong>
+                  <div className="field">
+                    <label htmlFor={`home-award-title-${index}`}>名称</label>
+                    <input id={`home-award-title-${index}`} name="award_title" defaultValue={award.title} maxLength={100} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-award-meta-${index}`}>说明</label>
+                    <textarea id={`home-award-meta-${index}`} name="award_meta" defaultValue={award.meta} rows={2} maxLength={240} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-award-image-${index}`}>展示图片</label>
+                    <select id={`home-award-image-${index}`} name="award_image_url" defaultValue={award.image_url}>
+                      <option value="">使用荣誉占位图形</option>
+                      {award.image_url && !images.some((image) => image.url === award.image_url) ? <option value={award.image_url}>{award.image_url}</option> : null}
+                      {images.map((image) => (
+                        <option value={image.url} key={image.id}>{image.alt || image.original_filename || image.url}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-award-alt-${index}`}>图片说明</label>
+                    <input id={`home-award-alt-${index}`} name="award_image_alt" defaultValue={award.image_alt} maxLength={160} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </fieldset>
+        </div>
       </form>
 
       <div className="admin-content-grid">

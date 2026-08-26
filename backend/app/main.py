@@ -433,6 +433,16 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS homepage_profile (
+                id TEXT PRIMARY KEY,
+                team_name TEXT NOT NULL,
+                team_intro TEXT NOT NULL,
+                stats_json TEXT NOT NULL DEFAULT '[]',
+                awards_json TEXT NOT NULL DEFAULT '[]',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS homepage_danmaku (
                 id TEXT PRIMARY KEY,
                 image_key TEXT DEFAULT '',
@@ -623,9 +633,47 @@ HOME_QUOTE_SEEDS = [
     ("勇于创新、追求极致、崇尚实干、具备视野和远见", "RoboMaster 专属招聘通道"),
 ]
 
+HOME_PROFILE_TEAM_NAME = "PRINTK 机甲大师战队"
+HOME_PROFILE_TEAM_INTRO = (
+    "PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，"
+    "现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 "
+    "2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。"
+)
+HOME_PROFILE_STATS = [
+    {"value": "4", "label": "核心组别"},
+    {"value": "7", "label": "兵种方向"},
+    {"value": "2026", "label": "赛季规划"},
+]
+HOME_PROFILE_AWARDS = [
+    {"title": "RoboMaster 赛事奖项", "meta": "奖状图片占位", "image_url": "", "image_alt": ""},
+    {"title": "赛季工程成果", "meta": "奖杯图片占位", "image_url": "", "image_alt": ""},
+    {"title": "校级竞赛荣誉", "meta": "证书图片占位", "image_url": "", "image_alt": ""},
+    {"title": "技术创新成果", "meta": "奖项图片占位", "image_url": "", "image_alt": ""},
+    {"title": "团队建设荣誉", "meta": "合影图片占位", "image_url": "", "image_alt": ""},
+    {"title": "年度贡献奖项", "meta": "荣誉图片占位", "image_url": "", "image_alt": ""},
+]
+
 
 def seed_homepage_content(conn: sqlite3.Connection) -> None:
     timestamp = now_iso()
+    profile_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_profile").fetchone()["total"]
+    if profile_count == 0:
+        conn.execute(
+            """
+            INSERT INTO homepage_profile (
+                id, team_name, team_intro, stats_json, awards_json, created_at, updated_at
+            )
+            VALUES ('profile', ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                HOME_PROFILE_TEAM_NAME,
+                HOME_PROFILE_TEAM_INTRO,
+                json.dumps(HOME_PROFILE_STATS, ensure_ascii=False),
+                json.dumps(HOME_PROFILE_AWARDS, ensure_ascii=False),
+                timestamp,
+                timestamp,
+            ),
+        )
     banner_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_recruitment_banner").fetchone()["total"]
     if banner_count == 0:
         conn.execute(
@@ -1933,6 +1981,24 @@ def homepage_recruitment_banner_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def homepage_profile_response(row: sqlite3.Row) -> dict[str, Any]:
+    try:
+        stats = json.loads(row["stats_json"] or "[]")
+    except json.JSONDecodeError:
+        stats = HOME_PROFILE_STATS
+    try:
+        awards = json.loads(row["awards_json"] or "[]")
+    except json.JSONDecodeError:
+        awards = HOME_PROFILE_AWARDS
+    return {
+        "team_name": row["team_name"],
+        "team_intro": row["team_intro"],
+        "stats": stats,
+        "awards": awards,
+        "updated_at": row["updated_at"],
+    }
+
+
 def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
     image_key = row["image_key"] if "image_key" in row.keys() else row["image_src"]
     author_name = row["author_name"] if "author_name" in row.keys() else ""
@@ -1986,6 +2052,7 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
             WHERE id = 'recruitment'
             """
         ).fetchone()
+        profile = conn.execute("SELECT * FROM homepage_profile WHERE id = 'profile'").fetchone()
     video_items = [homepage_asset_response(row) for row in videos]
     return {
         "video": video_items[0] if video_items else None,
@@ -1995,6 +2062,7 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
         "recruitment_banner": homepage_recruitment_banner_response(banner)
         if banner and (include_disabled or banner["is_enabled"])
         else None,
+        "profile": homepage_profile_response(profile),
     }
 
 
@@ -2021,6 +2089,62 @@ def update_homepage_recruitment_banner(payload: "HomepageRecruitmentBannerUpdate
         )
         row = conn.execute("SELECT * FROM homepage_recruitment_banner WHERE id = 'recruitment'").fetchone()
     return homepage_recruitment_banner_response(row)
+
+
+def update_homepage_profile(payload: "HomepageProfileUpdate") -> dict[str, Any]:
+    team_name = normalize_limited_text(payload.team_name, "战队名", 80)
+    team_intro = normalize_limited_text(payload.team_intro, "战队简介", 1000)
+    if not team_name or not team_intro:
+        raise HTTPException(status_code=400, detail="战队名和战队简介不能为空")
+    if len(payload.stats) != 3:
+        raise HTTPException(status_code=400, detail="首页概览需保留三个小窗口")
+    if len(payload.awards) > 12:
+        raise HTTPException(status_code=400, detail="奖项与荣誉最多配置 12 项")
+
+    stats = []
+    for item in payload.stats:
+        value = normalize_limited_text(item.value, "概览数值", 24)
+        label = normalize_limited_text(item.label, "概览名称", 32)
+        if not value or not label:
+            raise HTTPException(status_code=400, detail="概览数值和名称不能为空")
+        stats.append({"value": value, "label": label})
+
+    awards = []
+    for item in payload.awards:
+        title = normalize_limited_text(item.title, "奖项名称", 100)
+        meta = normalize_limited_text(item.meta, "奖项说明", 240)
+        image_url = normalize_limited_text(item.image_url, "奖项图片地址", 500)
+        image_alt = normalize_limited_text(item.image_alt, "奖项图片说明", 160)
+        if not title:
+            continue
+        awards.append({"title": title, "meta": meta, "image_url": image_url, "image_alt": image_alt})
+
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO homepage_profile (
+                id, team_name, team_intro, stats_json, awards_json, created_at, updated_at
+            )
+            VALUES ('profile', ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                team_name = excluded.team_name,
+                team_intro = excluded.team_intro,
+                stats_json = excluded.stats_json,
+                awards_json = excluded.awards_json,
+                updated_at = excluded.updated_at
+            """,
+            (
+                team_name,
+                team_intro,
+                json.dumps(stats, ensure_ascii=False),
+                json.dumps(awards, ensure_ascii=False),
+                timestamp,
+                timestamp,
+            ),
+        )
+        row = conn.execute("SELECT * FROM homepage_profile WHERE id = 'profile'").fetchone()
+    return homepage_profile_response(row)
 
 
 def normalize_homepage_order(value: int) -> int:
@@ -2412,6 +2536,25 @@ class HomepageRecruitmentBannerUpdate(BaseModel):
     is_enabled: bool = True
 
 
+class HomepageStatItem(BaseModel):
+    value: str
+    label: str
+
+
+class HomepageAwardItem(BaseModel):
+    title: str
+    meta: str = ""
+    image_url: str = ""
+    image_alt: str = ""
+
+
+class HomepageProfileUpdate(BaseModel):
+    team_name: str
+    team_intro: str
+    stats: list[HomepageStatItem]
+    awards: list[HomepageAwardItem]
+
+
 class HomepageQuoteCreate(BaseModel):
     text: str
     source: str = ""
@@ -2517,6 +2660,14 @@ def update_homepage_recruitment_banner_route(
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
     return update_homepage_recruitment_banner(payload)
+
+
+@app.put("/api/admin/homepage/profile")
+def update_homepage_profile_route(
+    payload: HomepageProfileUpdate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return update_homepage_profile(payload)
 
 
 @app.post("/api/admin/homepage/assets")
