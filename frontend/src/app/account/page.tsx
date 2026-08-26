@@ -39,19 +39,6 @@ async function getProfile(account: string): Promise<SiteAccountProfile> {
   return response.json() as Promise<SiteAccountProfile>;
 }
 
-async function getUnreadMessageCount(account: string): Promise<number> {
-  try {
-    const response = await fetch(`${API_BASE}/api/site-messages/${encodeURIComponent(account)}?limit=1`, {
-      cache: "no-store",
-    });
-    if (!response.ok) return 0;
-    const data = (await response.json()) as { unread_count: number };
-    return data.unread_count;
-  } catch {
-    return 0;
-  }
-}
-
 function OptionList({ options }: { options: readonly string[] }) {
   return (
     <>
@@ -90,10 +77,7 @@ export default async function AccountPage() {
     );
   }
 
-  const [profile, unreadMessageCount] = await Promise.all([
-    getProfile(account),
-    getUnreadMessageCount(account),
-  ]);
+  const profile = await getProfile(account);
 
   return (
     <div className="page account-page">
@@ -108,19 +92,6 @@ export default async function AccountPage() {
           <span>{[profile.member_status, profile.permission_level, profile.department, profile.grade].filter(Boolean).join(" / ") || "资料待完善"}</span>
         </div>
       </section>
-
-      <Link
-        className="account-message-fab"
-        href="/account/messages"
-        aria-label={unreadMessageCount > 0 ? `站内消息，有 ${unreadMessageCount} 条未读消息` : "站内消息"}
-        title="站内消息"
-      >
-        <svg aria-hidden="true" viewBox="0 0 32 32">
-          <path d="M6 5.5h20a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H14l-7.2 5v-5H6a3 3 0 0 1-3-3v-12a3 3 0 0 1 3-3Z" />
-          <path d="M9 12h14M9 17h10" />
-        </svg>
-        {unreadMessageCount > 0 ? <span className="account-message-unread" aria-hidden="true" /> : null}
-      </Link>
 
       {accountFeedback ? <p className="message">{accountFeedback}</p> : null}
 
