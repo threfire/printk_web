@@ -1705,6 +1705,56 @@ p {
   color: var(--muted);
 }
 
+.account-message-fab {
+  position: fixed;
+  z-index: 38;
+  top: 46%;
+  right: clamp(0.75rem, 2vw, 1.6rem);
+  display: grid;
+  width: 3.6rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 58%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 0 5px color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.account-message-fab:hover,
+.account-message-fab:focus-visible {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-strong));
+  transform: translateY(-2px);
+}
+
+.account-message-fab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  outline-offset: 3px;
+}
+
+.account-message-fab svg {
+  width: 1.8rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.account-message-unread {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  width: 0.72rem;
+  aspect-ratio: 1;
+  border: 2px solid var(--surface-strong);
+  border-radius: 999px;
+  background: #ff3b4f;
+  box-shadow: 0 0 0 3px rgba(255, 59, 79, 0.14);
+}
+
 .profile-card,
 .profile-form-card {
   display: grid;
@@ -5005,7 +5055,7 @@ th {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: -1px 1.6rem 0;
   border: 1px solid var(--ssl-cyan-line);
   background: rgba(1, 12, 17, 0.94);
@@ -5101,6 +5151,25 @@ th {
   max-width: 30rem;
   margin: 0;
   color: rgba(211, 239, 241, 0.62);
+}
+
+.ssl-recruitment-note {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 32rem;
+  border-left: 3px solid var(--ssl-orange);
+  padding: 0.65rem 0.85rem;
+  background: linear-gradient(90deg, rgba(255, 107, 37, 0.12), transparent);
+}
+
+.ssl-recruitment-note strong {
+  color: #ff9a68;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.08em;
+}
+
+.ssl-application > .section-heading .ssl-recruitment-note p {
+  margin: 0;
 }
 
 .ssl-page .eyebrow { color: var(--ssl-cyan); }
@@ -5288,7 +5357,7 @@ th {
   }
 
   .ssl-capabilities {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ssl-capabilities article {
@@ -5314,6 +5383,13 @@ th {
 }
 
 @media (max-width: 760px) {
+  .account-message-fab {
+    top: auto;
+    right: 0.75rem;
+    bottom: 5.2rem;
+    width: 3.25rem;
+  }
+
   .season-planning-page,
   .robot-planning-page,
   .flea-market-page,
@@ -5342,10 +5418,6 @@ th {
 
   .ssl-capabilities article {
     min-height: 6.8rem;
-  }
-
-  .ssl-capabilities article:last-child {
-    grid-column: 1 / -1;
   }
 
   .ssl-target-frame {

@@ -50,7 +50,7 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
           <h1 id="ssl-title"><span>RoboCup</span> <strong>SSL</strong></h1>
           <p className="ssl-slogan">让算法驱动机器人，让协作决定胜负</p>
           <p className="ssl-lead">
-            RoboCup 小型组足球赛以全自主轮式机器人为参赛主体，机器人通过视觉、无线通信、路径规划与实时控制完成协同对抗。
+            RoboCup 小型组足球赛以全自主轮式机器人为参赛主体，面向 11vs11 多机协同对抗，通过无线通信、路径规划与实时控制完成赛场决策。
           </p>
           <p className="ssl-detail">
             SSL 部围绕机械结构、电控硬件、嵌入式控制、视觉感知、决策算法和赛事运营开展研发，成员将在真实赛场节奏中完成系统联调与迭代。
@@ -77,11 +77,10 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
 
       <section className="ssl-capabilities" aria-label="SSL 部研发方向">
         {[
-          ["01", "CV", "计算机视觉"],
-          ["02", "CTRL", "运动控制"],
-          ["03", "EMB", "嵌入式系统"],
-          ["04", "MECH", "机械设计"],
-          ["05", "AI", "战术算法"],
+          ["01", "CTRL", "运动控制"],
+          ["02", "EMB", "嵌入式系统"],
+          ["03", "MECH", "机械设计"],
+          ["04", "AI", "战术算法"],
         ].map(([index, code, label]) => (
           <article key={code}>
             <small>{index}</small><strong>{code}</strong><span>{label}</span>
@@ -93,9 +92,12 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
         <div className="section-heading">
           <div>
             <span className="eyebrow">JOIN THE SQUAD / INTERVIEW</span>
-            <h2 id="ssl-application-title">加入我们 · 驰骋世界赛场</h2>
+            <h2 id="ssl-application-title">加入我们 · 驰骋赛场</h2>
           </div>
-          <p>填写个人经历与意向方向，选择可参加面试的时间。</p>
+          <div className="ssl-recruitment-note">
+            <strong>长期招新 · 全年开放</strong>
+            <p>申请通道长期有效，可在完成准备后随时提交个人经历、意向方向与面试时间。</p>
+          </div>
         </div>
         {ok ? <div className="message" role="status">{ok}</div> : null}
         {error ? <div className="message error" role="alert">{error}</div> : null}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sqlite3
 import tempfile
 import unittest
 from datetime import datetime, timedelta
@@ -48,9 +49,17 @@ class SSLInterviewFlowTest(unittest.TestCase):
             "admin",
         )
         self.assertEqual(reviewed["status"], "approved")
-        messages = main.list_site_messages("ssl-test-user", 50)["messages"]
+        inbox = main.list_site_messages("ssl-test-user", 50)
+        messages = inbox["messages"]
+        self.assertEqual(inbox["unread_count"], 1)
+        self.assertFalse(messages[0]["is_read"])
         self.assertIn(interview_time.replace("T", " "), messages[0]["content"])
         self.assertIn("工程训练中心 302", messages[0]["content"])
+        marked = main.mark_site_messages_read("ssl-test-user")
+        self.assertEqual(marked["marked_read"], 1)
+        read_inbox = main.list_site_messages("ssl-test-user", 50)
+        self.assertEqual(read_inbox["unread_count"], 0)
+        self.assertTrue(read_inbox["messages"][0]["is_read"])
 
         response = main.export_ssl_interview_applications("admin")
 
@@ -94,6 +103,15 @@ class SSLInterviewFlowTest(unittest.TestCase):
         self.assertEqual(reviewed["status"], "rejected")
         messages = main.list_site_messages("ssl-reject-user", 50)["messages"]
         self.assertIn("当前基础与本轮岗位要求未匹配", messages[0]["content"])
+
+    def test_existing_message_table_gets_read_column(self) -> None:
+        connection = sqlite3.connect(":memory:")
+        connection.row_factory = sqlite3.Row
+        connection.execute("CREATE TABLE site_message (id TEXT PRIMARY KEY)")
+        self.main.ensure_site_message_read_column(connection)
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(site_message)").fetchall()}
+        connection.close()
+        self.assertIn("read_at", columns)
 
 
 if __name__ == "__main__":

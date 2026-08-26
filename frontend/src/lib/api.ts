@@ -171,7 +171,14 @@ export type SiteMessage = {
   title: string;
   content: string;
   related_id: string;
+  read_at: string;
+  is_read: boolean;
   created_at: string;
+};
+
+export type SiteMessageData = {
+  messages: SiteMessage[];
+  unread_count: number;
 };
 
 export type HomepageAsset = {

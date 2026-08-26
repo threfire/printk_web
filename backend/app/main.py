@@ -342,6 +342,7 @@ def init_db() -> None:
                 title TEXT NOT NULL,
                 content TEXT NOT NULL,
                 related_id TEXT DEFAULT '',
+                read_at TEXT DEFAULT '',
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (recipient_account) REFERENCES site_account(account)
             );
@@ -451,6 +452,7 @@ def init_db() -> None:
         )
         ensure_season_plan_schema(conn)
         ensure_site_account_profile_columns(conn)
+        ensure_site_message_read_column(conn)
         ensure_homepage_danmaku_columns(conn)
         ensure_forum_moderation_columns(conn)
         conn.execute(
@@ -511,6 +513,12 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_site_message_recipient_created
             ON site_message (recipient_account, created_at DESC)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_site_message_unread
+            ON site_message (recipient_account, read_at, created_at DESC)
             """
         )
         conn.execute(
@@ -752,6 +760,15 @@ def ensure_site_account_profile_columns(conn: sqlite3.Connection) -> None:
     )
 
 
+def ensure_site_message_read_column(conn: sqlite3.Connection) -> None:
+    existing_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(site_message)").fetchall()
+    }
+    if "read_at" not in existing_columns:
+        conn.execute("ALTER TABLE site_message ADD COLUMN read_at TEXT DEFAULT ''")
+
+
 def ensure_forum_moderation_columns(conn: sqlite3.Connection) -> None:
     post_columns = {
         row["name"]
@@ -938,13 +955,16 @@ def ssl_application_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
-def site_message_response(row: sqlite3.Row) -> dict[str, str]:
+def site_message_response(row: sqlite3.Row) -> dict[str, Any]:
+    read_at = row["read_at"] or ""
     return {
         "id": row["id"],
         "category": row["category"],
         "title": row["title"],
         "content": row["content"],
         "related_id": row["related_id"] or "",
+        "read_at": read_at,
+        "is_read": bool(read_at),
         "created_at": row["created_at"],
     }
 
@@ -2675,7 +2695,7 @@ def list_site_messages(account: str, limit: int = Query(default=50, ge=1, le=100
         account_row = require_active_site_account(conn, account)
         rows = conn.execute(
             """
-            SELECT id, category, title, content, related_id, created_at
+            SELECT id, category, title, content, related_id, read_at, created_at
             FROM site_message
             WHERE recipient_account = ?
             ORDER BY created_at DESC
@@ -2683,7 +2703,26 @@ def list_site_messages(account: str, limit: int = Query(default=50, ge=1, le=100
             """,
             (account_row["account"], limit),
         ).fetchall()
-    return {"messages": [site_message_response(row) for row in rows]}
+        unread_count = conn.execute(
+            "SELECT COUNT(*) FROM site_message WHERE recipient_account = ? AND COALESCE(read_at, '') = ''",
+            (account_row["account"],),
+        ).fetchone()[0]
+    return {"messages": [site_message_response(row) for row in rows], "unread_count": unread_count}
+
+
+@app.put("/api/site-messages/{account}/read")
+def mark_site_messages_read(account: str) -> dict[str, int]:
+    with db_connection() as conn:
+        account_row = require_active_site_account(conn, account)
+        cursor = conn.execute(
+            """
+            UPDATE site_message
+            SET read_at = ?
+            WHERE recipient_account = ? AND COALESCE(read_at, '') = ''
+            """,
+            (now_iso(), account_row["account"]),
+        )
+    return {"marked_read": cursor.rowcount, "unread_count": 0}
 
 
 @app.get("/api/admin/ssl/applications")

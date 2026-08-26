@@ -1,13 +1,25 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { API_BASE, type SiteMessage } from "@/lib/api";
+import { API_BASE, type SiteMessageData } from "@/lib/api";
+
+async function markMessagesRead(account: string) {
+  if (!account) return;
+  try {
+    await fetch(`${API_BASE}/api/site-messages/${encodeURIComponent(account)}/read`, {
+      method: "PUT",
+      cache: "no-store",
+    });
+  } catch {
+    return;
+  }
+}
 
 async function getMessages(account: string) {
   if (!account) return [];
   try {
     const response = await fetch(`${API_BASE}/api/site-messages/${encodeURIComponent(account)}`, { cache: "no-store" });
     if (!response.ok) return [];
-    const data = (await response.json()) as { messages: SiteMessage[] };
+    const data = (await response.json()) as SiteMessageData;
     return data.messages;
   } catch {
     return [];
@@ -21,6 +33,7 @@ function formatDateTime(value: string) {
 export default async function AccountMessagesPage() {
   const cookieStore = await cookies();
   const account = cookieStore.get("printk-site-account")?.value ?? "";
+  await markMessagesRead(account);
   const messages = await getMessages(account);
 
   return (
