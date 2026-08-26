@@ -66,8 +66,8 @@ export function TeamEmblemPlayer() {
   const playbackLabel = currentTrack
     ? hasPlaybackError
       ? "音乐文件暂时无法播放"
-      : `${currentTrack.title} · ${currentTrack.artist}`
-    : "音乐待添加";
+      : `《${currentTrack.title}》`
+    : "《你》";
 
   return (
     <div className={`team-record-player${isPlaying ? " is-playing" : ""}`}>

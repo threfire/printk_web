@@ -835,11 +835,11 @@ body:has(.home-intro-backdrop) .page {
 }
 
 .record-skip-prev {
-  left: -3.2rem;
+  left: -1.15rem;
 }
 
 .record-skip-next {
-  right: -3.2rem;
+  right: -1.15rem;
 }
 
 .record-skip svg {
@@ -864,8 +864,8 @@ body:has(.home-intro-backdrop) .page {
   overflow: hidden;
   margin: 0;
   color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 800;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4168,11 +4168,11 @@ th {
   }
 
   .record-skip-prev {
-    left: -2.2rem;
+    left: -0.55rem;
   }
 
   .record-skip-next {
-    right: -2.2rem;
+    right: -0.55rem;
   }
 
   .home-awards-carousel {
