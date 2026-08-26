@@ -50,6 +50,12 @@ const carouselQuotes = [
 ];
 
 const fallbackHomepage: HomepageContentData = {
+  recruitment_banner: {
+    text: "2027赛季招新中",
+    action_text: "点击跳转",
+    is_enabled: true,
+    updated_at: "",
+  },
   video: {
     id: "fallback-video",
     kind: "video",
@@ -149,6 +155,12 @@ export default async function Home() {
 
   return (
     <div className="page">
+      {homepage.recruitment_banner ? (
+        <a className="home-recruitment-banner" href="#home-recruitment">
+          <span>{homepage.recruitment_banner.text}</span>
+          <strong>{homepage.recruitment_banner.action_text}<i aria-hidden="true">→</i></strong>
+        </a>
+      ) : null}
       {video ? (
         <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
           <video className="season-video-player" controls playsInline preload="metadata">
@@ -215,7 +227,7 @@ export default async function Home() {
         <HomeQuoteCarousel quotes={mottoItems} />
       </section>
 
-      <section className="home-recruitment" aria-labelledby="home-recruitment-title">
+      <section className="home-recruitment" id="home-recruitment" aria-labelledby="home-recruitment-title">
         <div className="home-recruitment-heading">
           <span className="eyebrow">2028 赛季招新</span>
           <h2 id="home-recruitment-title">加入 PRINTK，把热爱做成能上场的机器人</h2>

@@ -113,6 +113,28 @@ class SSLInterviewFlowTest(unittest.TestCase):
         connection.close()
         self.assertIn("read_at", columns)
 
+    def test_homepage_recruitment_banner_can_be_edited_and_hidden(self) -> None:
+        main = self.main
+        updated = main.update_homepage_recruitment_banner(
+            main.HomepageRecruitmentBannerUpdate(
+                text="2027赛季招新中",
+                action_text="点击跳转",
+                is_enabled=True,
+            )
+        )
+        self.assertTrue(updated["is_enabled"])
+        self.assertEqual(main.get_homepage_content()["recruitment_banner"]["text"], "2027赛季招新中")
+        main.update_homepage_recruitment_banner(
+            main.HomepageRecruitmentBannerUpdate(
+                text="长期招新",
+                action_text="了解详情",
+                is_enabled=False,
+            )
+        )
+        self.assertIsNone(main.get_homepage_content()["recruitment_banner"])
+        admin_banner = main.get_homepage_content(include_disabled=True)["recruitment_banner"]
+        self.assertEqual(admin_banner["text"], "长期招新")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -205,11 +205,19 @@ export type HomepageQuote = {
   updated_at: string;
 };
 
+export type HomepageRecruitmentBanner = {
+  text: string;
+  action_text: string;
+  is_enabled: boolean;
+  updated_at: string;
+};
+
 export type HomepageContentData = {
   video: HomepageAsset | null;
   videos: HomepageAsset[];
   images: HomepageAsset[];
   quotes: HomepageQuote[];
+  recruitment_banner: HomepageRecruitmentBanner | null;
 };
 
 export type RewardRankingItem = {

@@ -424,6 +424,15 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS homepage_recruitment_banner (
+                id TEXT PRIMARY KEY,
+                text TEXT NOT NULL,
+                action_text TEXT NOT NULL,
+                is_enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS homepage_danmaku (
                 id TEXT PRIMARY KEY,
                 image_key TEXT DEFAULT '',
@@ -617,6 +626,15 @@ HOME_QUOTE_SEEDS = [
 
 def seed_homepage_content(conn: sqlite3.Connection) -> None:
     timestamp = now_iso()
+    banner_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_recruitment_banner").fetchone()["total"]
+    if banner_count == 0:
+        conn.execute(
+            """
+            INSERT INTO homepage_recruitment_banner (id, text, action_text, is_enabled, created_at, updated_at)
+            VALUES ('recruitment', '2027赛季招新中', '点击跳转', 1, ?, ?)
+            """,
+            (timestamp, timestamp),
+        )
     video_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_asset WHERE kind = 'video'").fetchone()["total"]
     if video_count == 0:
         conn.execute(
@@ -1906,6 +1924,15 @@ def homepage_quote_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def homepage_recruitment_banner_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "text": row["text"],
+        "action_text": row["action_text"],
+        "is_enabled": bool(row["is_enabled"]),
+        "updated_at": row["updated_at"],
+    }
+
+
 def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
     image_key = row["image_key"] if "image_key" in row.keys() else row["image_src"]
     author_name = row["author_name"] if "author_name" in row.keys() else ""
@@ -1953,13 +1980,47 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
             ORDER BY display_order ASC, created_at ASC
             """
         ).fetchall()
+        banner = conn.execute(
+            """
+            SELECT * FROM homepage_recruitment_banner
+            WHERE id = 'recruitment'
+            """
+        ).fetchone()
     video_items = [homepage_asset_response(row) for row in videos]
     return {
         "video": video_items[0] if video_items else None,
         "videos": video_items,
         "images": [homepage_asset_response(row) for row in images],
         "quotes": [homepage_quote_response(row) for row in quotes],
+        "recruitment_banner": homepage_recruitment_banner_response(banner)
+        if banner and (include_disabled or banner["is_enabled"])
+        else None,
     }
+
+
+def update_homepage_recruitment_banner(payload: "HomepageRecruitmentBannerUpdate") -> dict[str, Any]:
+    text = normalize_limited_text(payload.text, "招新公告文案", 120)
+    action_text = normalize_limited_text(payload.action_text, "栏尾文案", 32)
+    if not text:
+        raise HTTPException(status_code=400, detail="招新公告文案不能为空")
+    if not action_text:
+        raise HTTPException(status_code=400, detail="栏尾文案不能为空")
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO homepage_recruitment_banner (id, text, action_text, is_enabled, created_at, updated_at)
+            VALUES ('recruitment', ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                text = excluded.text,
+                action_text = excluded.action_text,
+                is_enabled = excluded.is_enabled,
+                updated_at = excluded.updated_at
+            """,
+            (text, action_text, 1 if payload.is_enabled else 0, timestamp, timestamp),
+        )
+        row = conn.execute("SELECT * FROM homepage_recruitment_banner WHERE id = 'recruitment'").fetchone()
+    return homepage_recruitment_banner_response(row)
 
 
 def normalize_homepage_order(value: int) -> int:
@@ -2345,6 +2406,12 @@ class HomepageAssetUpdate(BaseModel):
     is_enabled: bool = True
 
 
+class HomepageRecruitmentBannerUpdate(BaseModel):
+    text: str
+    action_text: str
+    is_enabled: bool = True
+
+
 class HomepageQuoteCreate(BaseModel):
     text: str
     source: str = ""
@@ -2442,6 +2509,14 @@ def get_site_media(filename: str) -> FileResponse:
 @app.get("/api/admin/homepage")
 def admin_homepage_content(_: str = Depends(require_admin)) -> dict[str, Any]:
     return get_homepage_content(include_disabled=True)
+
+
+@app.put("/api/admin/homepage/recruitment-banner")
+def update_homepage_recruitment_banner_route(
+    payload: HomepageRecruitmentBannerUpdate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return update_homepage_recruitment_banner(payload)
 
 
 @app.post("/api/admin/homepage/assets")

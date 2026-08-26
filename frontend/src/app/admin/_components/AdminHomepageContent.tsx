@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import { type FormEvent, useState } from "react";
-import type { HomepageAsset, HomepageContentData, HomepageQuote } from "@/lib/api";
+import type { HomepageAsset, HomepageContentData, HomepageQuote, HomepageRecruitmentBanner } from "@/lib/api";
 
 type AdminHomepageContentProps = {
   initialData: HomepageContentData;
 };
 
-type SubmitKind = "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
+type SubmitKind = "save-banner" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
 
 function formatDateTime(value: unknown) {
   if (!value) {
@@ -66,6 +66,12 @@ async function submitHomepageForm<T>(form: HTMLFormElement): Promise<T> {
 }
 
 export function AdminHomepageContent({ initialData }: AdminHomepageContentProps) {
+  const [recruitmentBanner, setRecruitmentBanner] = useState<HomepageRecruitmentBanner>(() => initialData.recruitment_banner ?? {
+    text: "2027赛季招新中",
+    action_text: "点击跳转",
+    is_enabled: false,
+    updated_at: "",
+  });
   const [videos, setVideos] = useState(() => sortAssets(initialData.videos));
   const [images, setImages] = useState(() => sortAssets(initialData.images));
   const [quotes, setQuotes] = useState(() => sortQuotes(initialData.quotes));
@@ -107,6 +113,13 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
     setFeedback(null);
 
     try {
+      if (kind === "save-banner") {
+        const banner = await submitHomepageForm<HomepageRecruitmentBanner>(form);
+        setRecruitmentBanner(banner);
+        setFeedback({ type: "ok", text: "招新公告栏已保存" });
+        return;
+      }
+
       if (kind === "upload-asset" || kind === "save-asset") {
         const asset = await submitHomepageForm<HomepageAsset>(form);
         applyAsset(asset);
@@ -152,6 +165,32 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
       </div>
 
       {feedback ? <div className={`message admin-feedback${feedback.type === "error" ? " error" : ""}`}>{feedback.text}</div> : null}
+
+      <form className="form admin-content-form admin-recruitment-banner-form" action="/api/admin/homepage/recruitment-banner" method="post" onSubmit={(event) => handleSubmit(event, "save-banner")}>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">RECRUITMENT BANNER</span>
+            <h3>首页招新公告栏</h3>
+          </div>
+          <label className="account-switch">
+            <input name="is_enabled" type="checkbox" defaultChecked={recruitmentBanner.is_enabled} value="true" />
+            首页显示
+          </label>
+        </div>
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="home-recruitment-banner-text">主文案</label>
+            <input id="home-recruitment-banner-text" name="text" defaultValue={recruitmentBanner.text} maxLength={120} required />
+          </div>
+          <div className="field">
+            <label htmlFor="home-recruitment-banner-action">栏尾文案</label>
+            <input id="home-recruitment-banner-action" name="action_text" defaultValue={recruitmentBanner.action_text} maxLength={32} required />
+          </div>
+        </div>
+        <button className="button" type="submit" disabled={isBusy("save-banner", "/api/admin/homepage/recruitment-banner")}>
+          保存招新公告栏
+        </button>
+      </form>
 
       <div className="admin-content-grid">
         <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "upload-asset")}>

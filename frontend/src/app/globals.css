@@ -1447,6 +1447,65 @@ p {
   font-size: clamp(1.6rem, 3vw, 2.45rem);
 }
 
+.home-recruitment-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.25rem;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--line));
+  border-radius: var(--radius);
+  padding: 0.9rem clamp(1rem, 3vw, 1.7rem);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 68%),
+    color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.home-recruitment-banner:hover,
+.home-recruitment-banner:focus-visible {
+  border-color: var(--accent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 23%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  transform: translateY(-2px);
+}
+
+.home-recruitment-banner:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  outline-offset: 3px;
+}
+
+.home-recruitment-banner span {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 950;
+  letter-spacing: 0.03em;
+}
+
+.home-recruitment-banner strong {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--accent);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.home-recruitment-banner i {
+  font-style: normal;
+  font-size: 1.2rem;
+  transition: transform 180ms ease;
+}
+
+.home-recruitment-banner:hover i {
+  transform: translateX(0.25rem);
+}
+
 .member-profile-header {
   display: flex;
   justify-content: space-between;
@@ -3266,6 +3325,10 @@ th {
   padding-top: 2.4rem;
 }
 
+.admin-recruitment-banner-form {
+  margin-bottom: 1rem;
+}
+
 .home-motto-heading {
   display: grid;
   gap: 0.55rem;
@@ -3282,6 +3345,7 @@ th {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.34fr);
   gap: clamp(1.25rem, 4vw, 2.5rem);
+  scroll-margin-top: 6rem;
   align-items: start;
   margin-top: 2.4rem;
   border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
@@ -5383,6 +5447,15 @@ th {
 }
 
 @media (max-width: 760px) {
+  .home-recruitment-banner {
+    min-height: 3.75rem;
+    padding: 0.75rem 0.9rem;
+  }
+
+  .home-recruitment-banner strong {
+    font-size: 0.76rem;
+  }
+
   .account-message-fab {
     top: auto;
     right: 0.75rem;
