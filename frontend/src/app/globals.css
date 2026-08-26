@@ -350,17 +350,8 @@ button {
   min-width: 3.1rem;
 }
 
-.account-tab-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-  color: #fff;
-  font-weight: 800;
-}
-
 .account-panel-signed {
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding-left: 0.7rem;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  gap: 0.65rem;
 }
 
 .account-panel-signed form {
@@ -744,7 +735,7 @@ body:has(.home-intro-backdrop) .page {
 .emblem-stage {
   position: relative;
   z-index: 1;
-  width: min(76%, 340px);
+  width: min(88%, 390px);
 }
 
 .team-record-player {
@@ -1605,12 +1596,12 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 3.35rem;
-  margin-bottom: 0.6rem;
+  min-height: 2.7rem;
+  margin-bottom: 0.45rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--line));
   border-radius: var(--radius);
-  padding: 0.58rem clamp(0.9rem, 2.5vw, 1.4rem);
+  padding: 0.36rem clamp(0.85rem, 2.5vw, 1.3rem);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 68%),
     color-mix(in srgb, var(--surface-strong) 88%, transparent);
@@ -1657,6 +1648,25 @@ p {
 
 .home-recruitment-banner:hover i {
   transform: translateX(0.25rem);
+}
+
+.campus-competition-coming-soon {
+  display: grid;
+  min-height: min(68vh, 680px);
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.campus-competition-coming-soon h1 {
+  max-width: 20ch;
+}
+
+.campus-competition-coming-soon p {
+  margin: 1.5rem 0;
+  color: var(--text);
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 900;
 }
 
 .member-profile-header {
@@ -4039,7 +4049,7 @@ th {
   }
 
   .emblem-stage {
-    width: min(58%, 240px);
+    width: min(68%, 290px);
   }
 }
 
@@ -4154,7 +4164,7 @@ th {
   }
 
   .emblem-stage {
-    width: min(72%, 240px);
+    width: min(82%, 280px);
   }
 
   .record-skip-prev {
@@ -5834,8 +5844,8 @@ th {
   }
 
   .home-recruitment-banner {
-    min-height: 3.25rem;
-    padding: 0.55rem 0.8rem;
+    min-height: 2.75rem;
+    padding: 0.4rem 0.75rem;
   }
 
   .home-recruitment-banner strong {

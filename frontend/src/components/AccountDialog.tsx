@@ -18,11 +18,11 @@ export function AccountDialog({ accountName }: { accountName: string }) {
 
   return (
     <div className="account-panel" id="account">
-      <a className="account-tab account-tab-primary" href="#account-login">
-        队员登录
+      <a className="account-tab" href="#account-login">
+        登录
       </a>
       <a className="account-tab" href="#account-register">
-        队员注册
+        注册
       </a>
     </div>
   );

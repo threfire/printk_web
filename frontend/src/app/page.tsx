@@ -177,6 +177,10 @@ export default async function Home() {
             <strong>{homepage.recruitment_banner.action_text}<i aria-hidden="true">→</i></strong>
           </a>
         ) : null}
+        <Link className="home-recruitment-banner home-campus-competition-banner" href="/campus-competition">
+          <span>2027贵州大学机甲大师校内赛</span>
+          <strong>由此报名<i aria-hidden="true">→</i></strong>
+        </Link>
         {video ? (
           <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
             <video className="season-video-player" controls playsInline preload="metadata">
