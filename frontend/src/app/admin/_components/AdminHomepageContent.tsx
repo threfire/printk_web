@@ -248,6 +248,67 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
             </div>
           </fieldset>
 
+          <fieldset className="admin-home-editor-card admin-home-recruitment-editor">
+            <legend>首页底部招新栏目</legend>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="home-recruitment-season-label">赛季标签</label>
+                <input id="home-recruitment-season-label" name="recruitment_season_label" defaultValue={profile.recruitment.season_label} maxLength={40} required />
+              </div>
+              <div className="field">
+                <label htmlFor="home-recruitment-title">主标题</label>
+                <textarea id="home-recruitment-title" name="recruitment_title" defaultValue={profile.recruitment.title} rows={2} maxLength={120} required />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="home-recruitment-intro">引导文案</label>
+              <textarea id="home-recruitment-intro" name="recruitment_intro" defaultValue={profile.recruitment.intro} rows={3} maxLength={500} required />
+            </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="home-recruitment-event-kicker">赛事栏目标签</label>
+                <input id="home-recruitment-event-kicker" name="recruitment_event_kicker" defaultValue={profile.recruitment.event_kicker} maxLength={60} required />
+              </div>
+              <div className="field">
+                <label htmlFor="home-recruitment-event-title">赛事介绍标题</label>
+                <input id="home-recruitment-event-title" name="recruitment_event_title" defaultValue={profile.recruitment.event_title} maxLength={100} required />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="home-recruitment-event-description">赛事介绍正文</label>
+              <textarea id="home-recruitment-event-description" name="recruitment_event_description" defaultValue={profile.recruitment.event_description} rows={5} maxLength={1000} required />
+            </div>
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="home-recruitment-groups-kicker">组别栏目标签</label>
+                <input id="home-recruitment-groups-kicker" name="recruitment_groups_kicker" defaultValue={profile.recruitment.groups_kicker} maxLength={60} required />
+              </div>
+              <div className="field">
+                <label htmlFor="home-recruitment-groups-title">组别标题</label>
+                <input id="home-recruitment-groups-title" name="recruitment_groups_title" defaultValue={profile.recruitment.groups_title} maxLength={100} required />
+              </div>
+            </div>
+            <div className="admin-home-recruitment-groups">
+              {profile.recruitment.groups.map((group, index) => (
+                <article className="admin-home-stat-editor" key={`${group.name}-${index}`}>
+                  <strong>组别 {index + 1}</strong>
+                  <div className="field">
+                    <label htmlFor={`home-recruitment-group-name-${index}`}>名称</label>
+                    <input id={`home-recruitment-group-name-${index}`} name="recruitment_group_name" defaultValue={group.name} maxLength={40} required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-recruitment-group-summary-${index}`}>说明</label>
+                    <textarea id={`home-recruitment-group-summary-${index}`} name="recruitment_group_summary" defaultValue={group.summary} rows={2} maxLength={240} required />
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="field">
+              <label htmlFor="home-recruitment-qr-text">二维码提示</label>
+              <input id="home-recruitment-qr-text" name="recruitment_qr_text" defaultValue={profile.recruitment.qr_text} maxLength={100} required />
+            </div>
+          </fieldset>
+
           <fieldset className="admin-home-editor-card admin-home-awards-editor">
             <legend>奖项与荣誉展示</legend>
             <div className="admin-home-awards-grid">

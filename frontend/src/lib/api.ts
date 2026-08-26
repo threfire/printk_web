@@ -224,11 +224,30 @@ export type HomepageAward = {
   image_alt: string;
 };
 
+export type HomepageRecruitmentGroup = {
+  name: string;
+  summary: string;
+};
+
+export type HomepageRecruitmentContent = {
+  season_label: string;
+  title: string;
+  intro: string;
+  event_kicker: string;
+  event_title: string;
+  event_description: string;
+  groups_kicker: string;
+  groups_title: string;
+  groups: HomepageRecruitmentGroup[];
+  qr_text: string;
+};
+
 export type HomepageProfile = {
   team_name: string;
   team_intro: string;
   stats: HomepageStat[];
   awards: HomepageAward[];
+  recruitment: HomepageRecruitmentContent;
   updated_at: string;
 };
 

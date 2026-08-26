@@ -19,6 +19,8 @@ export async function POST(request: Request) {
   const awardMetas = form.getAll("award_meta");
   const awardImageUrls = form.getAll("award_image_url");
   const awardImageAlts = form.getAll("award_image_alt");
+  const recruitmentGroupNames = form.getAll("recruitment_group_name");
+  const recruitmentGroupSummaries = form.getAll("recruitment_group_summary");
   const response = await fetch(`${API_BASE}/api/admin/homepage/profile`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -32,6 +34,21 @@ export async function POST(request: Request) {
         image_url: String(awardImageUrls[index] ?? ""),
         image_alt: String(awardImageAlts[index] ?? ""),
       })),
+      recruitment: {
+        season_label: String(form.get("recruitment_season_label") ?? ""),
+        title: String(form.get("recruitment_title") ?? ""),
+        intro: String(form.get("recruitment_intro") ?? ""),
+        event_kicker: String(form.get("recruitment_event_kicker") ?? ""),
+        event_title: String(form.get("recruitment_event_title") ?? ""),
+        event_description: String(form.get("recruitment_event_description") ?? ""),
+        groups_kicker: String(form.get("recruitment_groups_kicker") ?? ""),
+        groups_title: String(form.get("recruitment_groups_title") ?? ""),
+        groups: recruitmentGroupNames.map((name, index) => ({
+          name: String(name),
+          summary: String(recruitmentGroupSummaries[index] ?? ""),
+        })),
+        qr_text: String(form.get("recruitment_qr_text") ?? ""),
+      },
     }),
   });
 

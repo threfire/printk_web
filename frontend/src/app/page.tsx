@@ -16,7 +16,7 @@ const awardPlaceholders = [
   { title: "年度贡献奖项", meta: "荣誉图片占位" },
 ];
 
-const recruitmentGroups = [
+const fallbackRecruitmentGroups = [
   { name: "机械组", summary: "负责结构设计、加工装配与整机维护。" },
   { name: "电控组", summary: "负责电气系统、嵌入式控制与整车联调。" },
   { name: "硬件组", summary: "负责电路板、传感器和硬件链路验证。" },
@@ -60,6 +60,18 @@ const fallbackHomepage: HomepageContentData = {
       { value: "2026", label: "赛季规划" },
     ],
     awards: awardPlaceholders.map((award) => ({ ...award, image_url: "", image_alt: "" })),
+    recruitment: {
+      season_label: "2028 赛季招新",
+      title: "加入 PRINTK，\n把热爱做成能上场的机器人",
+      intro: "从赛事认知到分组实践，找到适合自己的方向，和队友一起把想法做成真正能上场的机器人。",
+      event_kicker: "01 / ABOUT THE EVENT",
+      event_title: "RoboMaster 机甲大师赛事介绍",
+      event_description: "RoboMaster 机甲大师赛是国内顶尖大学生工科竞技赛事，被誉为青年工程师的培育摇篮。赛事主要分为机甲对抗赛、人工智能挑战赛、单项技能赛等多个赛道，综合考验机械结构设计、电控编程、机器视觉算法与团队运营能力。",
+      groups_kicker: "02 / JOIN PRINTK",
+      groups_title: "PRINTK 五大组别",
+      groups: fallbackRecruitmentGroups,
+      qr_text: "扫码进群即可报名咨询",
+    },
     updated_at: "",
   },
   recruitment_banner: {
@@ -146,6 +158,7 @@ export default async function Home() {
   }));
   const mottoItems = quoteItems.length ? quoteItems : carouselQuotes;
   const awardItems = buildAwardItems(homepage);
+  const recruitment = homepage.profile.recruitment ?? fallbackHomepage.profile.recruitment;
   const teamNameParts = homepage.profile.team_name.trim().split(/\s+/);
   const teamBrand = teamNameParts[0] || homepage.profile.team_name;
   const teamDescriptor = teamNameParts.slice(1).join(" ");
@@ -215,21 +228,21 @@ export default async function Home() {
 
       <section className="home-recruitment" id="home-recruitment" aria-labelledby="home-recruitment-title">
         <div className="home-recruitment-heading">
-          <span className="eyebrow">2028 赛季招新</span>
-          <h2 id="home-recruitment-title">加入 PRINTK，<br />把热爱做成能上场的机器人</h2>
-          <p>从赛事认知到分组实践，找到适合自己的方向，和队友一起把想法做成真正能上场的机器人。</p>
+          <span className="eyebrow">{recruitment.season_label}</span>
+          <h2 id="home-recruitment-title">{recruitment.title}</h2>
+          <p>{recruitment.intro}</p>
         </div>
         <div className="home-recruitment-blocks">
           <article className="home-recruitment-block">
-            <span className="home-recruitment-kicker">01 / ABOUT THE EVENT</span>
-            <h3>RoboMaster 机甲大师赛事介绍</h3>
-            <p>RoboMaster 机甲大师赛是国内顶尖大学生工科竞技赛事，被誉为青年工程师的培育摇篮。赛事主要分为机甲对抗赛、人工智能挑战赛、单项技能赛等多个赛道，综合考验机械结构设计、电控编程、机器视觉算法与团队运营能力。</p>
+            <span className="home-recruitment-kicker">{recruitment.event_kicker}</span>
+            <h3>{recruitment.event_title}</h3>
+            <p>{recruitment.event_description}</p>
           </article>
           <article className="home-recruitment-block">
-            <span className="home-recruitment-kicker">02 / JOIN PRINTK</span>
-            <h3>PRINTK 五大组别</h3>
+            <span className="home-recruitment-kicker">{recruitment.groups_kicker}</span>
+            <h3>{recruitment.groups_title}</h3>
             <div className="home-recruitment-groups">
-              {recruitmentGroups.map((group) => (
+              {recruitment.groups.map((group) => (
                 <div key={group.name}>
                   <strong>{group.name}</strong>
                   <p>{group.summary}</p>
@@ -240,7 +253,7 @@ export default async function Home() {
         </div>
         <div className="home-recruitment-qr">
           <Image src="/recruitment-qr.png" alt="PRINTK 2028 赛季招新群二维码" width={820} height={820} />
-          <p>扫码进群即可报名咨询</p>
+          <p>{recruitment.qr_text}</p>
         </div>
       </section>
 

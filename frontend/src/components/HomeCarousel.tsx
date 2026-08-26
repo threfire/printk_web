@@ -83,7 +83,7 @@ function messageList(value: unknown): DanmakuMessage[] {
     return [];
   }
 
-  return value
+  const messages = value
     .filter((item): item is DanmakuMessage => {
       if (!item || typeof item !== "object") {
         return false;
@@ -106,9 +106,15 @@ function messageList(value: unknown): DanmakuMessage[] {
       track: Number.isFinite(message.track) ? Math.abs(Math.trunc(message.track)) % DANMAKU_TRACKS : index % DANMAKU_TRACKS,
       color: typeof message.color === "string" ? message.color : DANMAKU_COLORS[index % DANMAKU_COLORS.length],
       createdAt: Number.isFinite(message.createdAt) ? message.createdAt : Date.now(),
-      duration: Number.isFinite(message.duration) ? message.duration : 9 + (index % 4),
-      delay: Number.isFinite(message.delay) ? message.delay : (index % 5) * 0.7,
+      duration: 36,
+      delay: 0,
     }));
+
+  return messages.slice(-(DANMAKU_TRACKS * 3)).map((message, index) => ({
+    ...message,
+    track: index % DANMAKU_TRACKS,
+    delay: -(Math.floor(index / DANMAKU_TRACKS) * 12 + (index % DANMAKU_TRACKS) * 0.8),
+  }));
 }
 
 async function fetchDanmakuMessages() {
@@ -264,7 +270,7 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
       const body = (await response.json()) as { message?: DanmakuMessage };
       const nextMessage = body.message;
       if (nextMessage) {
-        setDanmakuMessages((current) => [...current, nextMessage]);
+        setDanmakuMessages((current) => messageList([...current, nextMessage]));
       } else {
         void fetchDanmakuMessages()
           .then((messages) => {

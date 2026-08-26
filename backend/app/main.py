@@ -439,6 +439,7 @@ def init_db() -> None:
                 team_intro TEXT NOT NULL,
                 stats_json TEXT NOT NULL DEFAULT '[]',
                 awards_json TEXT NOT NULL DEFAULT '[]',
+                recruitment_json TEXT NOT NULL DEFAULT '{}',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             );
@@ -472,6 +473,7 @@ def init_db() -> None:
         ensure_season_plan_schema(conn)
         ensure_site_account_profile_columns(conn)
         ensure_site_message_read_column(conn)
+        ensure_homepage_profile_columns(conn)
         ensure_homepage_danmaku_columns(conn)
         ensure_forum_moderation_columns(conn)
         conn.execute(
@@ -652,6 +654,24 @@ HOME_PROFILE_AWARDS = [
     {"title": "团队建设荣誉", "meta": "合影图片占位", "image_url": "", "image_alt": ""},
     {"title": "年度贡献奖项", "meta": "荣誉图片占位", "image_url": "", "image_alt": ""},
 ]
+HOME_RECRUITMENT_CONTENT = {
+    "season_label": "2028 赛季招新",
+    "title": "加入 PRINTK，\n把热爱做成能上场的机器人",
+    "intro": "从赛事认知到分组实践，找到适合自己的方向，和队友一起把想法做成真正能上场的机器人。",
+    "event_kicker": "01 / ABOUT THE EVENT",
+    "event_title": "RoboMaster 机甲大师赛事介绍",
+    "event_description": "RoboMaster 机甲大师赛是国内顶尖大学生工科竞技赛事，被誉为青年工程师的培养摇篮。赛事主要分为机甲对抗赛、人工智能挑战赛、单项技能赛等多个赛道，综合考验机械结构设计、电控编程、机器视觉算法与团队运营能力。",
+    "groups_kicker": "02 / JOIN PRINTK",
+    "groups_title": "PRINTK 五大组别",
+    "groups": [
+        {"name": "机械组", "summary": "负责结构设计、加工装配与整机维护。"},
+        {"name": "电控组", "summary": "负责电气系统、嵌入式控制与整车联调。"},
+        {"name": "硬件组", "summary": "负责电路板、传感器和硬件链路验证。"},
+        {"name": "算法组", "summary": "负责视觉识别、运动控制与数据复盘。"},
+        {"name": "运营组", "summary": "负责赛事运营、宣传内容与团队协作。"},
+    ],
+    "qr_text": "扫码进群即可报名咨询",
+}
 
 
 def seed_homepage_content(conn: sqlite3.Connection) -> None:
@@ -661,15 +681,16 @@ def seed_homepage_content(conn: sqlite3.Connection) -> None:
         conn.execute(
             """
             INSERT INTO homepage_profile (
-                id, team_name, team_intro, stats_json, awards_json, created_at, updated_at
+                id, team_name, team_intro, stats_json, awards_json, recruitment_json, created_at, updated_at
             )
-            VALUES ('profile', ?, ?, ?, ?, ?, ?)
+            VALUES ('profile', ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 HOME_PROFILE_TEAM_NAME,
                 HOME_PROFILE_TEAM_INTRO,
                 json.dumps(HOME_PROFILE_STATS, ensure_ascii=False),
                 json.dumps(HOME_PROFILE_AWARDS, ensure_ascii=False),
+                json.dumps(HOME_RECRUITMENT_CONTENT, ensure_ascii=False),
                 timestamp,
                 timestamp,
             ),
@@ -875,6 +896,15 @@ def ensure_forum_moderation_columns(conn: sqlite3.Connection) -> None:
         WHERE COALESCE(updated_at, '') = ''
         """
     )
+
+
+def ensure_homepage_profile_columns(conn: sqlite3.Connection) -> None:
+    existing_columns = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(homepage_profile)").fetchall()
+    }
+    if "recruitment_json" not in existing_columns:
+        conn.execute("ALTER TABLE homepage_profile ADD COLUMN recruitment_json TEXT NOT NULL DEFAULT '{}'")
 
 
 def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
@@ -1990,11 +2020,17 @@ def homepage_profile_response(row: sqlite3.Row) -> dict[str, Any]:
         awards = json.loads(row["awards_json"] or "[]")
     except json.JSONDecodeError:
         awards = HOME_PROFILE_AWARDS
+    try:
+        saved_recruitment = json.loads(row["recruitment_json"] or "{}")
+        recruitment = {**HOME_RECRUITMENT_CONTENT, **saved_recruitment} if isinstance(saved_recruitment, dict) else HOME_RECRUITMENT_CONTENT
+    except json.JSONDecodeError:
+        recruitment = HOME_RECRUITMENT_CONTENT
     return {
         "team_name": row["team_name"],
         "team_intro": row["team_intro"],
         "stats": stats,
         "awards": awards,
+        "recruitment": recruitment,
         "updated_at": row["updated_at"],
     }
 
@@ -2119,19 +2155,44 @@ def update_homepage_profile(payload: "HomepageProfileUpdate") -> dict[str, Any]:
             continue
         awards.append({"title": title, "meta": meta, "image_url": image_url, "image_alt": image_alt})
 
+    recruitment = {
+        "season_label": normalize_limited_text(payload.recruitment.season_label, "招新赛季标签", 40),
+        "title": normalize_limited_text(payload.recruitment.title, "招新主标题", 120),
+        "intro": normalize_limited_text(payload.recruitment.intro, "招新引导文案", 500),
+        "event_kicker": normalize_limited_text(payload.recruitment.event_kicker, "赛事栏目标签", 60),
+        "event_title": normalize_limited_text(payload.recruitment.event_title, "赛事介绍标题", 100),
+        "event_description": normalize_limited_text(payload.recruitment.event_description, "赛事介绍", 1000),
+        "groups_kicker": normalize_limited_text(payload.recruitment.groups_kicker, "组别栏目标签", 60),
+        "groups_title": normalize_limited_text(payload.recruitment.groups_title, "组别标题", 100),
+        "groups": [],
+        "qr_text": normalize_limited_text(payload.recruitment.qr_text, "二维码提示", 100),
+    }
+    required_recruitment_values = [value for key, value in recruitment.items() if key != "groups"]
+    if not all(required_recruitment_values):
+        raise HTTPException(status_code=400, detail="招新栏目文案不能留空")
+    if not 1 <= len(payload.recruitment.groups) <= 8:
+        raise HTTPException(status_code=400, detail="招新组别需保留 1 至 8 个")
+    for item in payload.recruitment.groups:
+        name = normalize_limited_text(item.name, "招新组别名称", 40)
+        summary = normalize_limited_text(item.summary, "招新组别说明", 240)
+        if not name or not summary:
+            raise HTTPException(status_code=400, detail="招新组别名称和说明不能留空")
+        recruitment["groups"].append({"name": name, "summary": summary})
+
     timestamp = now_iso()
     with db_connection() as conn:
         conn.execute(
             """
             INSERT INTO homepage_profile (
-                id, team_name, team_intro, stats_json, awards_json, created_at, updated_at
+                id, team_name, team_intro, stats_json, awards_json, recruitment_json, created_at, updated_at
             )
-            VALUES ('profile', ?, ?, ?, ?, ?, ?)
+            VALUES ('profile', ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 team_name = excluded.team_name,
                 team_intro = excluded.team_intro,
                 stats_json = excluded.stats_json,
                 awards_json = excluded.awards_json,
+                recruitment_json = excluded.recruitment_json,
                 updated_at = excluded.updated_at
             """,
             (
@@ -2139,6 +2200,7 @@ def update_homepage_profile(payload: "HomepageProfileUpdate") -> dict[str, Any]:
                 team_intro,
                 json.dumps(stats, ensure_ascii=False),
                 json.dumps(awards, ensure_ascii=False),
+                json.dumps(recruitment, ensure_ascii=False),
                 timestamp,
                 timestamp,
             ),
@@ -2564,11 +2626,30 @@ class HomepageAwardItem(BaseModel):
     image_alt: str = ""
 
 
+class HomepageRecruitmentGroupItem(BaseModel):
+    name: str
+    summary: str
+
+
+class HomepageRecruitmentContent(BaseModel):
+    season_label: str
+    title: str
+    intro: str
+    event_kicker: str
+    event_title: str
+    event_description: str
+    groups_kicker: str
+    groups_title: str
+    groups: list[HomepageRecruitmentGroupItem]
+    qr_text: str
+
+
 class HomepageProfileUpdate(BaseModel):
     team_name: str
     team_intro: str
     stats: list[HomepageStatItem]
     awards: list[HomepageAwardItem]
+    recruitment: HomepageRecruitmentContent
 
 
 class HomepageQuoteCreate(BaseModel):
