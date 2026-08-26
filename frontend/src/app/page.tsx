@@ -85,6 +85,12 @@ const fallbackHomepage: HomepageContentData = {
     is_enabled: true,
     updated_at: "",
   },
+  campus_banner: {
+    text: "2027贵州大学机甲大师校内赛",
+    action_text: "由此报名",
+    is_enabled: true,
+    updated_at: "",
+  },
   video: {
     id: "fallback-video",
     kind: "video",
@@ -177,10 +183,12 @@ export default async function Home() {
             <strong>{homepage.recruitment_banner.action_text}<i aria-hidden="true">→</i></strong>
           </a>
         ) : null}
-        <Link className="home-recruitment-banner home-campus-competition-banner" href="/campus-competition">
-          <span>2027贵州大学机甲大师校内赛</span>
-          <strong>由此报名<i aria-hidden="true">→</i></strong>
-        </Link>
+        {homepage.campus_banner ? (
+          <Link className="home-recruitment-banner home-campus-competition-banner" href="/campus-competition">
+            <span>{homepage.campus_banner.text}</span>
+            <strong>{homepage.campus_banner.action_text}<i aria-hidden="true">→</i></strong>
+          </Link>
+        ) : null}
         {video ? (
           <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
             <video className="season-video-player" controls playsInline preload="metadata">

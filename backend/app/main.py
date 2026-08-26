@@ -704,15 +704,18 @@ def seed_homepage_content(conn: sqlite3.Connection) -> None:
                 timestamp,
             ),
         )
-    banner_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_recruitment_banner").fetchone()["total"]
-    if banner_count == 0:
-        conn.execute(
-            """
-            INSERT INTO homepage_recruitment_banner (id, text, action_text, is_enabled, created_at, updated_at)
-            VALUES ('recruitment', '2027赛季招新中', '点击跳转', 1, ?, ?)
-            """,
-            (timestamp, timestamp),
+    conn.executemany(
+        """
+        INSERT OR IGNORE INTO homepage_recruitment_banner (
+            id, text, action_text, is_enabled, created_at, updated_at
         )
+        VALUES (?, ?, ?, 1, ?, ?)
+        """,
+        (
+            ("recruitment", "2027赛季招新中", "点击跳转", timestamp, timestamp),
+            ("campus-competition", "2027贵州大学机甲大师校内赛", "由此报名", timestamp, timestamp),
+        ),
+    )
     video_count = conn.execute("SELECT COUNT(*) AS total FROM homepage_asset WHERE kind = 'video'").fetchone()["total"]
     if video_count == 0:
         conn.execute(
@@ -2115,10 +2118,16 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
             ORDER BY display_order ASC, created_at ASC
             """
         ).fetchall()
-        banner = conn.execute(
+        recruitment_banner = conn.execute(
             """
             SELECT * FROM homepage_recruitment_banner
             WHERE id = 'recruitment'
+            """
+        ).fetchone()
+        campus_banner = conn.execute(
+            """
+            SELECT * FROM homepage_recruitment_banner
+            WHERE id = 'campus-competition'
             """
         ).fetchone()
         profile = conn.execute("SELECT * FROM homepage_profile WHERE id = 'profile'").fetchone()
@@ -2128,8 +2137,11 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
         "videos": video_items,
         "images": [homepage_asset_response(row) for row in images],
         "quotes": [homepage_quote_response(row) for row in quotes],
-        "recruitment_banner": homepage_recruitment_banner_response(banner)
-        if banner and (include_disabled or banner["is_enabled"])
+        "recruitment_banner": homepage_recruitment_banner_response(recruitment_banner)
+        if recruitment_banner and (include_disabled or recruitment_banner["is_enabled"])
+        else None,
+        "campus_banner": homepage_recruitment_banner_response(campus_banner)
+        if campus_banner and (include_disabled or campus_banner["is_enabled"])
         else None,
         "profile": homepage_profile_response(profile),
     }
@@ -2157,6 +2169,31 @@ def update_homepage_recruitment_banner(payload: "HomepageRecruitmentBannerUpdate
             (text, action_text, 1 if payload.is_enabled else 0, timestamp, timestamp),
         )
         row = conn.execute("SELECT * FROM homepage_recruitment_banner WHERE id = 'recruitment'").fetchone()
+    return homepage_recruitment_banner_response(row)
+
+
+def update_homepage_campus_banner(payload: "HomepageRecruitmentBannerUpdate") -> dict[str, Any]:
+    text = normalize_limited_text(payload.text, "校内赛公告文案", 120)
+    action_text = normalize_limited_text(payload.action_text, "栏尾文案", 32)
+    if not text:
+        raise HTTPException(status_code=400, detail="校内赛公告文案不能为空")
+    if not action_text:
+        raise HTTPException(status_code=400, detail="栏尾文案不能为空")
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO homepage_recruitment_banner (id, text, action_text, is_enabled, created_at, updated_at)
+            VALUES ('campus-competition', ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                text = excluded.text,
+                action_text = excluded.action_text,
+                is_enabled = excluded.is_enabled,
+                updated_at = excluded.updated_at
+            """,
+            (text, action_text, 1 if payload.is_enabled else 0, timestamp, timestamp),
+        )
+        row = conn.execute("SELECT * FROM homepage_recruitment_banner WHERE id = 'campus-competition'").fetchone()
     return homepage_recruitment_banner_response(row)
 
 
@@ -2960,6 +2997,14 @@ def update_homepage_recruitment_banner_route(
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
     return update_homepage_recruitment_banner(payload)
+
+
+@app.put("/api/admin/homepage/campus-banner")
+def update_homepage_campus_banner_route(
+    payload: HomepageRecruitmentBannerUpdate,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return update_homepage_campus_banner(payload)
 
 
 @app.put("/api/admin/homepage/profile")

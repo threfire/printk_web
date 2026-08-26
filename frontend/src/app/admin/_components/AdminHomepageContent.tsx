@@ -8,7 +8,7 @@ type AdminHomepageContentProps = {
   initialData: HomepageContentData;
 };
 
-type SubmitKind = "save-banner" | "save-profile" | "upload-award" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
+type SubmitKind = "save-banner" | "save-campus-banner" | "save-profile" | "upload-award" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
 
 type AwardEditor = HomepageAward & { editorId: string };
 
@@ -84,6 +84,12 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
     is_enabled: false,
     updated_at: "",
   });
+  const [campusBanner, setCampusBanner] = useState<HomepageRecruitmentBanner>(() => initialData.campus_banner ?? {
+    text: "2027贵州大学机甲大师校内赛",
+    action_text: "由此报名",
+    is_enabled: false,
+    updated_at: "",
+  });
   const [videos, setVideos] = useState(() => sortAssets(initialData.videos));
   const [images, setImages] = useState(() => sortAssets(initialData.images));
   const [quotes, setQuotes] = useState(() => sortQuotes(initialData.quotes));
@@ -129,6 +135,13 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         const banner = await submitHomepageForm<HomepageRecruitmentBanner>(form);
         setRecruitmentBanner(banner);
         setFeedback({ type: "ok", text: "招新公告栏已保存" });
+        return;
+      }
+
+      if (kind === "save-campus-banner") {
+        const banner = await submitHomepageForm<HomepageRecruitmentBanner>(form);
+        setCampusBanner(banner);
+        setFeedback({ type: "ok", text: "校内赛公告栏已保存" });
         return;
       }
 
@@ -230,6 +243,32 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         </div>
         <button className="button" type="submit" disabled={isBusy("save-banner", "/api/admin/homepage/recruitment-banner")}>
           保存招新公告栏
+        </button>
+      </form>
+
+      <form className="form admin-content-form admin-recruitment-banner-form" action="/api/admin/homepage/campus-banner" method="post" onSubmit={(event) => handleSubmit(event, "save-campus-banner")}>
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">CAMPUS COMPETITION BANNER</span>
+            <h3>首页校内赛公告栏</h3>
+          </div>
+          <label className="account-switch">
+            <input name="is_enabled" type="checkbox" defaultChecked={campusBanner.is_enabled} value="true" />
+            首页显示
+          </label>
+        </div>
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="home-campus-banner-text">主文案</label>
+            <input id="home-campus-banner-text" name="text" defaultValue={campusBanner.text} maxLength={120} required />
+          </div>
+          <div className="field">
+            <label htmlFor="home-campus-banner-action">栏尾文案</label>
+            <input id="home-campus-banner-action" name="action_text" defaultValue={campusBanner.action_text} maxLength={32} required />
+          </div>
+        </div>
+        <button className="button" type="submit" disabled={isBusy("save-campus-banner", "/api/admin/homepage/campus-banner")}>
+          保存校内赛公告栏
         </button>
       </form>
 

@@ -258,6 +258,7 @@ export type HomepageContentData = {
   images: HomepageAsset[];
   quotes: HomepageQuote[];
   recruitment_banner: HomepageRecruitmentBanner | null;
+  campus_banner: HomepageRecruitmentBanner | null;
   profile: HomepageProfile;
 };
 
