@@ -1650,23 +1650,390 @@ p {
   transform: translateX(0.25rem);
 }
 
-.campus-competition-coming-soon {
+.campus-competition-page,
+.campus-event-page {
+  --campus-glow: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.campus-competition-selector {
   display: grid;
-  min-height: min(68vh, 680px);
+  min-height: min(78vh, 780px);
+  align-content: center;
+  gap: clamp(2rem, 5vw, 4rem);
+  padding: clamp(2rem, 6vw, 5rem) 0;
+}
+
+.campus-competition-heading {
+  max-width: 58rem;
+}
+
+.campus-competition-heading h1,
+.campus-event-hero h1 {
+  margin: 0.65rem 0 1rem;
+  font-size: clamp(2.8rem, 7vw, 6.8rem);
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+}
+
+.campus-competition-heading p,
+.campus-event-hero p,
+.campus-event-section p,
+.campus-registration-panel p {
+  color: var(--muted);
+  line-height: 1.85;
+}
+
+.campus-track-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.6vw, 2rem);
+}
+
+.campus-track-card {
+  position: relative;
+  display: grid;
+  min-height: clamp(22rem, 38vw, 31rem);
+  align-content: end;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
+  border-radius: var(--radius);
+  padding: clamp(1.4rem, 4vw, 3rem);
+  background:
+    linear-gradient(145deg, transparent 35%, color-mix(in srgb, var(--accent) 12%, transparent)),
+    color-mix(in srgb, var(--surface-strong) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 4%, transparent);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.campus-track-card::before {
+  position: absolute;
+  inset: 16% -20% auto auto;
+  width: 72%;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 7rem var(--campus-glow);
+  content: "";
+}
+
+.campus-track-card:hover,
+.campus-track-card:focus-visible {
+  z-index: 1;
+  border-color: color-mix(in srgb, var(--accent) 82%, var(--text));
+  box-shadow: 0 1.5rem 4.5rem color-mix(in srgb, var(--bg) 55%, transparent);
+  transform: scale(1.025);
+}
+
+.campus-track-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 4px;
+}
+
+.campus-track-index {
+  position: absolute;
+  top: clamp(1.2rem, 3vw, 2rem);
+  right: clamp(1.2rem, 3vw, 2rem);
+  color: color-mix(in srgb, var(--text) 24%, transparent);
+  font-size: clamp(4rem, 10vw, 8rem);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.campus-track-card small,
+.campus-event-mark small,
+.campus-resource-grid small {
+  color: var(--accent);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.campus-track-card h2 {
+  position: relative;
+  margin: 0.5rem 0 0;
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  line-height: 1;
+}
+
+.campus-track-card p {
+  position: relative;
+  max-width: 34rem;
+  min-height: 3.7em;
+  margin: 1.2rem 0 2rem;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.campus-track-card strong {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--accent);
+}
+
+.campus-track-card i {
+  font-size: 1.3rem;
+  font-style: normal;
+  transition: transform 180ms ease;
+}
+
+.campus-track-card:hover i {
+  transform: translateX(0.35rem);
+}
+
+.campus-back-link {
+  justify-self: start;
+}
+
+.campus-event-page {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+
+.campus-event-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.42fr);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 6rem);
+  min-height: min(72vh, 720px);
+  border-bottom: 1px solid var(--line);
+  padding: clamp(3rem, 7vw, 7rem) 0;
+}
+
+.campus-event-hero p {
+  max-width: 47rem;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+}
+
+.campus-event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 2rem;
+}
+
+.campus-primary-action {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 950;
+}
+
+.campus-primary-action:hover,
+.campus-primary-action:focus-visible {
+  background: color-mix(in srgb, var(--accent) 82%, white);
+  color: var(--bg);
+}
+
+.campus-event-mark {
+  display: grid;
+  aspect-ratio: 1;
   place-content: center;
   justify-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--campus-glow), transparent 68%);
+  box-shadow: 0 0 7rem var(--campus-glow);
+}
+
+.campus-event-mark span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+}
+
+.campus-event-mark strong {
+  margin: 0.35rem 0;
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  line-height: 1;
+}
+
+.campus-event-section {
+  display: grid;
+  grid-template-columns: minmax(4rem, 0.18fr) minmax(0, 1fr);
+  gap: clamp(1.2rem, 3vw, 3rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  background: color-mix(in srgb, var(--surface-strong) 54%, transparent);
+}
+
+.campus-event-section h2,
+.campus-resource-section h2,
+.campus-team-section h2,
+.campus-registration-panel h2 {
+  margin: 0.45rem 0 1rem;
+  font-size: clamp(1.8rem, 4vw, 3.25rem);
+}
+
+.campus-event-section p {
+  max-width: 67rem;
+  margin-bottom: 0;
+}
+
+.campus-section-number {
+  color: color-mix(in srgb, var(--accent) 76%, var(--text));
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 950;
+}
+
+.campus-stage-grid,
+.campus-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.6rem;
+}
+
+.campus-stage-grid article,
+.campus-resource-grid article {
+  border-top: 2px solid color-mix(in srgb, var(--accent) 58%, var(--line));
+  padding: 1.25rem 1rem 0.4rem;
+}
+
+.campus-stage-grid small {
+  color: var(--accent);
+  font-weight: 950;
+}
+
+.campus-stage-grid h3,
+.campus-resource-grid h3 {
+  margin: 0.65rem 0;
+  font-size: 1.08rem;
+}
+
+.campus-stage-grid p,
+.campus-resource-grid p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.campus-resource-section,
+.campus-team-section {
+  border-top: 1px solid var(--line);
+  padding: clamp(2.5rem, 5vw, 5rem) 0;
+}
+
+.campus-resource-section header,
+.campus-team-section header {
+  max-width: 54rem;
+}
+
+.campus-resource-grid article {
+  min-height: 11rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  background: color-mix(in srgb, var(--surface-strong) 42%, transparent);
+}
+
+.campus-team-empty {
+  display: grid;
+  min-height: 15rem;
+  place-content: center;
+  justify-items: center;
+  border: 1px dashed color-mix(in srgb, var(--accent) 48%, var(--line));
+  border-radius: var(--radius);
   text-align: center;
 }
 
-.campus-competition-coming-soon h1 {
-  max-width: 20ch;
+.campus-team-empty span {
+  color: color-mix(in srgb, var(--accent) 40%, transparent);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 950;
+  letter-spacing: 0.08em;
 }
 
-.campus-competition-coming-soon p {
-  margin: 1.5rem 0;
-  color: var(--text);
-  font-size: clamp(1.6rem, 4vw, 2.8rem);
-  font-weight: 900;
+.campus-team-empty p {
+  color: var(--muted);
+}
+
+.campus-team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+}
+
+.campus-team-grid article {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+}
+
+.campus-team-grid img {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.campus-registration-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  scroll-margin-top: 7rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--line));
+  border-radius: var(--radius);
+  padding: clamp(1.6rem, 4vw, 3.5rem);
+  background:
+    linear-gradient(100deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 68%),
+    color-mix(in srgb, var(--surface-strong) 64%, transparent);
+}
+
+.campus-registration-panel h2,
+.campus-registration-panel p {
+  margin-bottom: 0;
+}
+
+@media (max-width: 860px) {
+  .campus-track-grid,
+  .campus-event-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .campus-track-card {
+    min-height: 22rem;
+  }
+
+  .campus-event-mark {
+    width: min(18rem, 75vw);
+    justify-self: center;
+  }
+
+  .campus-stage-grid,
+  .campus-resource-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .campus-event-section,
+  .campus-stage-grid,
+  .campus-resource-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .campus-registration-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-track-card,
+  .campus-track-card i {
+    transition: none;
+  }
+
+  .campus-track-card:hover,
+  .campus-track-card:focus-visible {
+    transform: none;
+  }
 }
 
 .member-profile-header {
