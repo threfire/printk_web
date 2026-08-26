@@ -64,7 +64,7 @@ HOME_ASSET_KINDS = {"video", "image"}
 HOME_VIDEO_MIME_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
 HOME_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 DANMAKU_TRACKS = 7
-DANMAKU_COLORS = ["#ffffff", "#ffc857", "#37a9ff", "#32d583", "#ff8a9a"]
+DANMAKU_COLORS = ["#ffffff"]
 
 HEADER_MAP = {
     "采购日期": "purchase_date",
@@ -453,6 +453,9 @@ def init_db() -> None:
                 text TEXT NOT NULL,
                 track INTEGER NOT NULL,
                 color TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                reviewed_by TEXT DEFAULT '',
+                reviewed_at TEXT DEFAULT '',
                 created_at_ms INTEGER NOT NULL,
                 duration REAL NOT NULL,
                 delay REAL NOT NULL,
@@ -572,6 +575,12 @@ def init_db() -> None:
             ON homepage_danmaku (image_key, created_at_ms)
             """
         )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_homepage_danmaku_status_created
+            ON homepage_danmaku (status, created_at_ms DESC)
+            """
+        )
         seed_season_plan(conn)
         seed_homepage_content(conn)
 
@@ -647,12 +656,12 @@ HOME_PROFILE_STATS = [
     {"value": "2026", "label": "赛季规划"},
 ]
 HOME_PROFILE_AWARDS = [
-    {"title": "RoboMaster 赛事奖项", "meta": "奖状图片占位", "image_url": "", "image_alt": "", "display_order": 10},
-    {"title": "赛季工程成果", "meta": "奖杯图片占位", "image_url": "", "image_alt": "", "display_order": 20},
-    {"title": "校级竞赛荣誉", "meta": "证书图片占位", "image_url": "", "image_alt": "", "display_order": 30},
-    {"title": "技术创新成果", "meta": "奖项图片占位", "image_url": "", "image_alt": "", "display_order": 40},
-    {"title": "团队建设荣誉", "meta": "合影图片占位", "image_url": "", "image_alt": "", "display_order": 50},
-    {"title": "年度贡献奖项", "meta": "荣誉图片占位", "image_url": "", "image_alt": "", "display_order": 60},
+    {"title": "RoboMaster 赛事奖项", "meta": "奖状图片占位", "image_url": "", "image_alt": "", "display_order": 1},
+    {"title": "赛季工程成果", "meta": "奖杯图片占位", "image_url": "", "image_alt": "", "display_order": 2},
+    {"title": "校级竞赛荣誉", "meta": "证书图片占位", "image_url": "", "image_alt": "", "display_order": 3},
+    {"title": "技术创新成果", "meta": "奖项图片占位", "image_url": "", "image_alt": "", "display_order": 4},
+    {"title": "团队建设荣誉", "meta": "合影图片占位", "image_url": "", "image_alt": "", "display_order": 5},
+    {"title": "年度贡献奖项", "meta": "荣誉图片占位", "image_url": "", "image_alt": "", "display_order": 6},
 ]
 HOME_RECRUITMENT_CONTENT = {
     "season_label": "2028 赛季招新",
@@ -916,6 +925,9 @@ def ensure_homepage_danmaku_columns(conn: sqlite3.Connection) -> None:
         "image_key": "TEXT DEFAULT ''",
         "author_account": "TEXT DEFAULT ''",
         "author_name": "TEXT DEFAULT ''",
+        "status": "TEXT NOT NULL DEFAULT 'approved'",
+        "reviewed_by": "TEXT DEFAULT ''",
+        "reviewed_at": "TEXT DEFAULT ''",
     }
     for column, definition in column_definitions.items():
         if column not in existing_columns:
@@ -2011,22 +2023,30 @@ def homepage_recruitment_banner_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def ordered_homepage_awards(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    awards = [
+        {
+            **award,
+            "display_order": award.get("display_order", index + 1),
+        }
+        for index, award in enumerate(value)
+        if isinstance(award, dict)
+    ]
+    awards.sort(key=lambda award: award["display_order"])
+    for index, award in enumerate(awards):
+        award["display_order"] = index + 1
+    return awards
+
+
 def homepage_profile_response(row: sqlite3.Row) -> dict[str, Any]:
     try:
         stats = json.loads(row["stats_json"] or "[]")
     except json.JSONDecodeError:
         stats = HOME_PROFILE_STATS
     try:
-        saved_awards = json.loads(row["awards_json"] or "[]")
-        awards = [
-            {
-                **award,
-                "display_order": award.get("display_order", (index + 1) * 10),
-            }
-            for index, award in enumerate(saved_awards)
-            if isinstance(award, dict)
-        ]
-        awards.sort(key=lambda award: award["display_order"])
+        awards = ordered_homepage_awards(json.loads(row["awards_json"] or "[]"))
     except json.JSONDecodeError:
         awards = HOME_PROFILE_AWARDS
     try:
@@ -2058,7 +2078,11 @@ def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
         "text": row["text"],
         "track": row["track"],
         "color": row["color"],
+        "status": row["status"] if "status" in row.keys() else "approved",
+        "reviewedBy": row["reviewed_by"] if "reviewed_by" in row.keys() else "",
+        "reviewedAt": row["reviewed_at"] if "reviewed_at" in row.keys() else "",
         "createdAt": row["created_at_ms"],
+        "created_at": row["created_at"],
         "duration": row["duration"],
         "delay": row["delay"],
     }
@@ -2170,7 +2194,7 @@ def update_homepage_profile(payload: "HomepageProfileUpdate") -> dict[str, Any]:
             "image_alt": image_alt,
             "display_order": display_order,
         })
-    awards.sort(key=lambda award: award["display_order"])
+    awards = ordered_homepage_awards(awards)
 
     recruitment = {
         "season_label": normalize_limited_text(payload.recruitment.season_label, "招新赛季标签", 40),
@@ -2264,6 +2288,51 @@ async def save_homepage_award_image(upload: UploadFile) -> dict[str, Any]:
         "mime_type": mime_type,
         "size_bytes": len(content),
     }
+
+
+async def create_homepage_award(
+    upload: UploadFile,
+    title_value: str,
+    meta_value: str,
+    alt_value: str,
+    display_order_value: int,
+) -> dict[str, Any]:
+    title = normalize_limited_text(title_value, "奖项名称", 100)
+    meta = normalize_limited_text(meta_value, "奖项说明", 240)
+    image_alt = normalize_limited_text(alt_value, "奖项图片说明", 160)
+    display_order = normalize_homepage_order(display_order_value)
+    if not title:
+        raise HTTPException(status_code=400, detail="奖项名称不能为空")
+    if not 1 <= display_order <= 12:
+        raise HTTPException(status_code=400, detail="荣誉排序需在 1 到 12 之间")
+
+    with db_connection() as conn:
+        profile = conn.execute("SELECT * FROM homepage_profile WHERE id = 'profile'").fetchone()
+        try:
+            awards = ordered_homepage_awards(json.loads(profile["awards_json"] or "[]"))
+        except json.JSONDecodeError:
+            awards = ordered_homepage_awards(HOME_PROFILE_AWARDS)
+        if len(awards) >= 12:
+            raise HTTPException(status_code=400, detail="荣誉展示最多支持 12 项")
+
+    uploaded = await save_homepage_award_image(upload)
+    awards.insert(min(display_order - 1, len(awards)), {
+        "title": title,
+        "meta": meta,
+        "image_url": uploaded["url"],
+        "image_alt": image_alt,
+        "display_order": display_order,
+    })
+    for index, award in enumerate(awards):
+        award["display_order"] = index + 1
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            "UPDATE homepage_profile SET awards_json = ?, updated_at = ? WHERE id = 'profile'",
+            (json.dumps(awards, ensure_ascii=False), timestamp),
+        )
+        profile = conn.execute("SELECT * FROM homepage_profile WHERE id = 'profile'").fetchone()
+    return homepage_profile_response(profile)
 
 
 async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_order: int) -> dict[str, Any]:
@@ -2422,6 +2491,16 @@ def normalize_danmaku_image_key(value: str) -> str:
     return normalize_limited_text(value, "图片标识", 120)
 
 
+def normalize_danmaku_status(value: str, allow_pending: bool = False) -> str:
+    status = value.strip().lower()
+    allowed = {"approved", "rejected"}
+    if allow_pending:
+        allowed.add("pending")
+    if status not in allowed:
+        raise HTTPException(status_code=400, detail="弹幕审核状态无效")
+    return status
+
+
 def list_homepage_danmaku(image_key: str | None = None) -> dict[str, Any]:
     normalized_image_key = normalize_danmaku_image_key(image_key or "")
     with db_connection() as conn:
@@ -2434,7 +2513,7 @@ def list_homepage_danmaku(image_key: str | None = None) -> dict[str, Any]:
                 FROM homepage_danmaku AS danmaku
                 LEFT JOIN site_account AS account
                     ON account.account = danmaku.author_account
-                WHERE danmaku.image_key = ?
+                WHERE danmaku.image_key = ? AND danmaku.status = 'approved'
                 ORDER BY created_at_ms ASC
                 LIMIT 120
                 """,
@@ -2446,6 +2525,7 @@ def list_homepage_danmaku(image_key: str | None = None) -> dict[str, Any]:
                 WITH recent_danmaku AS (
                     SELECT *
                     FROM homepage_danmaku
+                    WHERE status = 'approved'
                     ORDER BY created_at_ms DESC
                     LIMIT 240
                 )
@@ -2459,6 +2539,62 @@ def list_homepage_danmaku(image_key: str | None = None) -> dict[str, Any]:
                 """
             ).fetchall()
     return {"messages": [homepage_danmaku_response(row) for row in rows]}
+
+
+def list_admin_homepage_danmaku() -> dict[str, Any]:
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                danmaku.*,
+                account.full_name AS account_full_name
+            FROM homepage_danmaku AS danmaku
+            LEFT JOIN site_account AS account
+                ON account.account = danmaku.author_account
+            ORDER BY
+                CASE danmaku.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+                danmaku.created_at_ms DESC
+            LIMIT 300
+            """
+        ).fetchall()
+    messages = [homepage_danmaku_response(row) for row in rows]
+    return {
+        "messages": messages,
+        "summary": {
+            "pending": sum(message["status"] == "pending" for message in messages),
+            "approved": sum(message["status"] == "approved" for message in messages),
+        },
+    }
+
+
+def review_homepage_danmaku(danmaku_id: str, status_value: str, reviewer: str) -> dict[str, Any]:
+    status = normalize_danmaku_status(status_value)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM homepage_danmaku WHERE id = ?", (danmaku_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="弹幕不存在")
+        conn.execute(
+            """
+            UPDATE homepage_danmaku
+            SET status = ?, reviewed_by = ?, reviewed_at = ?
+            WHERE id = ?
+            """,
+            (status, reviewer, timestamp, danmaku_id),
+        )
+        row = conn.execute("SELECT * FROM homepage_danmaku WHERE id = ?", (danmaku_id,)).fetchone()
+    return homepage_danmaku_response(row)
+
+
+def delete_approved_homepage_danmaku(danmaku_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        existing = conn.execute("SELECT status FROM homepage_danmaku WHERE id = ?", (danmaku_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="弹幕不存在")
+        if existing["status"] != "approved":
+            raise HTTPException(status_code=400, detail="仅已通过弹幕支持删除")
+        conn.execute("DELETE FROM homepage_danmaku WHERE id = ?", (danmaku_id,))
+    return {"id": danmaku_id}
 
 
 def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
@@ -2711,6 +2847,10 @@ class HomepageDanmakuCreate(BaseModel):
     authorAccount: str = ""
 
 
+class HomepageDanmakuReview(BaseModel):
+    status: str
+
+
 class RowIdsRequest(BaseModel):
     row_ids: list[str]
     note: str = ""
@@ -2779,6 +2919,28 @@ def create_homepage_danmaku_route(payload: HomepageDanmakuCreate) -> dict[str, A
     return create_homepage_danmaku(payload)
 
 
+@app.get("/api/admin/homepage/danmaku")
+def admin_homepage_danmaku(_: str = Depends(require_admin)) -> dict[str, Any]:
+    return list_admin_homepage_danmaku()
+
+
+@app.put("/api/admin/homepage/danmaku/{danmaku_id}")
+def review_homepage_danmaku_route(
+    danmaku_id: str,
+    payload: HomepageDanmakuReview,
+    reviewer: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return review_homepage_danmaku(danmaku_id, payload.status, reviewer)
+
+
+@app.delete("/api/admin/homepage/danmaku/{danmaku_id}")
+def delete_homepage_danmaku_route(
+    danmaku_id: str,
+    _: str = Depends(require_admin),
+) -> dict[str, str]:
+    return delete_approved_homepage_danmaku(danmaku_id)
+
+
 @app.get("/api/site-media/{filename}")
 def get_site_media(filename: str) -> FileResponse:
     path = (SITE_MEDIA_DIR / filename).resolve()
@@ -2825,6 +2987,18 @@ async def upload_homepage_award_image(
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
     return await save_homepage_award_image(file)
+
+
+@app.post("/api/admin/homepage/awards")
+async def create_homepage_award_route(
+    title: str = Form(...),
+    meta: str = Form(""),
+    image_alt: str = Form(""),
+    display_order: int = Form(...),
+    file: UploadFile = File(...),
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return await create_homepage_award(file, title, meta, image_alt, display_order)
 
 
 @app.put("/api/admin/homepage/assets/{asset_id}")

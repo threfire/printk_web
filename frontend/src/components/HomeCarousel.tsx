@@ -41,7 +41,7 @@ type DanmakuResponse = {
 const AUTOPLAY_DELAY_MS = 5000;
 const DANMAKU_REFRESH_MS = 4000;
 const DANMAKU_TRACKS = 7;
-const DANMAKU_COLORS = ["#ffffff", "#ffc857", "#37a9ff", "#32d583", "#ff8a9a"];
+const DANMAKU_COLOR = "#ffffff";
 
 function getSlot(index: number, activeIndex: number, direction: 1 | -1, total: number) {
   const forward = (index - activeIndex + total) % total;
@@ -104,7 +104,7 @@ function messageList(value: unknown): DanmakuMessage[] {
       authorName: typeof message.authorName === "string" ? message.authorName : "",
       text: message.text.slice(0, 48),
       track: Number.isFinite(message.track) ? Math.abs(Math.trunc(message.track)) % DANMAKU_TRACKS : index % DANMAKU_TRACKS,
-      color: typeof message.color === "string" ? message.color : DANMAKU_COLORS[index % DANMAKU_COLORS.length],
+      color: DANMAKU_COLOR,
       createdAt: Number.isFinite(message.createdAt) ? message.createdAt : Date.now(),
       duration: 36,
       delay: 0,
@@ -172,6 +172,7 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
   const [danmakuEnabled, setDanmakuEnabled] = useState(true);
   const [danmakuMessages, setDanmakuMessages] = useState<DanmakuMessage[]>([]);
   const [danmakuDraft, setDanmakuDraft] = useState("");
+  const [danmakuNotice, setDanmakuNotice] = useState("");
   const activeImage = images[activeIndex];
 
   const goNext = () => {
@@ -249,6 +250,7 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
 
   const sendDanmaku = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setDanmakuNotice("");
 
     const text = danmakuDraft.trim().slice(0, 48);
 
@@ -265,24 +267,14 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
         body: JSON.stringify({ imageKey: activeImage.imageKey, imageSrc: activeImage.src, text, authorAccount: accountName }),
       });
       if (!response.ok) {
+        setDanmakuNotice("弹幕提交失败，请稍后重试");
         return;
-      }
-      const body = (await response.json()) as { message?: DanmakuMessage };
-      const nextMessage = body.message;
-      if (nextMessage) {
-        setDanmakuMessages((current) => messageList([...current, nextMessage]));
-      } else {
-        void fetchDanmakuMessages()
-          .then((messages) => {
-            if (messages) {
-              setDanmakuMessages(messages);
-            }
-          })
-          .catch(() => null);
       }
       setDanmakuDraft("");
       setDanmakuEnabled(true);
+      setDanmakuNotice("弹幕已提交，审核通过后显示");
     } catch {
+      setDanmakuNotice("弹幕提交失败，请稍后重试");
       return;
     }
   };
@@ -349,6 +341,7 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
           发送
         </button>
       </form> : null}
+      {danmakuNotice ? <p className="message danmaku-notice" aria-live="polite">{danmakuNotice}</p> : null}
     </div>
   );
 }

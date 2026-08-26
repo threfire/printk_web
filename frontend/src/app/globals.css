@@ -715,6 +715,8 @@ body:has(.home-intro-backdrop) .page {
 }
 
 .hero-copy {
+  display: flex;
+  flex-direction: column;
   padding: clamp(1.35rem, 3.5vw, 2.6rem);
 }
 
@@ -743,7 +745,6 @@ body:has(.home-intro-backdrop) .page {
   position: relative;
   z-index: 1;
   width: min(76%, 340px);
-  margin-bottom: 5.5rem;
 }
 
 .team-record-player {
@@ -886,14 +887,11 @@ body:has(.home-intro-backdrop) .page {
 }
 
 .hero-stats {
-  position: absolute;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  left: 1.25rem;
-  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.7rem;
+  margin-top: auto;
+  padding-top: 1.5rem;
 }
 
 .hero-stats div,
@@ -4042,7 +4040,6 @@ th {
 
   .emblem-stage {
     width: min(58%, 240px);
-    margin-bottom: 5.25rem;
   }
 }
 
@@ -4158,7 +4155,6 @@ th {
 
   .emblem-stage {
     width: min(72%, 240px);
-    margin-bottom: 13rem;
   }
 
   .record-skip-prev {

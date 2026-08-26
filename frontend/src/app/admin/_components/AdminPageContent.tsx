@@ -8,6 +8,7 @@ import {
   DashboardData,
   type ForumManagementData,
   type HomepageContentData,
+  type HomepageDanmakuManagementData,
   type SSLApplicationListData,
 } from "@/lib/api";
 import {
@@ -25,7 +26,7 @@ type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export type AdminSection = "overview" | "home" | "accounts" | "rewards" | "forum" | "ssl" | "materials" | "batch";
+export type AdminSection = "overview" | "home" | "accounts" | "rewards" | "forum" | "ssl" | "materials" | "danmaku" | "batch";
 
 type AdminPageContentProps = AdminPageProps & {
   section: AdminSection;
@@ -41,6 +42,7 @@ const adminNavItems = [
   { href: "/admin/forum", label: "论坛审核", section: "forum" },
   { href: "/admin/ssl", label: "SSL 面试", section: "ssl" },
   { href: "/admin/materials", label: "发票审核", section: "materials" },
+  { href: "/admin/danmaku", label: "弹幕管理", section: "danmaku" },
 ] satisfies Array<{ href: string; label: string; section: AdminSection }>;
 
 const adminSectionTitles: Record<AdminSection, string> = {
@@ -51,6 +53,7 @@ const adminSectionTitles: Record<AdminSection, string> = {
   forum: "论坛审核",
   ssl: "SSL 面试管理",
   materials: "发票审核",
+  danmaku: "弹幕管理",
   batch: "批次复核",
 };
 
@@ -62,6 +65,7 @@ const adminSectionDescriptions: Record<AdminSection, string> = {
   forum: "审核帖子与回复内容",
   ssl: "审核申请、发送结果并导出面试名单",
   materials: "处理入库批次、库内明细和报销表",
+  danmaku: "审核首页弹幕并管理已通过内容",
   batch: "查看单个批次的复核明细",
 };
 
@@ -73,6 +77,7 @@ const adminReturnPaths: Record<AdminSection, string> = {
   forum: "/admin/forum",
   ssl: "/admin/ssl",
   materials: "/admin/materials",
+  danmaku: "/admin/danmaku",
   batch: "/admin/materials",
 };
 
@@ -144,6 +149,15 @@ async function fetchHomepageManagement(token: string): Promise<HomepageContentDa
   return response.json() as Promise<HomepageContentData>;
 }
 
+async function fetchDanmakuManagement(token: string): Promise<HomepageDanmakuManagementData | null> {
+  const response = await fetch(`${API_BASE}/api/admin/homepage/danmaku`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  return response.json() as Promise<HomepageDanmakuManagementData>;
+}
+
 async function fetchSSLApplications(token: string): Promise<SSLApplicationListData | null> {
   const response = await fetch(`${API_BASE}/api/admin/ssl/applications?limit=200`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -205,6 +219,15 @@ function forumStatusText(value: string) {
   return labels[value] ?? value;
 }
 
+function danmakuStatusText(value: string) {
+  const labels: Record<string, string> = {
+    pending: "待审核",
+    approved: "已通过",
+    rejected: "已拒绝",
+  };
+  return labels[value] ?? value;
+}
+
 function rewardSupported(account: SiteAccountProfile) {
   return account.member_status === "正式队员" || account.member_status === "老队员";
 }
@@ -226,15 +249,16 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
   const accountData = token ? await fetchAccounts(token, accountFilters) : null;
   const forumData = token ? await fetchForumManagement(token) : null;
   const homepageData = token ? await fetchHomepageManagement(token) : null;
+  const danmakuData = token ? await fetchDanmakuManagement(token) : null;
   const sslData = token ? await fetchSSLApplications(token) : null;
   const ok = firstParam(params.ok);
   const error = firstParam(params.error);
 
-  if (token && (!dashboard || !accountData || !forumData || !homepageData || !sslData)) {
+  if (token && (!dashboard || !accountData || !forumData || !homepageData || !danmakuData || !sslData)) {
     redirect("/api/admin/logout");
   }
 
-  if (!dashboard || !accountData || !forumData || !homepageData || !sslData) {
+  if (!dashboard || !accountData || !forumData || !homepageData || !danmakuData || !sslData) {
     return (
       <div className="page">
         <section className="section-hero">
@@ -877,6 +901,67 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                     </tr>
                   ))}
                   {sslData.applications.length === 0 ? <tr><td className="empty-cell" colSpan={5}>当前没有面试申请</td></tr> : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        {section === "danmaku" ? (
+          <section className="section admin-section">
+            <div className="section-heading">
+              <span className="eyebrow">DANMAKU</span>
+              <h2>弹幕审核</h2>
+            </div>
+            <div className="stats">
+              <div className="stat"><strong>{danmakuData.summary.pending}</strong>待审核</div>
+              <div className="stat"><strong>{danmakuData.summary.approved}</strong>已通过</div>
+            </div>
+            <div className="table-wrap">
+              <table className="admin-danmaku-table">
+                <thead>
+                  <tr>
+                    <th>弹幕内容</th>
+                    <th>发布人</th>
+                    <th>提交时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {danmakuData.messages.map((message) => (
+                    <tr key={message.id}>
+                      <td><strong>{message.text}</strong></td>
+                      <td>{message.authorName || message.authorAccount || "匿名用户"}</td>
+                      <td>{formatDateTime(message.created_at)}</td>
+                      <td><span className="badge">{danmakuStatusText(message.status)}</span></td>
+                      <td>
+                        <div className="row-actions">
+                          {message.status === "pending" ? (
+                            <>
+                              <form action={`/api/admin/danmaku/${encodeURIComponent(message.id)}`} method="post">
+                                <input name="status" type="hidden" value="approved" />
+                                <button className="ghost-button" type="submit">通过</button>
+                              </form>
+                              <form action={`/api/admin/danmaku/${encodeURIComponent(message.id)}`} method="post">
+                                <input name="status" type="hidden" value="rejected" />
+                                <button className="ghost-button" type="submit">拒绝</button>
+                              </form>
+                            </>
+                          ) : null}
+                          {message.status === "approved" ? (
+                            <form action={`/api/admin/danmaku/${encodeURIComponent(message.id)}`} method="post">
+                              <input name="intent" type="hidden" value="delete" />
+                              <button className="ghost-button" type="submit">删除</button>
+                            </form>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {danmakuData.messages.length === 0 ? (
+                    <tr><td className="empty-cell" colSpan={5}>当前没有弹幕</td></tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>

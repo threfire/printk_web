@@ -20,41 +20,15 @@ export async function POST(request: Request) {
   const awardImageUrls = form.getAll("award_image_url");
   const awardImageAlts = form.getAll("award_image_alt");
   const awardDisplayOrders = form.getAll("award_display_order");
-  const awardImageFiles = form.getAll("award_image_file");
   const recruitmentGroupNames = form.getAll("recruitment_group_name");
   const recruitmentGroupSummaries = form.getAll("recruitment_group_summary");
-  const awards = [];
-
-  for (let index = 0; index < awardTitles.length; index += 1) {
-    const title = String(awardTitles[index] ?? "");
-    let imageUrl = String(awardImageUrls[index] ?? "");
-    const imageFile = awardImageFiles[index];
-
-    if (title.trim() && imageFile instanceof File && imageFile.size > 0) {
-      const uploadForm = new FormData();
-      uploadForm.set("file", imageFile, imageFile.name);
-      const uploadResponse = await fetch(`${API_BASE}/api/admin/homepage/award-image`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: uploadForm,
-      });
-      if (!uploadResponse.ok) {
-        const detail = await responseError(uploadResponse, "荣誉图片上传失败");
-        if (wantsJson) return Response.json({ detail }, { status: uploadResponse.status });
-        redirect(feedbackPath(adminPath, "error", detail));
-      }
-      const uploaded = (await uploadResponse.json()) as { url?: string };
-      imageUrl = uploaded.url ?? imageUrl;
-    }
-
-    awards.push({
-      title,
-      meta: String(awardMetas[index] ?? ""),
-      image_url: imageUrl,
-      image_alt: String(awardImageAlts[index] ?? ""),
-      display_order: Number(awardDisplayOrders[index] ?? index * 10 + 10),
-    });
-  }
+  const awards = awardTitles.map((title, index) => ({
+    title: String(title),
+    meta: String(awardMetas[index] ?? ""),
+    image_url: String(awardImageUrls[index] ?? ""),
+    image_alt: String(awardImageAlts[index] ?? ""),
+    display_order: Number(awardDisplayOrders[index] ?? index + 1),
+  }));
 
   const response = await fetch(`${API_BASE}/api/admin/homepage/profile`, {
     method: "PUT",

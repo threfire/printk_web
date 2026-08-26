@@ -261,6 +261,28 @@ export type HomepageContentData = {
   profile: HomepageProfile;
 };
 
+export type HomepageDanmaku = {
+  id: string;
+  imageKey: string;
+  imageSrc: string;
+  authorAccount: string;
+  authorName: string;
+  text: string;
+  status: "pending" | "approved" | "rejected";
+  reviewedBy: string;
+  reviewedAt: string;
+  createdAt: number;
+  created_at: string;
+};
+
+export type HomepageDanmakuManagementData = {
+  messages: HomepageDanmaku[];
+  summary: {
+    pending: number;
+    approved: number;
+  };
+};
+
 export type RewardRankingItem = {
   rank: number;
   account: string;

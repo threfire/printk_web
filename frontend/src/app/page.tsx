@@ -63,7 +63,7 @@ const fallbackHomepage: HomepageContentData = {
       ...award,
       image_url: "",
       image_alt: "",
-      display_order: (index + 1) * 10,
+      display_order: index + 1,
     })),
     recruitment: {
       season_label: "2028 赛季招新",
@@ -200,11 +200,6 @@ export default async function Home() {
                 查看赛季规划
               </Link>
             </div> : null}
-          </div>
-          <div className="hero-visual" aria-label="战队徽展示区">
-            <div className="emblem-stage">
-              <TeamEmblemPlayer />
-            </div>
             <div className="hero-stats" aria-label="战队概览">
               {homepage.profile.stats.map((stat) => (
                 <div key={stat.label}>
@@ -212,6 +207,11 @@ export default async function Home() {
                   <span>{stat.label}</span>
                 </div>
               ))}
+            </div>
+          </div>
+          <div className="hero-visual" aria-label="战队徽展示区">
+            <div className="emblem-stage">
+              <TeamEmblemPlayer />
             </div>
           </div>
         </section>

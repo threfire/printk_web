@@ -8,15 +8,16 @@ type AdminHomepageContentProps = {
   initialData: HomepageContentData;
 };
 
-type SubmitKind = "save-banner" | "save-profile" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
+type SubmitKind = "save-banner" | "save-profile" | "upload-award" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
 
 type AwardEditor = HomepageAward & { editorId: string };
 
 function awardEditors(profile: HomepageProfile): AwardEditor[] {
-  const awards = profile.awards.length
-    ? profile.awards
-    : [{ title: "", meta: "", image_url: "", image_alt: "", display_order: 10 }];
-  return awards.map((award, index) => ({ ...award, editorId: `award-${index}-${award.image_url}` }));
+  return profile.awards.map((award, index) => ({
+    ...award,
+    display_order: index + 1,
+    editorId: `award-${index}-${award.image_url}`,
+  }));
 }
 
 function formatDateTime(value: unknown) {
@@ -139,6 +140,15 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         return;
       }
 
+      if (kind === "upload-award") {
+        const updatedProfile = await submitHomepageForm<HomepageProfile>(form);
+        setProfile(updatedProfile);
+        setAwards(awardEditors(updatedProfile));
+        form.reset();
+        setFeedback({ type: "ok", text: "荣誉图片已上传" });
+        return;
+      }
+
       if (kind === "upload-asset" || kind === "save-asset") {
         const asset = await submitHomepageForm<HomepageAsset>(form);
         applyAsset(asset);
@@ -176,23 +186,16 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
 
   const isBusy = (kind: SubmitKind, action: string, id = "") => busyForm === `${kind}-${action}-${id}`;
 
-  const addAward = () => {
-    setAwards((current) => {
-      if (current.length >= 12) return current;
-      const nextOrder = current.reduce((maximum, award) => Math.max(maximum, award.display_order), 0) + 10;
-      return [...current, {
-        title: "",
-        meta: "",
-        image_url: "",
-        image_alt: "",
-        display_order: nextOrder,
-        editorId: `award-new-${crypto.randomUUID()}`,
-      }];
-    });
+  const removeAward = (editorId: string) => {
+    setAwards((current) => current
+      .filter((award) => award.editorId !== editorId)
+      .map((award, index) => ({ ...award, display_order: index + 1 })));
   };
 
-  const removeAward = (editorId: string) => {
-    setAwards((current) => current.filter((award) => award.editorId !== editorId));
+  const updateAwardOrder = (editorId: string, displayOrder: number) => {
+    setAwards((current) => current.map((award) => (
+      award.editorId === editorId ? { ...award, display_order: displayOrder } : award
+    )));
   };
 
   return (
@@ -230,7 +233,7 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         </button>
       </form>
 
-      <form className="form admin-content-form admin-home-profile-form" action="/api/admin/homepage/profile" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "save-profile") }>
+      <form className="form admin-content-form admin-home-profile-form" action="/api/admin/homepage/profile" method="post" onSubmit={(event) => handleSubmit(event, "save-profile") }>
         <div className="section-heading">
           <div>
             <span className="eyebrow">HOMEPAGE PROFILE</span>
@@ -336,17 +339,14 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
           <fieldset className="admin-home-editor-card admin-home-awards-editor">
             <legend>奖项与荣誉展示</legend>
             <div className="admin-home-awards-toolbar">
-              <p>每项荣誉可独立上传图片，首页按排序值从小到大展示。</p>
-              <button className="ghost-button" type="button" onClick={addAward} disabled={awards.length >= 12}>
-                新增荣誉
-              </button>
+              <p>首页按连续序号展示，新增内容请使用下方“上传荣誉图片”。</p>
             </div>
             <div className="admin-home-awards-grid">
               {awards.map((award, index) => (
                 <article className="admin-home-award-editor" key={award.editorId}>
                   <div className="admin-home-award-heading">
                     <strong>荣誉 {index + 1}</strong>
-                    <button className="text-button" type="button" onClick={() => removeAward(award.editorId)} disabled={awards.length === 1}>
+                    <button className="text-button" type="button" onClick={() => removeAward(award.editorId)}>
                       移除
                     </button>
                   </div>
@@ -358,11 +358,7 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
                     <label htmlFor={`home-award-meta-${index}`}>说明</label>
                     <textarea id={`home-award-meta-${index}`} name="award_meta" defaultValue={award.meta} rows={2} maxLength={240} />
                   </div>
-                  <div className="field">
-                    <label htmlFor={`home-award-image-file-${index}`}>上传展示图片</label>
-                    <input id={`home-award-image-file-${index}`} name="award_image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-                    <input name="award_image_url" type="hidden" value={award.image_url} readOnly />
-                  </div>
+                  <input name="award_image_url" type="hidden" value={award.image_url} readOnly />
                   {award.image_url ? (
                     <div className="admin-home-award-preview">
                       <Image src={award.image_url} alt={award.image_alt || award.title} width={480} height={300} />
@@ -375,7 +371,16 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
                   </div>
                   <div className="field">
                     <label htmlFor={`home-award-order-${index}`}>排序</label>
-                    <input id={`home-award-order-${index}`} name="award_display_order" type="number" min="0" max="9999" defaultValue={award.display_order} required />
+                    <input
+                      id={`home-award-order-${index}`}
+                      name="award_display_order"
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={award.display_order}
+                      onChange={(event) => updateAwardOrder(award.editorId, Number(event.target.value))}
+                      required
+                    />
                   </div>
                 </article>
               ))}
@@ -426,6 +431,35 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
           </div>
           <button className="button" type="submit" disabled={isBusy("upload-asset", "/api/admin/homepage/assets")}>
             上传图片
+          </button>
+        </form>
+
+        <form className="form admin-content-form" action="/api/admin/homepage/awards" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "upload-award")}>
+          <h3>上传荣誉图片</h3>
+          <div className="field">
+            <label htmlFor="home-award-upload-file">图片文件</label>
+            <input id="home-award-upload-file" name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required />
+          </div>
+          <div className="form-grid">
+            <div className="field">
+              <label htmlFor="home-award-upload-title">荣誉名称</label>
+              <input id="home-award-upload-title" name="title" maxLength={100} required />
+            </div>
+            <div className="field">
+              <label htmlFor="home-award-upload-order">排序</label>
+              <input id="home-award-upload-order" name="display_order" type="number" min="1" max="12" defaultValue={awards.length + 1} required />
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="home-award-upload-meta">荣誉说明</label>
+            <textarea id="home-award-upload-meta" name="meta" rows={2} maxLength={240} />
+          </div>
+          <div className="field">
+            <label htmlFor="home-award-upload-alt">图片说明</label>
+            <input id="home-award-upload-alt" name="image_alt" maxLength={160} placeholder="用于无障碍说明" />
+          </div>
+          <button className="button" type="submit" disabled={isBusy("upload-award", "/api/admin/homepage/awards") || awards.length >= 12}>
+            上传荣誉图片
           </button>
         </form>
 
