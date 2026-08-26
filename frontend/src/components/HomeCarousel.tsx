@@ -34,7 +34,6 @@ type DanmakuMessage = {
   delay: number;
 };
 
-type DanmakuStore = Record<string, DanmakuMessage[]>;
 type DanmakuResponse = {
   messages?: Array<Partial<DanmakuMessage> & { imageKey?: string; imageSrc?: string }>;
 };
@@ -79,7 +78,7 @@ function getSlot(index: number, activeIndex: number, direction: 1 | -1, total: n
   return backward < forward ? "hidden-left" : "hidden-right";
 }
 
-function messageList(value: unknown, expectedImageKey: string): DanmakuMessage[] {
+function messageList(value: unknown): DanmakuMessage[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -94,8 +93,7 @@ function messageList(value: unknown, expectedImageKey: string): DanmakuMessage[]
       return (
         typeof message.id === "string" &&
         typeof message.text === "string" &&
-        message.text.trim().length > 0 &&
-        message.imageKey === expectedImageKey
+        message.text.trim().length > 0
       );
     })
     .map((message, index) => ({
@@ -113,18 +111,14 @@ function messageList(value: unknown, expectedImageKey: string): DanmakuMessage[]
     }));
 }
 
-async function fetchDanmakuMessages(imageKey: string) {
-  if (!imageKey) {
-    return null;
-  }
-
-  const response = await fetch(`/api/homepage/danmaku?image_key=${encodeURIComponent(imageKey)}`, { cache: "no-store" });
+async function fetchDanmakuMessages() {
+  const response = await fetch("/api/homepage/danmaku", { cache: "no-store" });
   if (!response.ok) {
     return null;
   }
 
   const body = (await response.json()) as DanmakuResponse;
-  return messageList(body.messages, imageKey);
+  return messageList(body.messages);
 }
 
 export function HomeQuoteCarousel({ quotes }: { quotes: CarouselQuote[] }) {
@@ -170,10 +164,9 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
   const [direction, setDirection] = useState<1 | -1>(1);
   const [paused, setPaused] = useState(false);
   const [danmakuEnabled, setDanmakuEnabled] = useState(true);
-  const [danmakuByImage, setDanmakuByImage] = useState<DanmakuStore>({});
+  const [danmakuMessages, setDanmakuMessages] = useState<DanmakuMessage[]>([]);
   const [danmakuDraft, setDanmakuDraft] = useState("");
   const activeImage = images[activeIndex];
-  const activeImageKey = activeImage?.imageKey ?? "";
 
   const goNext = () => {
     if (images.length < 2) {
@@ -215,22 +208,19 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
   }, [images.length, paused]);
 
   useEffect(() => {
-    if (!activeImageKey || !enableInteractive) {
+    if (!enableInteractive) {
       return undefined;
     }
 
     let active = true;
     const refresh = () => {
-      void fetchDanmakuMessages(activeImageKey)
+      void fetchDanmakuMessages()
         .then((messages) => {
           if (!active || !messages) {
             return;
           }
 
-          setDanmakuByImage((current) => ({
-            ...current,
-            [activeImageKey]: messages,
-          }));
+          setDanmakuMessages(messages);
         })
         .catch(() => null);
     };
@@ -245,13 +235,11 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
       window.clearTimeout(firstTimer);
       window.clearInterval(timer);
     };
-  }, [activeImageKey, enableInteractive]);
+  }, [enableInteractive]);
 
   if (images.length === 0) {
     return null;
   }
-
-  const activeMessages = enableInteractive ? danmakuByImage[activeImageKey] ?? [] : [];
 
   const sendDanmaku = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -275,19 +263,13 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
       }
       const body = (await response.json()) as { message?: DanmakuMessage };
       const nextMessage = body.message;
-      if (nextMessage?.imageKey === activeImage.imageKey) {
-        setDanmakuByImage((current) => ({
-          ...current,
-          [activeImage.imageKey]: [...(current[activeImage.imageKey] ?? []), nextMessage],
-        }));
+      if (nextMessage) {
+        setDanmakuMessages((current) => [...current, nextMessage]);
       } else {
-        void fetchDanmakuMessages(activeImage.imageKey)
+        void fetchDanmakuMessages()
           .then((messages) => {
             if (messages) {
-              setDanmakuByImage((current) => ({
-                ...current,
-                [activeImage.imageKey]: messages,
-              }));
+              setDanmakuMessages(messages);
             }
           })
           .catch(() => null);
@@ -319,26 +301,26 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
               loading={index < 3 ? "eager" : "lazy"}
               sizes="(max-width: 1180px) 98vw, 1150px"
             />
-            {index === activeIndex && activeMessages.length ? (
-              <div className="danmaku-stage" data-enabled={danmakuEnabled ? "true" : "false"} aria-hidden="true">
-                {activeMessages.map((message) => (
-                  <span
-                    className="danmaku-item"
-                    key={`${activeImage.imageKey}-${message.id}`}
-                    style={{
-                      top: `${0.9 + message.track * 2.35}rem`,
-                      color: message.color,
-                      animationDuration: `${message.duration}s`,
-                      animationDelay: `${message.delay}s`,
-                    }}
-                  >
-                    {message.authorName ? `${message.authorName}：${message.text}` : message.text}
-                  </span>
-                ))}
-              </div>
-            ) : null}
           </div>
         ))}
+        {enableInteractive && danmakuMessages.length ? (
+          <div className="danmaku-stage" data-enabled={danmakuEnabled ? "true" : "false"} aria-hidden="true">
+            {danmakuMessages.map((message) => (
+              <span
+                className="danmaku-item"
+                key={message.id}
+                style={{
+                  top: `${0.9 + message.track * 2.35}rem`,
+                  color: message.color,
+                  animationDuration: `${message.duration}s`,
+                  animationDelay: `${message.delay}s`,
+                }}
+              >
+                {message.authorName ? `${message.authorName}：${message.text}` : message.text}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {enableInteractive ? <form className="danmaku-panel" onSubmit={sendDanmaku}>
@@ -351,7 +333,7 @@ export function HomeCarousel({ images, accountName = "", enableInteractive = tru
           {danmakuEnabled ? "弹幕开" : "弹幕关"}
         </button>
         <input
-          aria-label="给当前图片发送弹幕"
+          aria-label="给首页轮播发送弹幕"
           maxLength={48}
           placeholder="请发弹幕留下你想说的话吧 (｡･ω･｡)ﾉ♡"
           value={danmakuDraft}

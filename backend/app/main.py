@@ -2322,24 +2322,40 @@ def normalize_danmaku_image_key(value: str) -> str:
 
 def list_homepage_danmaku(image_key: str | None = None) -> dict[str, Any]:
     normalized_image_key = normalize_danmaku_image_key(image_key or "")
-    if not normalized_image_key:
-        return {"messages": []}
-
     with db_connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT
-                danmaku.*,
-                account.full_name AS account_full_name
-            FROM homepage_danmaku AS danmaku
-            LEFT JOIN site_account AS account
-                ON account.account = danmaku.author_account
-            WHERE danmaku.image_key = ?
-            ORDER BY created_at_ms ASC
-            LIMIT 120
-            """,
-            (normalized_image_key,),
-        ).fetchall()
+        if normalized_image_key:
+            rows = conn.execute(
+                """
+                SELECT
+                    danmaku.*,
+                    account.full_name AS account_full_name
+                FROM homepage_danmaku AS danmaku
+                LEFT JOIN site_account AS account
+                    ON account.account = danmaku.author_account
+                WHERE danmaku.image_key = ?
+                ORDER BY created_at_ms ASC
+                LIMIT 120
+                """,
+                (normalized_image_key,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                WITH recent_danmaku AS (
+                    SELECT *
+                    FROM homepage_danmaku
+                    ORDER BY created_at_ms DESC
+                    LIMIT 240
+                )
+                SELECT
+                    danmaku.*,
+                    account.full_name AS account_full_name
+                FROM recent_danmaku AS danmaku
+                LEFT JOIN site_account AS account
+                    ON account.account = danmaku.author_account
+                ORDER BY created_at_ms ASC
+                """
+            ).fetchall()
     return {"messages": [homepage_danmaku_response(row) for row in rows]}
 
 

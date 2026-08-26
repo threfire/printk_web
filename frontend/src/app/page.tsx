@@ -216,7 +216,7 @@ export default async function Home() {
       <section className="home-recruitment" id="home-recruitment" aria-labelledby="home-recruitment-title">
         <div className="home-recruitment-heading">
           <span className="eyebrow">2028 赛季招新</span>
-          <h2 id="home-recruitment-title">加入 PRINTK，把热爱做成能上场的机器人</h2>
+          <h2 id="home-recruitment-title">加入 PRINTK，<br />把热爱做成能上场的机器人</h2>
           <p>从赛事认知到分组实践，找到适合自己的方向，和队友一起把想法做成真正能上场的机器人。</p>
         </div>
         <div className="home-recruitment-blocks">

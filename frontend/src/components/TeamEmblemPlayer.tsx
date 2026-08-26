@@ -72,6 +72,18 @@ export function TeamEmblemPlayer() {
   return (
     <div className={`team-record-player${isPlaying ? " is-playing" : ""}`}>
       <button
+        className="record-skip record-skip-prev"
+        type="button"
+        onClick={() => changeTrack(-1)}
+        disabled={tracks.length < 2}
+        aria-label="上一首"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M15.5 5.5 9 12l6.5 6.5M7 6v12" />
+        </svg>
+      </button>
+
+      <button
         className="team-record"
         type="button"
         onClick={togglePlayback}
@@ -83,19 +95,29 @@ export function TeamEmblemPlayer() {
         <span className="record-spindle" aria-hidden="true" />
       </button>
 
-      <span className="record-tonearm" aria-hidden="true">
-        <i />
-      </span>
+      <Image
+        className="record-player-overlay"
+        src="/team-record-player-overlay.png"
+        alt=""
+        width={1254}
+        height={1254}
+        aria-hidden="true"
+        priority
+      />
 
-      <div className="record-controls">
-        <button type="button" onClick={() => changeTrack(-1)} disabled={tracks.length < 2} aria-label="上一首">
-          <span aria-hidden="true">◀</span>
-        </button>
-        <p title={playbackLabel}>{playbackLabel}</p>
-        <button type="button" onClick={() => changeTrack(1)} disabled={tracks.length < 2} aria-label="下一首">
-          <span aria-hidden="true">▶</span>
-        </button>
-      </div>
+      <button
+        className="record-skip record-skip-next"
+        type="button"
+        onClick={() => changeTrack(1)}
+        disabled={tracks.length < 2}
+        aria-label="下一首"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m8.5 5.5 6.5 6.5-6.5 6.5M17 6v12" />
+        </svg>
+      </button>
+
+      <p className="record-track-label" title={playbackLabel}>{playbackLabel}</p>
 
       {currentTrack ? (
         <audio
