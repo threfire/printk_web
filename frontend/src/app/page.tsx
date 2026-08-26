@@ -59,7 +59,12 @@ const fallbackHomepage: HomepageContentData = {
       { value: "7", label: "兵种方向" },
       { value: "2026", label: "赛季规划" },
     ],
-    awards: awardPlaceholders.map((award) => ({ ...award, image_url: "", image_alt: "" })),
+    awards: awardPlaceholders.map((award, index) => ({
+      ...award,
+      image_url: "",
+      image_alt: "",
+      display_order: (index + 1) * 10,
+    })),
     recruitment: {
       season_label: "2028 赛季招新",
       title: "加入 PRINTK，\n把热爱做成能上场的机器人",

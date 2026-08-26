@@ -222,6 +222,7 @@ export type HomepageAward = {
   meta: string;
   image_url: string;
   image_alt: string;
+  display_order: number;
 };
 
 export type HomepageRecruitmentGroup = {

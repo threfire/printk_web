@@ -97,7 +97,7 @@ export function TeamEmblemPlayer() {
 
       <Image
         className="record-player-overlay"
-        src="/team-record-player-overlay.png"
+        src="/team-record-player-overlay-flat-v2.png"
         alt=""
         width={1254}
         height={1254}

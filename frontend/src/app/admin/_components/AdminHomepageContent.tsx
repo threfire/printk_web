@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { type FormEvent, useState } from "react";
-import type { HomepageAsset, HomepageContentData, HomepageProfile, HomepageQuote, HomepageRecruitmentBanner } from "@/lib/api";
+import type { HomepageAsset, HomepageAward, HomepageContentData, HomepageProfile, HomepageQuote, HomepageRecruitmentBanner } from "@/lib/api";
 
 type AdminHomepageContentProps = {
   initialData: HomepageContentData;
@@ -10,10 +10,13 @@ type AdminHomepageContentProps = {
 
 type SubmitKind = "save-banner" | "save-profile" | "upload-asset" | "save-asset" | "delete-asset" | "create-quote" | "save-quote" | "delete-quote";
 
-const blankAward = { title: "", meta: "", image_url: "", image_alt: "" };
+type AwardEditor = HomepageAward & { editorId: string };
 
-function awardSlots(profile: HomepageProfile) {
-  return [...profile.awards, ...Array.from({ length: Math.max(0, 6 - profile.awards.length) }, () => ({ ...blankAward }))];
+function awardEditors(profile: HomepageProfile): AwardEditor[] {
+  const awards = profile.awards.length
+    ? profile.awards
+    : [{ title: "", meta: "", image_url: "", image_alt: "", display_order: 10 }];
+  return awards.map((award, index) => ({ ...award, editorId: `award-${index}-${award.image_url}` }));
 }
 
 function formatDateTime(value: unknown) {
@@ -73,6 +76,7 @@ async function submitHomepageForm<T>(form: HTMLFormElement): Promise<T> {
 
 export function AdminHomepageContent({ initialData }: AdminHomepageContentProps) {
   const [profile, setProfile] = useState(initialData.profile);
+  const [awards, setAwards] = useState<AwardEditor[]>(() => awardEditors(initialData.profile));
   const [recruitmentBanner, setRecruitmentBanner] = useState<HomepageRecruitmentBanner>(() => initialData.recruitment_banner ?? {
     text: "2027赛季招新中",
     action_text: "点击跳转",
@@ -130,6 +134,7 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
       if (kind === "save-profile") {
         const updatedProfile = await submitHomepageForm<HomepageProfile>(form);
         setProfile(updatedProfile);
+        setAwards(awardEditors(updatedProfile));
         setFeedback({ type: "ok", text: "首页基础内容已保存" });
         return;
       }
@@ -171,6 +176,25 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
 
   const isBusy = (kind: SubmitKind, action: string, id = "") => busyForm === `${kind}-${action}-${id}`;
 
+  const addAward = () => {
+    setAwards((current) => {
+      if (current.length >= 12) return current;
+      const nextOrder = current.reduce((maximum, award) => Math.max(maximum, award.display_order), 0) + 10;
+      return [...current, {
+        title: "",
+        meta: "",
+        image_url: "",
+        image_alt: "",
+        display_order: nextOrder,
+        editorId: `award-new-${crypto.randomUUID()}`,
+      }];
+    });
+  };
+
+  const removeAward = (editorId: string) => {
+    setAwards((current) => current.filter((award) => award.editorId !== editorId));
+  };
+
   return (
     <section className="section admin-section">
       <div className="section-heading">
@@ -206,7 +230,7 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
         </button>
       </form>
 
-      <form className="form admin-content-form admin-home-profile-form" action="/api/admin/homepage/profile" method="post" onSubmit={(event) => handleSubmit(event, "save-profile") }>
+      <form className="form admin-content-form admin-home-profile-form" action="/api/admin/homepage/profile" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "save-profile") }>
         <div className="section-heading">
           <div>
             <span className="eyebrow">HOMEPAGE PROFILE</span>
@@ -311,31 +335,47 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
 
           <fieldset className="admin-home-editor-card admin-home-awards-editor">
             <legend>奖项与荣誉展示</legend>
+            <div className="admin-home-awards-toolbar">
+              <p>每项荣誉可独立上传图片，首页按排序值从小到大展示。</p>
+              <button className="ghost-button" type="button" onClick={addAward} disabled={awards.length >= 12}>
+                新增荣誉
+              </button>
+            </div>
             <div className="admin-home-awards-grid">
-              {awardSlots(profile).map((award, index) => (
-                <article className="admin-home-award-editor" key={`${award.title}-${index}`}>
-                  <strong>荣誉 {index + 1}</strong>
+              {awards.map((award, index) => (
+                <article className="admin-home-award-editor" key={award.editorId}>
+                  <div className="admin-home-award-heading">
+                    <strong>荣誉 {index + 1}</strong>
+                    <button className="text-button" type="button" onClick={() => removeAward(award.editorId)} disabled={awards.length === 1}>
+                      移除
+                    </button>
+                  </div>
                   <div className="field">
                     <label htmlFor={`home-award-title-${index}`}>名称</label>
-                    <input id={`home-award-title-${index}`} name="award_title" defaultValue={award.title} maxLength={100} />
+                    <input id={`home-award-title-${index}`} name="award_title" defaultValue={award.title} maxLength={100} required />
                   </div>
                   <div className="field">
                     <label htmlFor={`home-award-meta-${index}`}>说明</label>
                     <textarea id={`home-award-meta-${index}`} name="award_meta" defaultValue={award.meta} rows={2} maxLength={240} />
                   </div>
                   <div className="field">
-                    <label htmlFor={`home-award-image-${index}`}>展示图片</label>
-                    <select id={`home-award-image-${index}`} name="award_image_url" defaultValue={award.image_url}>
-                      <option value="">使用荣誉占位图形</option>
-                      {award.image_url && !images.some((image) => image.url === award.image_url) ? <option value={award.image_url}>{award.image_url}</option> : null}
-                      {images.map((image) => (
-                        <option value={image.url} key={image.id}>{image.alt || image.original_filename || image.url}</option>
-                      ))}
-                    </select>
+                    <label htmlFor={`home-award-image-file-${index}`}>上传展示图片</label>
+                    <input id={`home-award-image-file-${index}`} name="award_image_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                    <input name="award_image_url" type="hidden" value={award.image_url} readOnly />
                   </div>
+                  {award.image_url ? (
+                    <div className="admin-home-award-preview">
+                      <Image src={award.image_url} alt={award.image_alt || award.title} width={480} height={300} />
+                      <span>当前图片</span>
+                    </div>
+                  ) : null}
                   <div className="field">
                     <label htmlFor={`home-award-alt-${index}`}>图片说明</label>
                     <input id={`home-award-alt-${index}`} name="award_image_alt" defaultValue={award.image_alt} maxLength={160} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-award-order-${index}`}>排序</label>
+                    <input id={`home-award-order-${index}`} name="award_display_order" type="number" min="0" max="9999" defaultValue={award.display_order} required />
                   </div>
                 </article>
               ))}

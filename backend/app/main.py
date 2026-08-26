@@ -647,12 +647,12 @@ HOME_PROFILE_STATS = [
     {"value": "2026", "label": "赛季规划"},
 ]
 HOME_PROFILE_AWARDS = [
-    {"title": "RoboMaster 赛事奖项", "meta": "奖状图片占位", "image_url": "", "image_alt": ""},
-    {"title": "赛季工程成果", "meta": "奖杯图片占位", "image_url": "", "image_alt": ""},
-    {"title": "校级竞赛荣誉", "meta": "证书图片占位", "image_url": "", "image_alt": ""},
-    {"title": "技术创新成果", "meta": "奖项图片占位", "image_url": "", "image_alt": ""},
-    {"title": "团队建设荣誉", "meta": "合影图片占位", "image_url": "", "image_alt": ""},
-    {"title": "年度贡献奖项", "meta": "荣誉图片占位", "image_url": "", "image_alt": ""},
+    {"title": "RoboMaster 赛事奖项", "meta": "奖状图片占位", "image_url": "", "image_alt": "", "display_order": 10},
+    {"title": "赛季工程成果", "meta": "奖杯图片占位", "image_url": "", "image_alt": "", "display_order": 20},
+    {"title": "校级竞赛荣誉", "meta": "证书图片占位", "image_url": "", "image_alt": "", "display_order": 30},
+    {"title": "技术创新成果", "meta": "奖项图片占位", "image_url": "", "image_alt": "", "display_order": 40},
+    {"title": "团队建设荣誉", "meta": "合影图片占位", "image_url": "", "image_alt": "", "display_order": 50},
+    {"title": "年度贡献奖项", "meta": "荣誉图片占位", "image_url": "", "image_alt": "", "display_order": 60},
 ]
 HOME_RECRUITMENT_CONTENT = {
     "season_label": "2028 赛季招新",
@@ -2017,7 +2017,16 @@ def homepage_profile_response(row: sqlite3.Row) -> dict[str, Any]:
     except json.JSONDecodeError:
         stats = HOME_PROFILE_STATS
     try:
-        awards = json.loads(row["awards_json"] or "[]")
+        saved_awards = json.loads(row["awards_json"] or "[]")
+        awards = [
+            {
+                **award,
+                "display_order": award.get("display_order", (index + 1) * 10),
+            }
+            for index, award in enumerate(saved_awards)
+            if isinstance(award, dict)
+        ]
+        awards.sort(key=lambda award: award["display_order"])
     except json.JSONDecodeError:
         awards = HOME_PROFILE_AWARDS
     try:
@@ -2151,9 +2160,17 @@ def update_homepage_profile(payload: "HomepageProfileUpdate") -> dict[str, Any]:
         meta = normalize_limited_text(item.meta, "奖项说明", 240)
         image_url = normalize_limited_text(item.image_url, "奖项图片地址", 500)
         image_alt = normalize_limited_text(item.image_alt, "奖项图片说明", 160)
+        display_order = normalize_homepage_order(item.display_order)
         if not title:
             continue
-        awards.append({"title": title, "meta": meta, "image_url": image_url, "image_alt": image_alt})
+        awards.append({
+            "title": title,
+            "meta": meta,
+            "image_url": image_url,
+            "image_alt": image_alt,
+            "display_order": display_order,
+        })
+    awards.sort(key=lambda award: award["display_order"])
 
     recruitment = {
         "season_label": normalize_limited_text(payload.recruitment.season_label, "招新赛季标签", 40),
@@ -2224,6 +2241,29 @@ def normalize_homepage_kind(value: str) -> str:
 
 def media_url(filename: str) -> str:
     return f"/api/site-media/{quote(filename)}"
+
+
+async def save_homepage_award_image(upload: UploadFile) -> dict[str, Any]:
+    if not upload.filename:
+        raise HTTPException(status_code=400, detail="请选择荣誉图片")
+    content = await upload.read()
+    if len(content) > MAX_CONTENT_LENGTH:
+        raise HTTPException(status_code=413, detail="图片超过 50MB 上限")
+    mime_type = upload.content_type or ""
+    suffix = Path(upload.filename).suffix.lower()
+    if mime_type not in HOME_IMAGE_MIME_TYPES or suffix not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+        raise HTTPException(status_code=400, detail="荣誉图片只支持 jpg、png、webp、gif")
+
+    media_id = uuid.uuid4().hex
+    filename = f"award-{media_id}{suffix}"
+    target_path = SITE_MEDIA_DIR / filename
+    target_path.write_bytes(content)
+    return {
+        "url": media_url(filename),
+        "original_filename": upload.filename,
+        "mime_type": mime_type,
+        "size_bytes": len(content),
+    }
 
 
 async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_order: int) -> dict[str, Any]:
@@ -2624,6 +2664,7 @@ class HomepageAwardItem(BaseModel):
     meta: str = ""
     image_url: str = ""
     image_alt: str = ""
+    display_order: int = 0
 
 
 class HomepageRecruitmentGroupItem(BaseModel):
@@ -2776,6 +2817,14 @@ async def upload_homepage_asset(
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
     return await save_homepage_upload(kind, file, alt, display_order)
+
+
+@app.post("/api/admin/homepage/award-image")
+async def upload_homepage_award_image(
+    file: UploadFile = File(...),
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return await save_homepage_award_image(file)
 
 
 @app.put("/api/admin/homepage/assets/{asset_id}")
