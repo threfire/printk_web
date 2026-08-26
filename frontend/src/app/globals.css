@@ -643,36 +643,38 @@ button {
   padding: 3rem 0 5rem;
 }
 
+body:has(.home-intro-backdrop) .site-frame {
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--bg) 50%, transparent) 0, color-mix(in srgb, var(--bg) 60%, transparent) 50rem, var(--bg) 86rem),
+    url("/home-robomaster-backdrop.jpg") center top / max(100vw, 1800px) auto no-repeat,
+    radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--primary) 24%, transparent), transparent 28rem),
+    radial-gradient(circle at 82% 4%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 32rem),
+    linear-gradient(135deg, var(--bg), var(--bg-soft));
+}
+
+body:has(.home-intro-backdrop) .site-header {
+  background: color-mix(in srgb, var(--bg) 58%, transparent);
+}
+
+body:has(.home-intro-backdrop) .page {
+  padding-top: 1.25rem;
+}
+
+.theme-root[data-theme="light"] .site-frame:has(.home-intro-backdrop) {
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--bg) 62%, transparent) 0, color-mix(in srgb, var(--bg) 70%, transparent) 50rem, var(--bg) 86rem),
+    url("/home-robomaster-backdrop.jpg") center top / max(100vw, 1800px) auto no-repeat,
+    radial-gradient(circle at 18% 10%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 28rem),
+    radial-gradient(circle at 82% 4%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 32rem),
+    linear-gradient(135deg, var(--bg), var(--bg-soft));
+}
+
 .home-intro-backdrop {
   position: relative;
-  isolation: isolate;
   margin: -0.75rem -0.75rem -2rem;
   overflow: hidden;
   border-radius: calc(var(--radius) + 0.35rem);
   padding: 0.75rem 0.75rem 4rem;
-}
-
-.home-intro-backdrop::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  content: "";
-  background: url("/home-robomaster-backdrop.jpg") center top / cover no-repeat;
-  filter: saturate(0.68) brightness(0.72);
-  opacity: 0.42;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 68%, rgba(0, 0, 0, 0.72) 80%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 68%, rgba(0, 0, 0, 0.72) 80%, transparent 100%);
-  pointer-events: none;
-}
-
-.theme-root[data-theme="light"] .home-intro-backdrop::before {
-  filter: saturate(0.55) brightness(1.06);
-  opacity: 0.24;
-}
-
-.theme-root[data-theme="red"] .home-intro-backdrop::before {
-  filter: saturate(0.72) brightness(0.76);
-  opacity: 0.34;
 }
 
 .season-video {
@@ -719,7 +721,7 @@ button {
 .hero-visual {
   position: relative;
   display: grid;
-  min-height: 400px;
+  min-height: 430px;
   overflow: hidden;
   place-items: center;
   padding: 1.4rem;
@@ -746,6 +748,7 @@ button {
   place-items: center;
   border-radius: 999px;
   background: color-mix(in srgb, var(--surface-strong) 82%, transparent);
+  margin-bottom: 5.5rem;
   overflow: hidden;
 }
 
@@ -1490,12 +1493,12 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 4.25rem;
-  margin-bottom: 0.75rem;
+  min-height: 3.35rem;
+  margin-bottom: 0.6rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--line));
   border-radius: var(--radius);
-  padding: 0.9rem clamp(1rem, 3vw, 1.7rem);
+  padding: 0.58rem clamp(0.9rem, 2.5vw, 1.4rem);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 68%),
     color-mix(in srgb, var(--surface-strong) 88%, transparent);
@@ -1519,7 +1522,7 @@ p {
 }
 
 .home-recruitment-banner span {
-  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-size: clamp(0.95rem, 1.7vw, 1.2rem);
   font-weight: 950;
   letter-spacing: 0.03em;
 }
@@ -3860,7 +3863,12 @@ th {
   }
 
   .hero-visual {
-    min-height: 340px;
+    min-height: 390px;
+  }
+
+  .emblem-stage {
+    width: min(58%, 240px);
+    margin-bottom: 5.25rem;
   }
 }
 
@@ -5633,13 +5641,9 @@ th {
     padding-inline: 0.5rem;
   }
 
-  .home-intro-backdrop::before {
-    background-position: 56% top;
-  }
-
   .home-recruitment-banner {
-    min-height: 3.75rem;
-    padding: 0.75rem 0.9rem;
+    min-height: 3.25rem;
+    padding: 0.55rem 0.8rem;
   }
 
   .home-recruitment-banner strong {
