@@ -145,53 +145,59 @@ export default async function Home() {
   }));
   const mottoItems = quoteItems.length ? quoteItems : carouselQuotes;
   const awardItems = buildAwardItems(homepage);
+  const teamNameParts = homepage.profile.team_name.trim().split(/\s+/);
+  const teamBrand = teamNameParts[0] || homepage.profile.team_name;
+  const teamDescriptor = teamNameParts.slice(1).join(" ");
 
   return (
     <div className="page">
-      {homepage.recruitment_banner ? (
-        <a className="home-recruitment-banner" href="#home-recruitment">
-          <span>{homepage.recruitment_banner.text}</span>
-          <strong>{homepage.recruitment_banner.action_text}<i aria-hidden="true">→</i></strong>
-        </a>
-      ) : null}
-      {video ? (
-        <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
-          <video className="season-video-player" controls playsInline preload="metadata">
-            <source src={video.url} type={video.mime_type || "video/mp4"} />
-          </video>
-        </section>
-      ) : null}
+      <div className="home-intro-backdrop">
+        {homepage.recruitment_banner ? (
+          <a className="home-recruitment-banner" href="#home-recruitment">
+            <span>{homepage.recruitment_banner.text}</span>
+            <strong>{homepage.recruitment_banner.action_text}<i aria-hidden="true">→</i></strong>
+          </a>
+        ) : null}
+        {video ? (
+          <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
+            <video className="season-video-player" controls playsInline preload="metadata">
+              <source src={video.url} type={video.mime_type || "video/mp4"} />
+            </video>
+          </section>
+        ) : null}
 
-      <section className="hero">
-        <div className="hero-copy">
-          <h1 className="hero-title">
-            <span className="hero-title-primary">{homepage.profile.team_name}</span>
-          </h1>
-          <p>{homepage.profile.team_intro}</p>
-          {ENABLE_INTERACTIVE ? <div className="hero-actions">
-            <Link className="button" href="/invoices">
-              进入报销管理
-            </Link>
-            <Link className="ghost-button" href="/season-plan">
-              查看赛季规划
-            </Link>
-          </div> : null}
-        </div>
-        <div className="hero-visual" aria-label="战队徽展示区">
-          <div className="emblem-stage">
-            <Image className="emblem-image" src="/team-logo.jpg" alt="PRINTK 战队徽" width={360} height={360} priority />
-            <div className="emblem-ring" />
+        <section className="hero">
+          <div className="hero-copy">
+            <h1 className="hero-title">
+              <span className="hero-title-primary">{teamBrand}</span>
+              {teamDescriptor ? <span className="hero-title-secondary">{teamDescriptor}</span> : null}
+            </h1>
+            <p>{homepage.profile.team_intro}</p>
+            {ENABLE_INTERACTIVE ? <div className="hero-actions">
+              <Link className="button" href="/invoices">
+                进入报销管理
+              </Link>
+              <Link className="ghost-button" href="/season-plan">
+                查看赛季规划
+              </Link>
+            </div> : null}
           </div>
-          <div className="hero-stats" aria-label="战队概览">
-            {homepage.profile.stats.map((stat) => (
-              <div key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-              </div>
-            ))}
+          <div className="hero-visual" aria-label="战队徽展示区">
+            <div className="emblem-stage">
+              <Image className="emblem-image" src="/team-logo.jpg" alt="PRINTK 战队徽" width={360} height={360} priority />
+              <div className="emblem-ring" />
+            </div>
+            <div className="hero-stats" aria-label="战队概览">
+              {homepage.profile.stats.map((stat) => (
+                <div key={stat.label}>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <HomeCarousel images={carouselImageItems} accountName={accountName} enableInteractive />
 

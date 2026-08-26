@@ -643,6 +643,38 @@ button {
   padding: 3rem 0 5rem;
 }
 
+.home-intro-backdrop {
+  position: relative;
+  isolation: isolate;
+  margin: -0.75rem -0.75rem -2rem;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 0.35rem);
+  padding: 0.75rem 0.75rem 4rem;
+}
+
+.home-intro-backdrop::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background: url("/home-robomaster-backdrop.jpg") center top / cover no-repeat;
+  filter: saturate(0.68) brightness(0.72);
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 68%, rgba(0, 0, 0, 0.72) 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 68%, rgba(0, 0, 0, 0.72) 80%, transparent 100%);
+  pointer-events: none;
+}
+
+.theme-root[data-theme="light"] .home-intro-backdrop::before {
+  filter: saturate(0.55) brightness(1.06);
+  opacity: 0.24;
+}
+
+.theme-root[data-theme="red"] .home-intro-backdrop::before {
+  filter: saturate(0.72) brightness(0.76);
+  opacity: 0.34;
+}
+
 .season-video {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -681,16 +713,16 @@ button {
 }
 
 .hero-copy {
-  padding: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(1.35rem, 3.5vw, 2.6rem);
 }
 
 .hero-visual {
   position: relative;
   display: grid;
-  min-height: 480px;
+  min-height: 400px;
   overflow: hidden;
   place-items: center;
-  padding: 2rem;
+  padding: 1.4rem;
 }
 
 .hero-visual::before {
@@ -709,7 +741,7 @@ button {
   position: relative;
   z-index: 1;
   display: grid;
-  width: min(78%, 360px);
+  width: min(66%, 290px);
   aspect-ratio: 1;
   place-items: center;
   border-radius: 999px;
@@ -792,7 +824,7 @@ h1 {
 .hero-title {
   display: grid;
   gap: 0.34rem;
-  max-width: 12ch;
+  max-width: 100%;
   line-height: 0.9;
 }
 
@@ -802,13 +834,14 @@ h1 {
 }
 
 .hero-title-primary {
-  font-size: clamp(4.25rem, 10vw, 8rem);
+  font-size: clamp(3.5rem, 8vw, 6.5rem);
   font-weight: 950;
 }
 
 .hero-title-secondary {
-  font-size: clamp(1.65rem, 4.4vw, 3.3rem);
-  line-height: 1.05;
+  font-size: clamp(1.3rem, 2.7vw, 2.15rem);
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 h2 {
@@ -3827,7 +3860,7 @@ th {
   }
 
   .hero-visual {
-    min-height: 360px;
+    min-height: 340px;
   }
 }
 
@@ -5595,6 +5628,15 @@ th {
 }
 
 @media (max-width: 760px) {
+  .home-intro-backdrop {
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+  }
+
+  .home-intro-backdrop::before {
+    background-position: 56% top;
+  }
+
   .home-recruitment-banner {
     min-height: 3.75rem;
     padding: 0.75rem 0.9rem;
