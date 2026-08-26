@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
 import { HomeCarousel, HomeQuoteCarousel } from "@/components/HomeCarousel";
+import { TeamEmblemPlayer } from "@/components/TeamEmblemPlayer";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
@@ -184,8 +185,7 @@ export default async function Home() {
           </div>
           <div className="hero-visual" aria-label="战队徽展示区">
             <div className="emblem-stage">
-              <Image className="emblem-image" src="/team-logo.jpg" alt="PRINTK 战队徽" width={360} height={360} priority />
-              <div className="emblem-ring" />
+              <TeamEmblemPlayer />
             </div>
             <div className="hero-stats" aria-label="战队概览">
               {homepage.profile.stats.map((stat) => (

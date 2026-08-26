@@ -94,6 +94,9 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </details>
+            <a href="https://gzu-printk.yuque.com" target="_blank" rel="noreferrer">
+              战队语雀库
+            </a>
           </nav>
           <div className="header-actions">
             {accountFeedback ? <span className="account-feedback">{accountFeedback}</span> : null}
