@@ -272,16 +272,21 @@ export default async function Home() {
         </div>
       </footer>
 
-      <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
-        联系我们
-      </a>
-      <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
-        <span className="home-reward-mark" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </span>
-      </Link>
+      <div className="home-floating-actions">
+        <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
+          <span className="home-reward-mark" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+        </Link>
+        <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
+          <svg aria-hidden="true" viewBox="0 0 32 32">
+            <path d="M6 17v-2a10 10 0 0 1 20 0v2" />
+            <path d="M6 16H4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h2ZM26 16h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2ZM26 24c0 3-2.5 5-6 5h-2" />
+          </svg>
+        </a>
+      </div>
       <div className="home-contact-popover" id="home-contact" role="dialog" aria-modal="true" aria-labelledby="home-contact-title">
         <a className="home-contact-dismiss" href="#" aria-label="关闭联系我们弹窗" />
         <div className="home-contact-dialog">

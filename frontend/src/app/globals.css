@@ -2392,9 +2392,7 @@ p {
   color: var(--text);
 }
 
-.forum-new-post-fab,
-.home-contact-fab,
-.home-reward-fab {
+.forum-new-post-fab {
   position: fixed;
   right: clamp(1rem, 3vw, 1.8rem);
   z-index: 34;
@@ -2425,23 +2423,37 @@ p {
   font-size: 2.15rem;
 }
 
-.home-contact-fab {
+.home-floating-actions {
+  position: fixed;
+  right: clamp(0.75rem, 2vw, 1.25rem);
   bottom: clamp(0.75rem, 2vw, 1.25rem);
-  width: 3.35rem;
-  min-height: 6.3rem;
-  padding: 0.8rem 0.65rem;
-  font-size: 0.9rem;
-  line-height: 1.18;
-  text-align: center;
-  white-space: normal;
-  writing-mode: vertical-rl;
-  text-orientation: upright;
+  z-index: 34;
+  display: grid;
+  gap: 0.85rem;
 }
 
+.home-contact-fab,
 .home-reward-fab {
-  bottom: clamp(9.35rem, 12vw, 10.35rem);
-  width: 3.35rem;
-  height: 3.35rem;
+  position: relative;
+  display: grid;
+  width: 3.1rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  box-shadow: var(--shadow);
+  color: var(--accent);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.home-contact-fab svg {
+  width: 1.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
 .home-reward-mark {
@@ -2473,9 +2485,22 @@ p {
   height: 1.35rem;
 }
 
-.forum-new-post-fab:hover,
 .home-contact-fab:hover,
-.home-reward-fab:hover {
+.home-contact-fab:focus-visible,
+.home-reward-fab:hover,
+.home-reward-fab:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--surface-strong));
+  transform: translateY(-2px);
+}
+
+.home-contact-fab:focus-visible,
+.home-reward-fab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  outline-offset: 3px;
+}
+
+.forum-new-post-fab:hover {
   border-color: color-mix(in srgb, var(--theme-switch-color) 92%, white);
   box-shadow:
     0 18px 44px color-mix(in srgb, var(--theme-switch-color) 36%, transparent),
@@ -2483,9 +2508,7 @@ p {
   transform: translateY(-2px);
 }
 
-.forum-new-post-fab:focus-visible,
-.home-contact-fab:focus-visible,
-.home-reward-fab:focus-visible {
+.forum-new-post-fab:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--theme-switch-color) 78%, white);
   outline-offset: 3px;
 }
@@ -3472,6 +3495,20 @@ th {
   margin: 0;
   color: color-mix(in srgb, var(--text) 82%, var(--muted));
   line-height: 1.8;
+}
+
+.theme-root[data-theme="light"] .home-recruitment-heading h2 {
+  color: #f7fbff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.48);
+}
+
+.theme-root[data-theme="light"] .home-recruitment-heading > p {
+  color: #dceaff;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+
+.theme-root[data-theme="light"] .home-recruitment-heading .eyebrow {
+  color: #76c7ff;
 }
 
 .home-recruitment-blocks {
@@ -5621,6 +5658,21 @@ th {
     bottom: 5.1rem;
     gap: 0.7rem;
     transform: none;
+  }
+
+  body:has(.home-floating-actions) .site-quick-actions {
+    bottom: 7.9rem;
+  }
+
+  .home-floating-actions {
+    right: 0.65rem;
+    bottom: 0.65rem;
+    gap: 0.7rem;
+  }
+
+  .home-contact-fab,
+  .home-reward-fab {
+    width: 2.75rem;
   }
 
   .market-quick-link {
