@@ -5409,14 +5409,14 @@ th {
 
 .flea-market-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 12rem));
   gap: 0.85rem;
+  justify-content: start;
 }
 
 .flea-market-card {
-  display: grid;
-  grid-template-rows: minmax(13rem, 0.9fr) auto;
-  min-height: 21rem;
+  display: block;
+  aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -5434,31 +5434,29 @@ th {
   transform: translateY(-2px);
 }
 
-.flea-market-image {
-  display: block;
-  min-height: 13rem;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--bg) 50%, transparent);
-}
-
-.flea-market-image img,
-.flea-market-detail-image img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .flea-market-card-copy {
   display: grid;
-  gap: 0.45rem;
-  padding: 1rem;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 0.85rem;
 }
 
 .flea-market-card-copy strong {
   overflow-wrap: anywhere;
   color: var(--text);
-  font-size: 1.18rem;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.flea-market-card-summary {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .flea-market-card-copy small {
@@ -5515,12 +5513,9 @@ th {
 
 .flea-market-detail-hero {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 0.55fr);
-  gap: 1rem;
-  align-items: stretch;
+  grid-template-columns: 1fr;
 }
 
-.flea-market-detail-image,
 .flea-market-detail-copy,
 .flea-market-detail-panel {
   border: 1px solid var(--line);
@@ -5529,15 +5524,11 @@ th {
   box-shadow: var(--shadow);
 }
 
-.flea-market-detail-image {
-  min-height: clamp(22rem, 46vw, 38rem);
-  overflow: hidden;
-}
-
 .flea-market-detail-copy {
   display: grid;
-  align-content: end;
+  align-content: start;
   gap: 0.75rem;
+  min-height: 14rem;
   padding: clamp(1.15rem, 3vw, 2rem);
 }
 
@@ -5611,6 +5602,64 @@ th {
   overflow-wrap: anywhere;
   color: var(--text);
   font-weight: 800;
+}
+
+.market-publish-fab {
+  position: fixed;
+  top: calc(50% + 4.4rem);
+  right: clamp(0.75rem, 2vw, 1.25rem);
+  z-index: 35;
+  display: grid;
+  width: 3.1rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+  box-shadow: var(--shadow);
+  color: var(--accent);
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.market-publish-fab:hover {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--surface-strong));
+}
+
+.market-publish-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: none;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+.market-publish-modal:target {
+  display: block;
+}
+
+.market-publish-dismiss {
+  position: absolute;
+  inset: 0;
+}
+
+.market-publish-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: min(44rem, calc(100% - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+  transform: translate(-50%, -50%);
 }
 
 .ssl-page {
@@ -6316,20 +6365,22 @@ th {
   }
 
   .flea-market-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(9.25rem, 1fr));
   }
 
   .flea-market-card {
-    grid-template-rows: minmax(12rem, auto) auto;
-    min-height: 19rem;
+    min-height: 0;
   }
 
   .flea-market-manage-item {
     grid-template-columns: 1fr;
   }
 
-  .flea-market-detail-image {
-    min-height: 18rem;
+  .market-publish-fab {
+    top: auto;
+    right: 0.65rem;
+    bottom: 0.65rem;
+    width: 2.75rem;
   }
 
   .flea-market-meta-list div {

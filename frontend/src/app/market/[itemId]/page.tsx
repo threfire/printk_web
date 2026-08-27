@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { API_BASE } from "@/lib/api";
@@ -57,9 +56,6 @@ export default async function MarketItemPage({ params, searchParams }: MarketIte
   return (
     <div className="page flea-market-detail-page">
       <section className="flea-market-detail-hero">
-        <div className="flea-market-detail-image">
-          <Image src={item.image_src} alt={item.image_alt} width={960} height={620} sizes="(max-width: 900px) 100vw, 54vw" priority />
-        </div>
         <div className="flea-market-detail-copy">
           <span className="eyebrow">IDLE ITEM</span>
           <h1>{item.name}</h1>
@@ -126,10 +122,6 @@ export default async function MarketItemPage({ params, searchParams }: MarketIte
               <div className="field">
                 <label htmlFor="market-name">物品名称</label>
                 <input id="market-name" name="name" defaultValue={item.name} required minLength={2} maxLength={60} />
-              </div>
-              <div className="field">
-                <label htmlFor="market-image">图片路径</label>
-                <input id="market-image" name="image_src" defaultValue={item.image_src} maxLength={200} />
               </div>
               <div className="field">
                 <label htmlFor="market-location">存放位置</label>

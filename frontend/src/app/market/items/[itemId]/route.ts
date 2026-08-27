@@ -45,7 +45,7 @@ export async function POST(request: Request, { params }: MarketItemRouteContext)
       }
     : {
         name: String(form.get("name") ?? ""),
-        image_src: String(form.get("image_src") ?? ""),
+        image_src: "",
         location: String(form.get("location") ?? ""),
         summary: String(form.get("summary") ?? ""),
         detail: String(form.get("detail") ?? ""),

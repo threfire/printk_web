@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import Image from "next/image";
 import Link from "next/link";
 import { API_BASE } from "@/lib/api";
 import { firstParam } from "@/lib/admin-feedback";
@@ -63,61 +62,10 @@ export default async function MarketPage({ searchParams }: MarketPageProps) {
         <p>队内闲置物品展示信息流，成员通过发布人联系完成物品流转。</p>
       </section>
 
-      {ENABLE_INTERACTIVE ? <section className="section flea-market-compose" aria-label="发布闲置物品">
-        <div>
-          <span className="eyebrow">PUBLISH</span>
-          <h2>发布闲置物品</h2>
-        </div>
-        {ok ? <div className="message">{ok}</div> : null}
-        {error ? <div className="message error">{error}</div> : null}
-        {publicState.loadError ? <div className="message error">{publicState.loadError}</div> : null}
-        {mineState.loadError ? <div className="message error">{mineState.loadError}</div> : null}
-        {account ? (
-          <form className="form flea-market-form" action="/market/items" method="post">
-            <div className="form-grid">
-              <div className="field">
-                <label htmlFor="market-name">物品名称</label>
-                <input id="market-name" name="name" required minLength={2} maxLength={60} />
-              </div>
-              <div className="field">
-                <label htmlFor="market-image">图片路径</label>
-                <input id="market-image" name="image_src" placeholder="/robots/engineering-robot.png" maxLength={200} />
-              </div>
-              <div className="field">
-                <label htmlFor="market-location">存放位置</label>
-                <input id="market-location" name="location" required maxLength={120} />
-              </div>
-              <div className="field">
-                <label htmlFor="market-contact">联系方式</label>
-                <input id="market-contact" name="contact" required maxLength={120} />
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="market-summary">简介</label>
-              <input id="market-summary" name="summary" required maxLength={180} />
-            </div>
-            <div className="field">
-              <label htmlFor="market-detail">详细信息</label>
-              <textarea id="market-detail" name="detail" required rows={5} maxLength={2000} />
-            </div>
-            <div className="field">
-              <label htmlFor="market-tags">标签</label>
-              <input id="market-tags" name="tags" placeholder="底盘，调试，结构件" maxLength={120} />
-            </div>
-            <button className="button" type="submit">
-              发布物品
-            </button>
-          </form>
-        ) : (
-          <div className="message error">
-            请先
-            <Link className="text-button" href="/#account-login">
-              登录账号
-            </Link>
-            后发布闲置物品。
-          </div>
-        )}
-      </section> : null}
+      {ok ? <div className="message flea-market-feedback">{ok}</div> : null}
+      {error ? <div className="message error flea-market-feedback">{error}</div> : null}
+      {publicState.loadError ? <div className="message error flea-market-feedback">{publicState.loadError}</div> : null}
+      {mineState.loadError ? <div className="message error flea-market-feedback">{mineState.loadError}</div> : null}
 
       <section className="section flea-market-section" aria-label="闲置物品列表">
         <div className="section-heading">
@@ -128,13 +76,11 @@ export default async function MarketPage({ searchParams }: MarketPageProps) {
           <div className="flea-market-grid">
             {items.map((item) => (
               <Link className="flea-market-card" href={`/market/${item.id}`} key={item.id}>
-                <span className="flea-market-image">
-                  <Image src={item.image_src} alt={item.image_alt} width={720} height={460} sizes="(max-width: 760px) 100vw, 30vw" />
-                </span>
                 <span className="flea-market-card-copy">
                   <span className="badge">{item.status_text}</span>
                   <strong>{item.name}</strong>
-                  <small>{item.owner} · {formatMarketTime(item.created_at)}</small>
+                  <span className="flea-market-card-summary">{item.summary}</span>
+                  <small>{item.owner}</small>
                 </span>
               </Link>
             ))}
@@ -194,6 +140,59 @@ export default async function MarketPage({ searchParams }: MarketPageProps) {
             <div className="message">当前还没有发布记录。</div>
           )}
         </section>
+      ) : null}
+
+      {ENABLE_INTERACTIVE ? (
+        <>
+          <a className="market-publish-fab" href="#market-publish" aria-label="发布闲置物品" title="发布闲置物品">＋</a>
+          <div className="market-publish-modal" id="market-publish" role="dialog" aria-modal="true" aria-labelledby="market-publish-title">
+            <Link className="market-publish-dismiss" href="/market" aria-label="关闭发布窗口" />
+            <section className="market-publish-dialog">
+              <div className="account-modal-heading">
+                <div>
+                  <span className="eyebrow">PUBLISH</span>
+                  <h2 id="market-publish-title">发布闲置物品</h2>
+                </div>
+                <Link className="account-modal-close" href="/market" aria-label="关闭发布窗口">×</Link>
+              </div>
+              {account ? (
+                <form className="form flea-market-form" action="/market/items" method="post">
+                  <div className="form-grid">
+                    <div className="field">
+                      <label htmlFor="market-name">物品名称</label>
+                      <input id="market-name" name="name" required minLength={2} maxLength={60} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="market-location">存放位置</label>
+                      <input id="market-location" name="location" required maxLength={120} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="market-contact">联系方式</label>
+                      <input id="market-contact" name="contact" required maxLength={120} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="market-tags">标签</label>
+                      <input id="market-tags" name="tags" placeholder="底盘，调试，结构件" maxLength={120} />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="market-summary">简介</label>
+                    <input id="market-summary" name="summary" required maxLength={180} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="market-detail">详细信息</label>
+                    <textarea id="market-detail" name="detail" required rows={5} maxLength={2000} />
+                  </div>
+                  <button className="button" type="submit">发布物品</button>
+                </form>
+              ) : (
+                <div className="message error">
+                  请先<Link className="text-button" href="/#account-login">登录账号</Link>后发布闲置物品。
+                </div>
+              )}
+            </section>
+          </div>
+        </>
       ) : null}
     </div>
   );
