@@ -24,6 +24,7 @@ type UploadFeedback = {
 };
 
 const MAX_UPLOAD_BYTES = 60 * 1024 * 1024;
+const MAX_VIDEO_UPLOAD_BYTES = 70 * 1024 * 1024;
 
 function awardEditors(profile: HomepageProfile): AwardEditor[] {
   return profile.awards.map((award, index) => ({
@@ -76,8 +77,10 @@ function submitFormWithProgress<T>(form: HTMLFormElement, onProgress: (percent: 
   return new Promise((resolve, reject) => {
     const formData = new FormData(form);
     const file = formData.get("file");
-    if (file instanceof File && file.size > MAX_UPLOAD_BYTES) {
-      reject(new Error("文件超过 60MB 上限"));
+    const isVideo = formData.get("kind") === "video";
+    const uploadLimit = isVideo ? MAX_VIDEO_UPLOAD_BYTES : MAX_UPLOAD_BYTES;
+    if (file instanceof File && file.size > uploadLimit) {
+      reject(new Error(`文件超过 ${isVideo ? 70 : 60}MB 上限`));
       return;
     }
     const request = new XMLHttpRequest();

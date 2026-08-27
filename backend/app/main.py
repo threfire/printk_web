@@ -48,6 +48,7 @@ TEMP_DIR = STORAGE_DIR / "temp"
 SITE_MEDIA_DIR = STORAGE_DIR / "site_media"
 
 MAX_CONTENT_LENGTH = 60 * 1024 * 1024
+MAX_VIDEO_CONTENT_LENGTH = 70 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")
@@ -2377,8 +2378,10 @@ async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_
     if not upload.filename:
         raise HTTPException(status_code=400, detail="请选择上传文件")
     content = await upload.read()
-    if len(content) > MAX_CONTENT_LENGTH:
-        raise HTTPException(status_code=413, detail="文件超过 60MB 上限")
+    content_limit = MAX_VIDEO_CONTENT_LENGTH if normalized_kind == "video" else MAX_CONTENT_LENGTH
+    if len(content) > content_limit:
+        limit_mb = content_limit // 1024 // 1024
+        raise HTTPException(status_code=413, detail=f"文件超过 {limit_mb}MB 上限")
     mime_type = upload.content_type or ""
     allowed_types = HOME_VIDEO_MIME_TYPES if normalized_kind == "video" else HOME_IMAGE_MIME_TYPES
     if mime_type not in allowed_types:
