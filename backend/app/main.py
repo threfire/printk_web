@@ -2377,11 +2377,6 @@ async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_
     normalized_kind = normalize_homepage_kind(kind)
     if not upload.filename:
         raise HTTPException(status_code=400, detail="请选择上传文件")
-    content = await upload.read()
-    content_limit = MAX_VIDEO_CONTENT_LENGTH if normalized_kind == "video" else MAX_CONTENT_LENGTH
-    if len(content) > content_limit:
-        limit_mb = content_limit // 1024 // 1024
-        raise HTTPException(status_code=413, detail=f"文件超过 {limit_mb}MB 上限")
     mime_type = upload.content_type or ""
     allowed_types = HOME_VIDEO_MIME_TYPES if normalized_kind == "video" else HOME_IMAGE_MIME_TYPES
     if mime_type not in allowed_types:
@@ -2397,36 +2392,55 @@ async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_
     media_id = uuid.uuid4().hex
     filename = f"{normalized_kind}-{media_id}{suffix}"
     target_path = SITE_MEDIA_DIR / filename
-    target_path.write_bytes(content)
+    content_limit = MAX_VIDEO_CONTENT_LENGTH if normalized_kind == "video" else MAX_CONTENT_LENGTH
+    size_bytes = 0
+    try:
+        with target_path.open("wb") as target:
+            while chunk := await upload.read(1024 * 1024):
+                size_bytes += len(chunk)
+                if size_bytes > content_limit:
+                    limit_mb = content_limit // 1024 // 1024
+                    raise HTTPException(status_code=413, detail=f"文件超过 {limit_mb}MB 上限")
+                target.write(chunk)
+    except HTTPException:
+        target_path.unlink(missing_ok=True)
+        raise
+    except OSError as exc:
+        target_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=507, detail="服务器媒体存储空间不足或目录不可写") from exc
     normalized_alt = normalize_limited_text(alt, "媒体说明", 120)
     normalized_order = normalize_homepage_order(display_order)
 
-    with db_connection() as conn:
-        if normalized_kind == "video":
-            conn.execute("UPDATE homepage_asset SET is_enabled = 0, updated_at = ? WHERE kind = 'video'", (timestamp,))
-        conn.execute(
-            """
-            INSERT INTO homepage_asset (
-                id, kind, url, storage_path, original_filename, mime_type, size_bytes,
-                alt, display_order, is_enabled, created_at, updated_at
+    try:
+        with db_connection() as conn:
+            if normalized_kind == "video":
+                conn.execute("UPDATE homepage_asset SET is_enabled = 0, updated_at = ? WHERE kind = 'video'", (timestamp,))
+            conn.execute(
+                """
+                INSERT INTO homepage_asset (
+                    id, kind, url, storage_path, original_filename, mime_type, size_bytes,
+                    alt, display_order, is_enabled, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (
+                    media_id,
+                    normalized_kind,
+                    media_url(filename),
+                    str(target_path),
+                    upload.filename,
+                    mime_type,
+                    size_bytes,
+                    normalized_alt,
+                    normalized_order,
+                    timestamp,
+                    timestamp,
+                ),
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
-            """,
-            (
-                media_id,
-                normalized_kind,
-                media_url(filename),
-                str(target_path),
-                upload.filename,
-                mime_type,
-                len(content),
-                normalized_alt,
-                normalized_order,
-                timestamp,
-                timestamp,
-            ),
-        )
-        row = conn.execute("SELECT * FROM homepage_asset WHERE id = ?", (media_id,)).fetchone()
+            row = conn.execute("SELECT * FROM homepage_asset WHERE id = ?", (media_id,)).fetchone()
+    except sqlite3.Error as exc:
+        target_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail="媒体记录保存失败，请检查数据库状态") from exc
     return homepage_asset_response(row)
 
 

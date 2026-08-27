@@ -14,14 +14,30 @@ export async function POST(request: Request) {
     redirect(feedbackPath(adminPath, "error", "请先登录管理员后台"));
   }
 
-  const form = await request.formData();
-  const response = await fetch(`${API_BASE}/api/admin/homepage/assets`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: form,
-  });
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.startsWith("multipart/form-data") || !request.body) {
+    return Response.json({ detail: "上传请求格式错误" }, { status: 400 });
+  }
+
+  let response: Response;
+  try {
+    const uploadRequest: RequestInit & { duplex: "half" } = {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": contentType,
+      },
+      body: request.body,
+      duplex: "half",
+    };
+    response = await fetch(`${API_BASE}/api/admin/homepage/assets`, uploadRequest);
+  } catch (error) {
+    const detail = error instanceof Error ? `上传转发失败：${error.message}` : "上传转发失败";
+    if (wantsJson) {
+      return Response.json({ detail }, { status: 502 });
+    }
+    redirect(feedbackPath(adminPath, "error", detail));
+  }
 
   if (!response.ok) {
     if (wantsJson) {
