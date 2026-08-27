@@ -3732,7 +3732,7 @@ th {
 
 .home-awards-carousel {
   position: relative;
-  min-height: clamp(23rem, 36vw, 30rem);
+  min-height: clamp(44rem, 54vw, 46rem);
   overflow: hidden;
   border-radius: calc(var(--radius) * 1.2);
   padding: 0;
@@ -3746,7 +3746,7 @@ th {
 
 .home-awards-stack {
   position: relative;
-  min-height: clamp(22rem, 34vw, 29rem);
+  min-height: clamp(43rem, 53vw, 45rem);
 }
 
 .home-award-card {
@@ -3755,7 +3755,7 @@ th {
   left: 50%;
   display: grid;
   gap: 0.75rem;
-  width: min(62vw, 30rem);
+  width: min(54vw, 24rem);
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--gold) 34%, var(--line));
   border-radius: var(--radius);
@@ -3838,8 +3838,7 @@ th {
   display: grid;
   position: relative;
   overflow: hidden;
-  aspect-ratio: 18 / 11;
-  min-height: 10.5rem;
+  aspect-ratio: 210 / 297;
   place-items: center;
   border: 1px dashed color-mix(in srgb, var(--gold) 54%, var(--line));
   border-radius: var(--radius);
@@ -3849,9 +3848,10 @@ th {
 }
 
 .home-award-media img {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .home-award-media span {
@@ -4560,8 +4560,12 @@ th {
   }
 
   .home-awards-carousel {
-    min-height: 22rem;
+    min-height: 37rem;
     padding: 0.75rem;
+  }
+
+  .home-awards-stack {
+    min-height: 35.5rem;
   }
 
   .home-award-card {
@@ -4569,7 +4573,7 @@ th {
   }
 
   .home-award-media {
-    min-height: 9rem;
+    min-height: 0;
   }
 
   .home-recruitment {

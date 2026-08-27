@@ -124,7 +124,7 @@ export function HomeAwardsCarousel({ awards }: HomeAwardsCarouselProps) {
           <article className="home-award-card" data-slot={getAwardSlot(index, activeIndex, direction, awards.length)} key={`${award.title}-${index}`}>
             {award.image ? (
               <div className="home-award-media">
-                <Image src={award.image.src} alt={award.image.alt} width={720} height={440} sizes="(max-width: 768px) 74vw, 34rem" />
+                <Image src={award.image.src} alt={award.image.alt} width={700} height={990} sizes="(max-width: 560px) 74vw, 24rem" />
               </div>
             ) : (
               <div className="home-award-media" aria-hidden="true">

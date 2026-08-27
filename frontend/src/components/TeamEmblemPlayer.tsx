@@ -5,36 +5,42 @@ import { useEffect, useRef, useState } from "react";
 
 type TeamTrack = {
   title: string;
-  artist: string;
   src: string;
 };
 
 // 将音乐文件放入 public/team-music 后，在这里按播放顺序登记。
 const tracks: TeamTrack[] = [
-  { title: "你", artist: "PRINTK 战队", src: "/team-music/you.mp3" },
-  { title: "三分钟准备 BGM", artist: "机甲大师", src: "/team-music/robomaster-ready.mp4" },
-  { title: "Summoning Glory", artist: "机甲大师", src: "/team-music/summoning-glory.mp4" },
-  { title: "过场 1", artist: "机甲大师", src: "/team-music/robomaster-transition-1.mp4" },
-  { title: "过场音乐", artist: "机甲大师", src: "/team-music/robomaster-transition-3.mp4" },
+  { title: "你", src: "/team-music/you.mp3" },
+  { title: "三分钟准备 BGM", src: "/team-music/robomaster-ready.mp4" },
+  { title: "Summoning Glory", src: "/team-music/summoning-glory.mp4" },
+  { title: "过场 1", src: "/team-music/robomaster-transition-1.mp4" },
+  { title: "过场音乐", src: "/team-music/robomaster-transition-3.mp4" },
 ];
 
 export function TeamEmblemPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const continuePlayingRef = useRef(false);
+  const continuePlayingRef = useRef(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const currentTrack = tracks[currentIndex];
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack || !continuePlayingRef.current) return;
 
-    continuePlayingRef.current = false;
-    audio.play().catch(() => {
-      setIsPlaying(false);
-      setHasPlaybackError(true);
-    });
+    const removeUnlockListeners = () => {
+      document.removeEventListener("pointerdown", attemptPlayback);
+      document.removeEventListener("keydown", attemptPlayback);
+    };
+    const attemptPlayback = () => {
+      audio.play().then(removeUnlockListeners).catch(() => setIsPlaying(false));
+    };
+
+    attemptPlayback();
+    document.addEventListener("pointerdown", attemptPlayback, { once: true });
+    document.addEventListener("keydown", attemptPlayback, { once: true });
+
+    return removeUnlockListeners;
   }, [currentIndex, currentTrack]);
 
   function togglePlayback() {
@@ -42,28 +48,24 @@ export function TeamEmblemPlayer() {
     if (!audio || !currentTrack) return;
 
     if (isPlaying) {
+      continuePlayingRef.current = false;
       audio.pause();
       setIsPlaying(false);
       return;
     }
 
-    setHasPlaybackError(false);
-    audio.play().then(() => setIsPlaying(true)).catch(() => setHasPlaybackError(true));
+    continuePlayingRef.current = true;
+    audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
   }
 
   function changeTrack(offset: number) {
     if (!tracks.length) return;
 
-    continuePlayingRef.current = isPlaying;
-    setHasPlaybackError(false);
+    continuePlayingRef.current = isPlaying || continuePlayingRef.current;
     setCurrentIndex((index) => (index + offset + tracks.length) % tracks.length);
   }
 
-  const playbackLabel = currentTrack
-    ? hasPlaybackError
-      ? "音乐文件暂时无法播放"
-      : `《${currentTrack.title}》 · ${currentTrack.artist}`
-    : "《你》";
+  const playbackLabel = currentTrack ? `《${currentTrack.title}》` : "《你》";
 
   return (
     <div className={`team-record-player${isPlaying ? " is-playing" : ""}`}>
@@ -119,14 +121,12 @@ export function TeamEmblemPlayer() {
         <audio
           ref={audioRef}
           src={currentTrack.src}
+          autoPlay
           preload="metadata"
           loop
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onError={() => {
-            setIsPlaying(false);
-            setHasPlaybackError(true);
-          }}
+          onError={() => setIsPlaying(false)}
         />
       ) : null}
     </div>
