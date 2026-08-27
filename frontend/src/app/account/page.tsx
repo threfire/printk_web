@@ -9,6 +9,7 @@ import {
   type SiteAccountProfile,
 } from "@/lib/account-profile";
 import { API_BASE } from "@/lib/api";
+import { ProfilePhotoUpload } from "@/components/ProfilePhotoUpload";
 
 const emptyProfile: SiteAccountProfile = {
   account: "",
@@ -106,14 +107,7 @@ export default async function AccountPage() {
             ) : (
               <span className="profile-photo-empty" aria-label="尚未上传个人照片" />
             )}
-            <form className="form" action="/account/photo" method="post" encType="multipart/form-data">
-              <div className="field">
-                <label htmlFor="profile-photo">个人照片</label>
-                <input id="profile-photo" name="file" type="file" accept="image/jpeg,image/png,image/webp" required />
-                <small>支持 jpg、png、webp，大小不超过 8MB。</small>
-              </div>
-              <button className="ghost-button" type="submit">上传照片</button>
-            </form>
+            <ProfilePhotoUpload />
           </div>
           <dl className="profile-list">
             <div>

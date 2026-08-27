@@ -74,7 +74,7 @@ async function fetchMembers(): Promise<Member[]> {
 }
 
 function statusText(member: Member) {
-  return member.status === "active" ? "现役队员" : `${member.cohort} 退役队员`;
+  return member.status === "active" ? "" : `${member.cohort} 退役队员`;
 }
 
 function MemberPhoto({ member, className, detail = false }: { member: Member; className: string; detail?: boolean }) {
@@ -99,7 +99,7 @@ function MemberWall({ members, sectionId }: { members: Member[]; sectionId: stri
           <Link className="member-photo-link" href={`/members/${encodeURIComponent(member.id)}`}>
             <MemberPhoto className="member-photo" member={member} />
             <div className="member-basic">
-              <span className="badge">{statusText(member)}</span>
+              {statusText(member) ? <span className="badge">{statusText(member)}</span> : null}
               <h3>{member.name}</h3>
               <p>{member.group} / {member.role}</p>
               <p>{member.summary}</p>
@@ -148,10 +148,6 @@ export default async function MembersPage() {
       </section>
 
       <section className="section member-section" id="active-members">
-        <div className="section-heading">
-          <span className="eyebrow">ACTIVE</span>
-          <h2>现役队员</h2>
-        </div>
         {activeMembers.length ? <MemberWall members={activeMembers} sectionId="active-members" /> : <p className="muted">当前没有现役队员资料。</p>}
       </section>
 

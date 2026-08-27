@@ -1536,8 +1536,13 @@ p {
   margin: 0;
 }
 
+.member-basic h3 {
+  font-size: 1rem;
+}
+
 .member-basic p {
   color: color-mix(in srgb, var(--text) 82%, var(--muted));
+  font-size: 0.82rem;
   line-height: 1.55;
 }
 
@@ -2384,6 +2389,29 @@ p {
 
 .profile-photo-editor small {
   color: var(--muted);
+}
+
+.profile-photo-progress {
+  position: relative;
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.profile-photo-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 160ms ease;
+}
+
+.profile-photo-progress span {
+  position: absolute;
+  top: 0.65rem;
+  right: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .profile-list {
@@ -4158,7 +4186,7 @@ th {
   gap: 0.7rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 0.72rem;
   background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
 }
 
@@ -4637,7 +4665,7 @@ th {
   }
 
   .member-wall {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .member-profile-header {
