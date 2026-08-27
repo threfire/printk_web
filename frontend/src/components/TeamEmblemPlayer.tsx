@@ -33,7 +33,10 @@ export function TeamEmblemPlayer() {
       document.removeEventListener("keydown", attemptPlayback);
     };
     const attemptPlayback = () => {
-      audio.play().then(removeUnlockListeners).catch(() => setIsPlaying(false));
+      audio.play().then(() => {
+        setIsPlaying(true);
+        removeUnlockListeners();
+      }).catch(() => setIsPlaying(false));
     };
 
     attemptPlayback();
