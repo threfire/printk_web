@@ -3879,7 +3879,6 @@ th {
   overflow: hidden;
   aspect-ratio: 210 / 297;
   place-items: center;
-  border: 1px dashed color-mix(in srgb, var(--gold) 54%, var(--line));
   border-radius: var(--radius);
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--gold) 18%, transparent), transparent 60%),
