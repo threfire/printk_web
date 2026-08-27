@@ -49,6 +49,7 @@ SITE_MEDIA_DIR = STORAGE_DIR / "site_media"
 
 MAX_CONTENT_LENGTH = 60 * 1024 * 1024
 MAX_VIDEO_CONTENT_LENGTH = 70 * 1024 * 1024
+MAX_MEMBER_PHOTO_LENGTH = 8 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")
@@ -64,6 +65,7 @@ MARKET_ITEM_STATUSES = {"available", "sold", "delisted"}
 HOME_ASSET_KINDS = {"video", "image"}
 HOME_VIDEO_MIME_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
 HOME_IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MEMBER_PHOTO_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 DANMAKU_TRACKS = 7
 DANMAKU_COLORS = ["#ffffff"]
 
@@ -2305,6 +2307,42 @@ def media_url(filename: str) -> str:
     return f"/api/site-media/{quote(filename)}"
 
 
+async def save_site_account_photo(account: str, upload: UploadFile) -> dict[str, Any]:
+    normalized_account = normalize_account(account)
+    if not upload.filename:
+        raise HTTPException(status_code=400, detail="请选择个人照片")
+    suffix = Path(upload.filename).suffix.lower()
+    mime_type = upload.content_type or ""
+    if mime_type not in MEMBER_PHOTO_MIME_TYPES or suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
+        raise HTTPException(status_code=400, detail="个人照片仅支持 jpg、png、webp")
+    content = await upload.read(MAX_MEMBER_PHOTO_LENGTH + 1)
+    if not content:
+        raise HTTPException(status_code=400, detail="个人照片文件为空")
+    if len(content) > MAX_MEMBER_PHOTO_LENGTH:
+        raise HTTPException(status_code=413, detail="个人照片不能超过 8MB")
+
+    with db_connection() as conn:
+        existing = conn.execute(
+            "SELECT account, is_disabled FROM site_account WHERE account = ?",
+            (normalized_account,),
+        ).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="账号不存在")
+        if existing["is_disabled"]:
+            raise HTTPException(status_code=403, detail="账号已停用，请联系管理员")
+
+    filename = f"member-{uuid.uuid4().hex}{suffix}"
+    (SITE_MEDIA_DIR / filename).write_bytes(content)
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            "UPDATE site_account SET photo_url = ?, updated_at = ? WHERE account = ?",
+            (media_url(filename), timestamp, normalized_account),
+        )
+        row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
+    return site_account_response(row)
+
+
 async def save_homepage_award_image(upload: UploadFile) -> dict[str, Any]:
     if not upload.filename:
         raise HTTPException(status_code=400, detail="请选择荣誉图片")
@@ -3208,6 +3246,11 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
         )
         row = conn.execute("SELECT * FROM site_account WHERE account = ?", (normalized_account,)).fetchone()
     return site_account_response(row)
+
+
+@app.post("/api/site-accounts/{account}/photo")
+async def upload_site_account_photo(account: str, file: UploadFile = File(...)) -> dict[str, Any]:
+    return await save_site_account_photo(account, file)
 
 
 @app.post("/api/ssl/applications", status_code=201)

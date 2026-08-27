@@ -55,7 +55,7 @@ export default async function MarketPage({ searchParams }: MarketPageProps) {
   const myItems = mineState.data.items;
 
   return (
-    <div className="page flea-market-page">
+    <div className="page flea-market-page" id="market-page">
       <section className="section-hero flea-market-hero">
         <span className="eyebrow">IDLE FLOW</span>
         <h1>闲置物品展示</h1>
@@ -68,10 +68,6 @@ export default async function MarketPage({ searchParams }: MarketPageProps) {
       {mineState.loadError ? <div className="message error flea-market-feedback">{mineState.loadError}</div> : null}
 
       <section className="section flea-market-section" aria-label="闲置物品列表">
-        <div className="section-heading">
-          <span className="eyebrow">ITEMS</span>
-          <h2>正在流转</h2>
-        </div>
         {items.length > 0 ? (
           <div className="flea-market-grid">
             {items.map((item) => (
@@ -146,14 +142,14 @@ export default async function MarketPage({ searchParams }: MarketPageProps) {
         <>
           <a className="market-publish-fab" href="#market-publish" aria-label="发布闲置物品" title="发布闲置物品">＋</a>
           <div className="market-publish-modal" id="market-publish" role="dialog" aria-modal="true" aria-labelledby="market-publish-title">
-            <Link className="market-publish-dismiss" href="/market" aria-label="关闭发布窗口" />
+            <a className="market-publish-dismiss" href="#market-page" aria-label="关闭发布窗口" />
             <section className="market-publish-dialog">
               <div className="account-modal-heading">
                 <div>
                   <span className="eyebrow">PUBLISH</span>
                   <h2 id="market-publish-title">发布闲置物品</h2>
                 </div>
-                <Link className="account-modal-close" href="/market" aria-label="关闭发布窗口">×</Link>
+                <a className="account-modal-close" href="#market-page" aria-label="关闭发布窗口">×</a>
               </div>
               {account ? (
                 <form className="form flea-market-form" action="/market/items" method="post">

@@ -934,6 +934,12 @@ h1 {
   line-height: 0.9;
 }
 
+.hero-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
 .hero-title-primary,
 .hero-title-secondary {
   display: block;
@@ -1471,6 +1477,11 @@ p {
   height: 100%;
   object-fit: cover;
   transition: transform 220ms ease, filter 220ms ease;
+}
+
+.member-photo-empty {
+  display: block;
+  background: color-mix(in srgb, var(--surface) 72%, var(--bg));
 }
 
 .home-member-grid {
@@ -2345,6 +2356,34 @@ p {
 .profile-form-card {
   display: grid;
   gap: 1rem;
+}
+
+.profile-photo-editor {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.profile-photo-editor > img,
+.profile-photo-empty {
+  display: block;
+  width: 7rem;
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 72%, var(--bg));
+  object-fit: cover;
+}
+
+.profile-photo-editor form {
+  gap: 0.65rem;
+}
+
+.profile-photo-editor small {
+  color: var(--muted);
 }
 
 .profile-list {
@@ -5387,6 +5426,17 @@ th {
 
 .flea-market-hero h1 {
   max-width: 10ch;
+  font-size: clamp(2rem, 4.2vw, 3.45rem);
+}
+
+.flea-market-hero {
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem 1.15rem;
+}
+
+.flea-market-hero p {
+  margin: 0;
 }
 
 .flea-market-section {

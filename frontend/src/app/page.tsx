@@ -172,7 +172,9 @@ export default async function Home() {
   const recruitment = homepage.profile.recruitment ?? fallbackHomepage.profile.recruitment;
   const teamNameParts = homepage.profile.team_name.trim().split(/\s+/);
   const teamBrand = teamNameParts[0] || homepage.profile.team_name;
-  const teamDescriptor = teamNameParts.slice(1).join(" ");
+  const rawTeamDescriptor = teamNameParts.slice(1).join(" ");
+  const teamLabel = rawTeamDescriptor.endsWith("战队") ? "战队" : "";
+  const teamDescriptor = teamLabel ? rawTeamDescriptor.slice(0, -teamLabel.length).trim() : rawTeamDescriptor;
 
   return (
     <div className="page">
@@ -200,7 +202,10 @@ export default async function Home() {
         <section className="hero">
           <div className="hero-copy">
             <h1 className="hero-title">
-              <span className="hero-title-primary">{teamBrand}</span>
+              <span className="hero-title-line">
+                <span className="hero-title-primary">{teamBrand}</span>
+                {teamLabel ? <span className="hero-title-secondary">{teamLabel}</span> : null}
+              </span>
               {teamDescriptor ? <span className="hero-title-secondary">{teamDescriptor}</span> : null}
             </h1>
             <p>{homepage.profile.team_intro}</p>

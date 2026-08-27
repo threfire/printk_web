@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { cookies } from "next/headers";
 import Link from "next/link";
 import {
@@ -99,6 +100,21 @@ export default async function AccountPage() {
         <article className="card profile-card">
           <span className="eyebrow">PROFILE</span>
           <h2>资料概览</h2>
+          <div className="profile-photo-editor">
+            {profile.photo_url ? (
+              <img src={profile.photo_url} alt={`${profile.full_name || profile.account}个人照片`} />
+            ) : (
+              <span className="profile-photo-empty" aria-label="尚未上传个人照片" />
+            )}
+            <form className="form" action="/account/photo" method="post" encType="multipart/form-data">
+              <div className="field">
+                <label htmlFor="profile-photo">个人照片</label>
+                <input id="profile-photo" name="file" type="file" accept="image/jpeg,image/png,image/webp" required />
+                <small>支持 jpg、png、webp，大小不超过 8MB。</small>
+              </div>
+              <button className="ghost-button" type="submit">上传照片</button>
+            </form>
+          </div>
           <dl className="profile-list">
             <div>
               <dt>账号</dt>

@@ -33,21 +33,6 @@ type Member = {
   focus: string[];
 };
 
-const memberPhotos = [
-  "/home-carousel/team-01.jpeg",
-  "/home-carousel/team-02.jpeg",
-  "/home-carousel/team-03.jpeg",
-  "/home-carousel/team-04.jpeg",
-  "/home-carousel/team-05.jpeg",
-  "/home-carousel/team-06.jpeg",
-  "/home-carousel/team-07.jpeg",
-  "/home-carousel/team-09.jpg",
-  "/home-carousel/team-10.jpg",
-  "/home-carousel/team-11.jpg",
-  "/home-carousel/team-12.jpeg",
-  "/home-carousel/team-13.jpeg",
-];
-
 function memberDomId(value: string) {
   return `member-${value.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
@@ -72,7 +57,7 @@ function toMember(member: PublicMember, index: number): Member {
     group,
     role,
     grade,
-    photo: member.photo_url || memberPhotos[index % memberPhotos.length],
+    photo: member.photo_url,
     summary: uniqueItems([cohort, group, role]).join(" · "),
     details: member.bio || `${name}在战队中负责${role}方向，当前归属${group}。`,
     focus: uniqueItems([cohort, group, role]),
@@ -89,10 +74,13 @@ async function fetchMembers(): Promise<Member[]> {
 }
 
 function statusText(member: Member) {
-  return member.status === "active" ? "在队队员" : `${member.cohort} 退队`;
+  return member.status === "active" ? "现役队员" : `${member.cohort} 退役队员`;
 }
 
 function MemberPhoto({ member, className, detail = false }: { member: Member; className: string; detail?: boolean }) {
+  if (!member.photo) {
+    return <span className={`${className} member-photo-empty`} aria-label={`${member.name}尚未上传个人照片`} />;
+  }
   return (
     <img
       className={className}
@@ -162,15 +150,15 @@ export default async function MembersPage() {
       <section className="section member-section" id="active-members">
         <div className="section-heading">
           <span className="eyebrow">ACTIVE</span>
-          <h2>在队队员</h2>
+          <h2>现役队员</h2>
         </div>
-        {activeMembers.length ? <MemberWall members={activeMembers} sectionId="active-members" /> : <p className="muted">当前没有在队队员资料。</p>}
+        {activeMembers.length ? <MemberWall members={activeMembers} sectionId="active-members" /> : <p className="muted">当前没有现役队员资料。</p>}
       </section>
 
       <section className="section member-section" id="retired-members">
         <div className="section-heading">
           <span className="eyebrow">ALUMNI</span>
-          <h2>退队队员</h2>
+          <h2>退役队员</h2>
         </div>
         {retiredMembers.length ? (
           <div className="retired-year-list">
@@ -179,7 +167,7 @@ export default async function MembersPage() {
               return (
                 <section className="retired-year-group" id={`retired-${year}`} key={year}>
                   <div className="retired-year-heading">
-                    <h3>{year} 退队队员</h3>
+                    <h3>{year} 退役队员</h3>
                     <span>{yearMembers.length} 人</span>
                   </div>
                   <MemberWall members={yearMembers} sectionId={`retired-${year}`} />
@@ -188,7 +176,7 @@ export default async function MembersPage() {
             })}
           </div>
         ) : (
-          <p className="muted">当前没有退队队员资料。</p>
+          <p className="muted">当前没有退役队员资料。</p>
         )}
       </section>
     </div>

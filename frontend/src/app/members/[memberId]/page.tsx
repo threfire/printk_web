@@ -17,21 +17,6 @@ type PublicMember = {
   photo_url: string;
 };
 
-const memberPhotos = [
-  "/home-carousel/team-01.jpeg",
-  "/home-carousel/team-02.jpeg",
-  "/home-carousel/team-03.jpeg",
-  "/home-carousel/team-04.jpeg",
-  "/home-carousel/team-05.jpeg",
-  "/home-carousel/team-06.jpeg",
-  "/home-carousel/team-07.jpeg",
-  "/home-carousel/team-09.jpg",
-  "/home-carousel/team-10.jpg",
-  "/home-carousel/team-11.jpg",
-  "/home-carousel/team-12.jpeg",
-  "/home-carousel/team-13.jpeg",
-];
-
 async function fetchMembers(): Promise<PublicMember[]> {
   try {
     const response = await fetch(`${API_BASE}/api/members`, { cache: "no-store" });
@@ -58,8 +43,7 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ m
   const name = member.name || member.account;
   const group = member.group || "未分组";
   const role = member.role || "队员";
-  const photo = member.photo_url || memberPhotos[memberIndex % memberPhotos.length];
-  const status = member.membership_state === "active" ? "在队队员" : `${member.cohort || "往届"} 退队`;
+  const status = member.membership_state === "active" ? "现役队员" : `${member.cohort || "往届"} 退役队员`;
 
   return (
     <div className="page member-profile-page">
@@ -75,7 +59,11 @@ export default async function MemberDetailPage({ params }: { params: Promise<{ m
       </section>
 
       <article className="member-profile-card">
-        <img className="member-profile-photo" src={photo} alt={`${name}个人照片`} />
+        {member.photo_url ? (
+          <img className="member-profile-photo" src={member.photo_url} alt={`${name}个人照片`} />
+        ) : (
+          <span className="member-profile-photo member-photo-empty" aria-label={`${name}尚未上传个人照片`} />
+        )}
         <div className="member-profile-copy">
           <span className="badge">{status}</span>
           <h2>{name}</h2>
