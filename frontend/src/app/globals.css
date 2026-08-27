@@ -3596,6 +3596,23 @@ th {
   margin: 0;
 }
 
+.admin-upload-status {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.admin-upload-status progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--accent);
+}
+
+.admin-upload-result {
+  margin: 0;
+}
+
 .admin-section {
   scroll-margin-top: 7.5rem;
   padding: clamp(1rem, 2vw, 1.35rem);

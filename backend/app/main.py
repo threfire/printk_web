@@ -47,7 +47,7 @@ REIMBURSEMENT_EXPORT_DIR = STORAGE_DIR / "master" / "reimbursement_export"
 TEMP_DIR = STORAGE_DIR / "temp"
 SITE_MEDIA_DIR = STORAGE_DIR / "site_media"
 
-MAX_CONTENT_LENGTH = 50 * 1024 * 1024
+MAX_CONTENT_LENGTH = 60 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")
@@ -2309,7 +2309,7 @@ async def save_homepage_award_image(upload: UploadFile) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="请选择荣誉图片")
     content = await upload.read()
     if len(content) > MAX_CONTENT_LENGTH:
-        raise HTTPException(status_code=413, detail="图片超过 50MB 上限")
+        raise HTTPException(status_code=413, detail="图片超过 60MB 上限")
     mime_type = upload.content_type or ""
     suffix = Path(upload.filename).suffix.lower()
     if mime_type not in HOME_IMAGE_MIME_TYPES or suffix not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
@@ -2378,7 +2378,7 @@ async def save_homepage_upload(kind: str, upload: UploadFile, alt: str, display_
         raise HTTPException(status_code=400, detail="请选择上传文件")
     content = await upload.read()
     if len(content) > MAX_CONTENT_LENGTH:
-        raise HTTPException(status_code=413, detail="文件超过 50MB 上限")
+        raise HTTPException(status_code=413, detail="文件超过 60MB 上限")
     mime_type = upload.content_type or ""
     allowed_types = HOME_VIDEO_MIME_TYPES if normalized_kind == "video" else HOME_IMAGE_MIME_TYPES
     if mime_type not in allowed_types:
@@ -4494,7 +4494,7 @@ async def upload_invoice_form(
         raise HTTPException(status_code=400, detail="只支持上传 .xlsx 表格")
     content = await form_file.read()
     if len(content) > MAX_CONTENT_LENGTH:
-        raise HTTPException(status_code=413, detail="文件超过 50MB 上限")
+        raise HTTPException(status_code=413, detail="文件超过 60MB 上限")
 
     submitter_id = "invoice"
     batch_id = build_batch_id(submitter_id)

@@ -38,7 +38,7 @@ OUT_STOCK_MASTER_DIR = STORAGE_DIR / "master" / "out_stock_master"
 REIMBURSEMENT_EXPORT_DIR = STORAGE_DIR / "master" / "reimbursement_export"
 TEMP_DIR = STORAGE_DIR / "temp"
 
-MAX_CONTENT_LENGTH = 50 * 1024 * 1024
+MAX_CONTENT_LENGTH = 60 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")

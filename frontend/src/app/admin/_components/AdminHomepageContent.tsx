@@ -12,6 +12,19 @@ type SubmitKind = "save-banner" | "save-campus-banner" | "save-profile" | "uploa
 
 type AwardEditor = HomepageAward & { editorId: string };
 
+type UploadState = {
+  formId: string;
+  percent: number;
+  phase: "uploading" | "processing";
+};
+
+type UploadFeedback = {
+  type: "ok" | "error";
+  text: string;
+};
+
+const MAX_UPLOAD_BYTES = 60 * 1024 * 1024;
+
 function awardEditors(profile: HomepageProfile): AwardEditor[] {
   return profile.awards.map((award, index) => ({
     ...award,
@@ -59,7 +72,46 @@ function formAction(form: HTMLFormElement) {
   return form.getAttribute("action") || form.action;
 }
 
-async function submitHomepageForm<T>(form: HTMLFormElement): Promise<T> {
+function submitFormWithProgress<T>(form: HTMLFormElement, onProgress: (percent: number, phase: UploadState["phase"]) => void): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData(form);
+    const file = formData.get("file");
+    if (file instanceof File && file.size > MAX_UPLOAD_BYTES) {
+      reject(new Error("文件超过 60MB 上限"));
+      return;
+    }
+    const request = new XMLHttpRequest();
+    request.open(form.method || "POST", form.action);
+    request.setRequestHeader("Accept", "application/json");
+    request.setRequestHeader("X-Admin-Async", "true");
+    request.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)), "uploading");
+      }
+    });
+    request.upload.addEventListener("load", () => onProgress(100, "processing"));
+    request.addEventListener("load", () => {
+      let body: Record<string, unknown> = {};
+      try {
+        body = JSON.parse(request.responseText) as Record<string, unknown>;
+      } catch {
+        body = {};
+      }
+      if (request.status >= 200 && request.status < 300) {
+        resolve(body as T);
+        return;
+      }
+      reject(new Error(String(body.detail ?? `上传失败（HTTP ${request.status}）`)));
+    });
+    request.addEventListener("error", () => reject(new Error("上传连接中断，请检查网络后重试")));
+    request.send(formData);
+  });
+}
+
+async function submitHomepageForm<T>(form: HTMLFormElement, onProgress?: (percent: number, phase: UploadState["phase"]) => void): Promise<T> {
+  if (onProgress) {
+    return submitFormWithProgress<T>(form, onProgress);
+  }
   const response = await fetch(form.action, {
     method: form.method || "POST",
     headers: {
@@ -95,6 +147,8 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
   const [quotes, setQuotes] = useState(() => sortQuotes(initialData.quotes));
   const [feedback, setFeedback] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [busyForm, setBusyForm] = useState("");
+  const [uploadState, setUploadState] = useState<UploadState | null>(null);
+  const [uploadFeedback, setUploadFeedback] = useState<Record<string, UploadFeedback>>({});
 
   const applyAsset = (asset: HomepageAsset) => {
     if (asset.kind === "video") {
@@ -127,8 +181,17 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
     const form = event.currentTarget;
     const action = formAction(form);
     const formKey = `${kind}-${action}-${String(form.dataset.id ?? "")}`;
+    const uploadFormId = String(form.dataset.uploadId ?? "");
     setBusyForm(formKey);
     setFeedback(null);
+    if (uploadFormId) {
+      setUploadFeedback((current) => {
+        const next = { ...current };
+        delete next[uploadFormId];
+        return next;
+      });
+      setUploadState({ formId: uploadFormId, percent: 0, phase: "uploading" });
+    }
 
     try {
       if (kind === "save-banner") {
@@ -154,19 +217,27 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
       }
 
       if (kind === "upload-award") {
-        const updatedProfile = await submitHomepageForm<HomepageProfile>(form);
+        const updatedProfile = await submitHomepageForm<HomepageProfile>(form, (percent, phase) => {
+          setUploadState({ formId: uploadFormId, percent, phase });
+        });
         setProfile(updatedProfile);
         setAwards(awardEditors(updatedProfile));
         form.reset();
         setFeedback({ type: "ok", text: "荣誉图片已上传" });
+        setUploadFeedback((current) => ({ ...current, [uploadFormId]: { type: "ok", text: "上传成功" } }));
         return;
       }
 
       if (kind === "upload-asset" || kind === "save-asset") {
-        const asset = await submitHomepageForm<HomepageAsset>(form);
+        const asset = await submitHomepageForm<HomepageAsset>(form, uploadFormId ? (percent, phase) => {
+          setUploadState({ formId: uploadFormId, percent, phase });
+        } : undefined);
         applyAsset(asset);
         form.reset();
         setFeedback({ type: "ok", text: kind === "upload-asset" ? "媒体已上传" : "媒体已保存" });
+        if (uploadFormId) {
+          setUploadFeedback((current) => ({ ...current, [uploadFormId]: { type: "ok", text: "上传成功，内容已加入列表" } }));
+        }
         return;
       }
 
@@ -191,13 +262,35 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
       setQuotes((current) => current.filter((item) => item.id !== form.dataset.id));
       setFeedback({ type: "ok", text: "文案已删除" });
     } catch (error) {
-      setFeedback({ type: "error", text: error instanceof Error ? error.message : "保存失败" });
+      const message = error instanceof Error ? error.message : "保存失败";
+      setFeedback({ type: "error", text: message });
+      if (uploadFormId) {
+        setUploadFeedback((current) => ({ ...current, [uploadFormId]: { type: "error", text: message } }));
+      }
     } finally {
       setBusyForm("");
+      if (uploadFormId) {
+        setUploadState(null);
+      }
     }
   };
 
   const isBusy = (kind: SubmitKind, action: string, id = "") => busyForm === `${kind}-${action}-${id}`;
+
+  const uploadStatus = (formId: string) => {
+    const active = uploadState?.formId === formId ? uploadState : null;
+    const result = uploadFeedback[formId];
+    if (active) {
+      const text = active.phase === "processing" ? "文件已传完，服务器正在保存…" : `正在上传 ${active.percent}%`;
+      return (
+        <div className="admin-upload-status" aria-live="polite">
+          <progress max="100" value={active.percent}>{active.percent}%</progress>
+          <span>{text}</span>
+        </div>
+      );
+    }
+    return result ? <div className={`message admin-upload-result${result.type === "error" ? " error" : ""}`} role="status">{result.text}</div> : null;
+  };
 
   const removeAward = (editorId: string) => {
     setAwards((current) => current
@@ -429,7 +522,7 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
       </form>
 
       <div className="admin-content-grid">
-        <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "upload-asset")}>
+        <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data" data-id="video" data-upload-id="video" onSubmit={(event) => handleSubmit(event, "upload-asset")}>
           <h3>上传赛季宣传视频</h3>
           <input name="kind" type="hidden" value="video" />
           <div className="field">
@@ -446,12 +539,13 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
               <input id="home-video-order" name="display_order" type="number" min="0" max="9999" defaultValue="1" />
             </div>
           </div>
-          <button className="button" type="submit" disabled={isBusy("upload-asset", "/api/admin/homepage/assets")}>
-            上传并启用视频
+          <button className="button" type="submit" disabled={Boolean(uploadState) || isBusy("upload-asset", "/api/admin/homepage/assets", "video")}>
+            {isBusy("upload-asset", "/api/admin/homepage/assets", "video") ? "正在上传…" : "上传并启用视频"}
           </button>
+          {uploadStatus("video")}
         </form>
 
-        <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "upload-asset")}>
+        <form className="form admin-content-form" action="/api/admin/homepage/assets" method="post" encType="multipart/form-data" data-id="image" data-upload-id="image" onSubmit={(event) => handleSubmit(event, "upload-asset")}>
           <h3>上传轮播图片</h3>
           <input name="kind" type="hidden" value="image" />
           <div className="field">
@@ -468,12 +562,13 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
               <input id="home-image-order" name="display_order" type="number" min="0" max="9999" defaultValue="20" />
             </div>
           </div>
-          <button className="button" type="submit" disabled={isBusy("upload-asset", "/api/admin/homepage/assets")}>
-            上传图片
+          <button className="button" type="submit" disabled={Boolean(uploadState) || isBusy("upload-asset", "/api/admin/homepage/assets", "image")}>
+            {isBusy("upload-asset", "/api/admin/homepage/assets", "image") ? "正在上传…" : "上传图片"}
           </button>
+          {uploadStatus("image")}
         </form>
 
-        <form className="form admin-content-form" action="/api/admin/homepage/awards" method="post" encType="multipart/form-data" onSubmit={(event) => handleSubmit(event, "upload-award")}>
+        <form className="form admin-content-form" action="/api/admin/homepage/awards" method="post" encType="multipart/form-data" data-id="award" data-upload-id="award" onSubmit={(event) => handleSubmit(event, "upload-award")}>
           <h3>上传荣誉图片</h3>
           <div className="field">
             <label htmlFor="home-award-upload-file">图片文件</label>
@@ -497,9 +592,10 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
             <label htmlFor="home-award-upload-alt">图片说明</label>
             <input id="home-award-upload-alt" name="image_alt" maxLength={160} placeholder="用于无障碍说明" />
           </div>
-          <button className="button" type="submit" disabled={isBusy("upload-award", "/api/admin/homepage/awards") || awards.length >= 12}>
-            上传荣誉图片
+          <button className="button" type="submit" disabled={Boolean(uploadState) || isBusy("upload-award", "/api/admin/homepage/awards", "award") || awards.length >= 12}>
+            {isBusy("upload-award", "/api/admin/homepage/awards", "award") ? "正在上传…" : "上传荣誉图片"}
           </button>
+          {uploadStatus("award")}
         </form>
 
         <form className="form admin-content-form" action="/api/admin/homepage/quotes" method="post" onSubmit={(event) => handleSubmit(event, "create-quote")}>

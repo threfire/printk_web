@@ -10,7 +10,13 @@ type TeamTrack = {
 };
 
 // 将音乐文件放入 public/team-music 后，在这里按播放顺序登记。
-const tracks: TeamTrack[] = [];
+const tracks: TeamTrack[] = [
+  { title: "你", artist: "PRINTK 战队", src: "/team-music/you.mp3" },
+  { title: "三分钟准备 BGM", artist: "机甲大师", src: "/team-music/robomaster-ready.mp4" },
+  { title: "Summoning Glory", artist: "机甲大师", src: "/team-music/summoning-glory.mp4" },
+  { title: "过场 1", artist: "机甲大师", src: "/team-music/robomaster-transition-1.mp4" },
+  { title: "过场音乐", artist: "机甲大师", src: "/team-music/robomaster-transition-3.mp4" },
+];
 
 export function TeamEmblemPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -53,20 +59,10 @@ export function TeamEmblemPlayer() {
     setCurrentIndex((index) => (index + offset + tracks.length) % tracks.length);
   }
 
-  function playNextTrack() {
-    if (tracks.length < 2) {
-      setIsPlaying(false);
-      return;
-    }
-
-    continuePlayingRef.current = true;
-    setCurrentIndex((index) => (index + 1) % tracks.length);
-  }
-
   const playbackLabel = currentTrack
     ? hasPlaybackError
       ? "音乐文件暂时无法播放"
-      : `《${currentTrack.title}》`
+      : `《${currentTrack.title}》 · ${currentTrack.artist}`
     : "《你》";
 
   return (
@@ -124,9 +120,9 @@ export function TeamEmblemPlayer() {
           ref={audioRef}
           src={currentTrack.src}
           preload="metadata"
+          loop
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onEnded={playNextTrack}
           onError={() => {
             setIsPlaying(false);
             setHasPlaybackError(true);
