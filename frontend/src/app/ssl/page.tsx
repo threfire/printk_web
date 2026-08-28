@@ -124,6 +124,7 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
 
             {canApply ? (
               <form className="form ssl-form" action="/api/ssl/applications" method="post">
+                <input type="hidden" name="applicant_account" value={account} />
                 <div className="field">
                   <label htmlFor="ssl-self-intro">自我简介</label>
                   <textarea id="ssl-self-intro" name="self_intro" rows={7} maxLength={1000} required placeholder="介绍你的专业基础、项目经历、擅长技能与加入 SSL 部的目标" />
