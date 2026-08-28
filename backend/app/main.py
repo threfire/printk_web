@@ -3495,7 +3495,10 @@ async def upload_site_account_photo(account: str, file: UploadFile = File(...)) 
 
 
 @app.post("/api/ssl/applications", status_code=201)
-def submit_ssl_interview_application(payload: SSLInterviewApplicationRequest) -> dict[str, Any]:
+async def submit_ssl_interview_application(request: Request) -> dict[str, Any]:
+    content_type = request.headers.get("content-type", "")
+    data = await request.json() if "application/json" in content_type else dict(await request.form())
+    payload = SSLInterviewApplicationRequest.model_validate(data)
     self_intro = normalize_limited_text(payload.self_intro, "自我简介", 1000)
     if not self_intro:
         raise HTTPException(status_code=400, detail="请填写自我简介")

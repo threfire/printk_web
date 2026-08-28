@@ -95,6 +95,7 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
             <h2 id="ssl-application-title">加入我们 · 驰骋赛场</h2>
           </div>
           <div className="ssl-recruitment-note">
+            <p>提交申请后请留意站内消息，及时查看审核反馈。</p>
             <strong>长期招新 · 全年开放</strong>
             <p>申请通道长期有效，可在完成准备后随时提交个人经历、意向方向与面试时间。</p>
           </div>
