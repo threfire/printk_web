@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { API_BASE } from "@/lib/api";
 
 async function removeMessage({ params }: { params: Promise<{ messageId: string }> }) {
@@ -10,4 +11,8 @@ async function removeMessage({ params }: { params: Promise<{ messageId: string }
 }
 
 export async function DELETE(_: Request, context: { params: Promise<{ messageId: string }> }) { return removeMessage(context); }
-export async function POST(_: Request, context: { params: Promise<{ messageId: string }> }) { return removeMessage(context); }
+export async function POST(_: Request, context: { params: Promise<{ messageId: string }> }) {
+  const response = await removeMessage(context);
+  if (response.ok) redirect("/account/messages");
+  return response;
+}
