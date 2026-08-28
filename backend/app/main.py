@@ -3617,6 +3617,16 @@ def mark_site_messages_read(account: str) -> dict[str, int]:
     return {"marked_read": cursor.rowcount, "unread_count": 0}
 
 
+@app.delete("/api/site-messages/{account}/{message_id}")
+def delete_site_message(account: str, message_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        account_row = require_active_site_account(conn, account)
+        cursor = conn.execute("DELETE FROM site_message WHERE id = ? AND recipient_account = ?", (message_id, account_row["account"]))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="站内消息不存在")
+    return {"id": message_id}
+
+
 @app.get("/api/admin/ssl/applications")
 def list_ssl_interview_applications(
     status: str = Query(default=""),
