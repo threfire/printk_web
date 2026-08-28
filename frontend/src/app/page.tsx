@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsCarousel";
 import { HomeCarousel, HomeQuoteCarousel } from "@/components/HomeCarousel";
 import { TeamEmblemPlayer } from "@/components/TeamEmblemPlayer";
+import { HomeEventAccordion } from "@/components/HomeEventAccordion";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
@@ -255,10 +256,8 @@ export default async function Home() {
           <p>{recruitment.intro}</p>
         </div>
         <div className="home-recruitment-blocks">
-          <article className="home-recruitment-block">
-            <span className="home-recruitment-kicker">{recruitment.event_kicker}</span>
-            <h3>{recruitment.event_title}</h3>
-            <p>{recruitment.event_description}</p>
+          <article className="home-recruitment-block home-recruitment-events">
+            <HomeEventAccordion />
           </article>
           <article className="home-recruitment-block">
             <span className="home-recruitment-kicker">{recruitment.groups_kicker}</span>

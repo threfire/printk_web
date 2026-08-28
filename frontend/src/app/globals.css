@@ -4190,6 +4190,84 @@ th {
   background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
 }
 
+.home-recruitment-events {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.home-event-accordion {
+  min-height: 22rem;
+  padding: 0.72rem;
+  border-radius: calc(var(--radius) - 1px);
+  background:
+    linear-gradient(90deg, rgba(3, 9, 20, 0.94) 0%, rgba(3, 9, 20, 0.62) 58%, rgba(3, 9, 20, 0.18) 100%),
+    linear-gradient(180deg, rgba(3, 9, 20, 0.08), rgba(3, 9, 20, 0.82)),
+    var(--event-background) center / cover no-repeat;
+  transition: background-image 420ms ease;
+}
+
+.home-event-panels {
+  display: flex;
+  gap: 0.55rem;
+  height: 100%;
+  min-height: 20.5rem;
+}
+
+.home-event-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 3.2rem;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-radius: calc(var(--radius) - 3px);
+  padding: 0.7rem;
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-strong) 54%, transparent);
+  cursor: pointer;
+  text-align: left;
+  transition: flex 300ms ease, background 300ms ease, border-color 300ms ease;
+}
+
+.home-event-panel:not(.is-active) {
+  flex: 0 0 3.2rem;
+  justify-content: center;
+}
+
+.home-event-panel.is-active {
+  flex: 1 1 auto;
+  align-items: flex-start;
+  border-color: color-mix(in srgb, var(--accent) 76%, white);
+  background: color-mix(in srgb, var(--surface-strong) 34%, transparent);
+}
+
+.home-event-panel-label {
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.home-event-panel:not(.is-active) .home-event-panel-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.home-event-panel-content {
+  display: grid;
+  align-content: start;
+  gap: 0.65rem;
+  max-width: 34rem;
+  line-height: 1.75;
+}
+
+.home-event-panel-content strong {
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+}
+
+.home-event-panel-content > span:last-child {
+  color: color-mix(in srgb, var(--text) 84%, var(--muted));
+}
+
 .home-recruitment-block h3 {
   margin: 0;
   font-size: clamp(1.25rem, 2vw, 1.7rem);
@@ -4653,6 +4731,15 @@ th {
 
   .home-recruitment-qr img {
     width: min(100%, 15.5rem);
+  }
+
+  .home-event-panels {
+    min-height: 18rem;
+  }
+
+  .home-event-panel:not(.is-active) {
+    flex-basis: 2.7rem;
+    min-width: 2.7rem;
   }
 
   .home-footer-main,
