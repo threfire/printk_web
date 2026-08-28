@@ -1551,7 +1551,32 @@ p {
 .member-photo-empty {
   display: block;
   background: color-mix(in srgb, var(--surface) 72%, var(--bg));
+  position: relative;
 }
+.member-photo-empty::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 25%;
+  width: 24%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: currentColor;
+}
+.member-photo-empty::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 52%;
+  height: 48%;
+  border-radius: 48% 48% 0 0;
+  transform: translateX(-50%);
+  background: currentColor;
+}
+.member-photo-male { color: #4b8dff; }
+.member-photo-female { color: #f286b6; }
 
 .home-member-grid {
   display: grid;

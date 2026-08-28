@@ -8,6 +8,7 @@ type PublicMember = {
   id: string;
   account: string;
   name: string;
+  gender: string;
   membership_state: MemberStatus;
   member_status: string;
   cohort: string;
@@ -22,6 +23,7 @@ type Member = {
   id: string;
   domId: string;
   name: string;
+  gender: string;
   status: MemberStatus;
   cohort: string;
   group: string;
@@ -51,6 +53,7 @@ function toMember(member: PublicMember, index: number): Member {
     id,
     domId: memberDomId(id),
     name,
+    gender: member.gender,
     status: member.membership_state,
     cohort: "",
     group,
@@ -78,7 +81,7 @@ function statusText(member: Member) {
 
 function MemberPhoto({ member, className, detail = false }: { member: Member; className: string; detail?: boolean }) {
   if (!member.photo) {
-    return <span className={`${className} member-photo-empty`} aria-label={`${member.name}尚未上传个人照片`} />;
+    return <span className={`${className} member-photo-empty ${member.gender === "男" ? "member-photo-male" : member.gender === "女" ? "member-photo-female" : ""}`} aria-label={`${member.name}尚未上传个人照片`} />;
   }
   return (
     <img

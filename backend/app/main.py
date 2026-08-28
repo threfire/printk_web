@@ -3772,6 +3772,7 @@ def member_response(row: sqlite3.Row) -> dict[str, Any]:
         "id": row["account"],
         "account": row["account"],
         "name": row["full_name"] or row["account"],
+        "gender": row["gender"] or "",
         "membership_state": membership_state,
         "member_status": member_status,
         "cohort": row["cohort"] or "",
@@ -3790,7 +3791,7 @@ def list_public_members() -> dict[str, Any]:
     with db_connection() as conn:
         rows = conn.execute(
             f"""
-            SELECT account, full_name, grade, member_status, permission_level,
+            SELECT account, full_name, gender, grade, member_status, permission_level,
                 department, cohort, role, bio, photo_url, updated_at
             FROM site_account
             WHERE is_disabled = 0
