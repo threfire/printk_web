@@ -103,19 +103,6 @@ function AccountModal({ mode }: { mode: AccountMode }) {
                     <option value="研究生">研究生</option>
                   </select>
                 </div>
-                <div>
-                  <label htmlFor="account-register-member-status">身份信息</label>
-                  <select id="account-register-member-status" name="member_status" defaultValue="">
-                    <option value="">请选择</option>
-                    <option value="非战队队员">非战队队员</option>
-                    <option value="梯队队员">梯队队员</option>
-                    <option value="正式队员">正式队员</option>
-                    <option value="老队员">老队员</option>
-                    <option value="退役队员">退役队员</option>
-                    <option value="老师">老师</option>
-                  </select>
-                  <input name="permission_level" type="hidden" value="普通队员" />
-                </div>
               </div>
             </>
           ) : null}

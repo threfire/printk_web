@@ -5,7 +5,6 @@ import {
   departmentOptions,
   genderOptions,
   gradeOptions,
-  memberStatusOptions,
   type SiteAccountProfile,
 } from "@/lib/account-profile";
 import { API_BASE } from "@/lib/api";
@@ -164,12 +163,6 @@ export default async function AccountPage() {
                 <label htmlFor="profile-grade">年级</label>
                 <select id="profile-grade" name="grade" defaultValue={profile.grade}>
                   <OptionList options={gradeOptions} />
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="profile-member-status">身份信息</label>
-                <select id="profile-member-status" name="member_status" defaultValue={profile.member_status}>
-                  <OptionList options={memberStatusOptions} />
                 </select>
               </div>
               <div className="field">

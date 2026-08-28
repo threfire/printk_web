@@ -3347,6 +3347,8 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
     account = normalize_account(payload.account)
     password = validate_site_password(payload.password)
     profile = normalize_site_profile(payload)
+    profile["member_status"] = "非战队队员"
+    profile["permission_level"] = "普通队员"
     timestamp = now_iso()
     with db_connection() as conn:
         existing = conn.execute("SELECT account FROM site_account WHERE account = ?", (account,)).fetchone()
@@ -3415,7 +3417,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
     timestamp = now_iso()
     with db_connection() as conn:
         existing = conn.execute(
-            "SELECT account, is_disabled, permission_level FROM site_account WHERE account = ?",
+            "SELECT account, is_disabled, member_status, permission_level FROM site_account WHERE account = ?",
             (normalized_account,),
         ).fetchone()
         if existing is None:
@@ -3435,7 +3437,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
                 profile["full_name"],
                 profile["gender"],
                 profile["grade"],
-                profile["member_status"],
+                existing["member_status"] or "非战队队员",
                 existing["permission_level"] or "普通队员",
                 profile["department"],
                 profile["cohort"],
@@ -3444,7 +3446,7 @@ def update_site_account(account: str, payload: SiteAccountProfile) -> dict[str, 
                 profile["email"],
                 profile["bio"],
                 profile["photo_url"],
-                profile["member_status"],
+                existing["member_status"] or "非战队队员",
                 timestamp,
                 normalized_account,
             ),
@@ -3695,7 +3697,7 @@ def export_ssl_interview_applications(_: str = Depends(require_admin)) -> Stream
     )
 
 
-PUBLIC_MEMBER_STATUSES = {"梯队队员", "正式队员", "老队员", "退役队员", "老师"}
+PUBLIC_MEMBER_STATUSES = {"梯队队员", "正式队员", "老队员", "退役队员"}
 RETIRED_MEMBER_STATUSES = {"老队员", "退役队员"}
 
 
