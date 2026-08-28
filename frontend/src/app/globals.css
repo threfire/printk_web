@@ -705,8 +705,6 @@ body:has(.home-intro-backdrop) .page {
   align-items: stretch;
 }
 
-.hero-copy,
-.hero-visual,
 .section,
 .section-hero {
   border: 1px solid var(--line);
@@ -723,6 +721,13 @@ body:has(.home-intro-backdrop) .page {
   padding: clamp(1.35rem, 3.5vw, 2.6rem);
 }
 
+.hero-copy,
+.hero-visual {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .hero-visual {
   position: relative;
   display: grid;
@@ -733,15 +738,7 @@ body:has(.home-intro-backdrop) .page {
 }
 
 .hero-visual::before {
-  position: absolute;
-  inset: 1.2rem;
-  content: "";
-  border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--primary) 18%, transparent), transparent 40%),
-    repeating-linear-gradient(90deg, transparent 0 30px, rgba(255, 255, 255, 0.04) 30px 31px),
-    linear-gradient(145deg, color-mix(in srgb, var(--surface-strong) 84%, transparent), transparent);
+  display: none;
 }
 
 .emblem-stage {
