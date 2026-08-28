@@ -12,7 +12,10 @@ function readableError(value: unknown, fallback: string) {
     }).filter(Boolean);
     if (messages.length) return messages.join("；");
   }
-  if (value && typeof value === "object" && "msg" in value) return String(value.msg);
+  if (value && typeof value === "object" && "msg" in value) return readableError(value.msg, fallback);
+  if (value && typeof value === "object") {
+    try { return JSON.stringify(value); } catch { return fallback; }
+  }
   return fallback;
 }
 
@@ -20,7 +23,13 @@ async function submit(form: HTMLFormElement, method: string) {
   const response = await fetch(form.action, { method, body: new FormData(form) });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(readableError(body.detail, "保存失败"));
-  return body as RecruitmentFaq;
+  const item = body && typeof body === "object" && "message" in body && body.message && typeof body.message === "object"
+    ? body.message
+    : body;
+  if (!item || typeof item !== "object" || !("id" in item)) {
+    throw new Error("服务器未返回有效的 QA 数据");
+  }
+  return item as RecruitmentFaq;
 }
 
 export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: RecruitmentFaq[]; questions: RecruitmentQuestion[] }) {
