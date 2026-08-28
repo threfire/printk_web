@@ -1307,11 +1307,14 @@ p {
 
 .danmaku-stage {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
   z-index: 6;
   overflow: hidden;
-  width: 100%;
-  max-width: 100%;
+  width: min(98%, 1150px);
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 

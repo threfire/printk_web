@@ -319,7 +319,7 @@ export default async function Home() {
       <div className="home-floating-actions">
         <a className="home-top-fab" href="#top" aria-label="回到顶部" title="回到顶部">
           <svg aria-hidden="true" viewBox="0 0 32 32">
-            <path d="M16 25V7M9 14l7-7 7 7" />
+            <path d="M8 8h16M9 22l7-7 7 7" />
           </svg>
         </a>
         <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
