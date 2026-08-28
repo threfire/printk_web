@@ -33,7 +33,9 @@ function formatDateTime(value: string) {
 export default async function AccountMessagesPage({ searchParams }: { searchParams?: Promise<{ read?: string }> }) {
   const cookieStore = await cookies();
   const account = cookieStore.get("printk-site-account")?.value ?? "";
-  if ((await searchParams)?.read) await markMessagesRead(account);
+  const params = await searchParams;
+  const selectedId = params?.read ?? "";
+  if (selectedId) await markMessagesRead(account);
   const messages = await getMessages(account);
 
   return (
@@ -53,14 +55,10 @@ export default async function AccountMessagesPage({ searchParams }: { searchPara
               {messages.map((message) => (
                 <article className="site-message-card" key={message.id}>
                   <div className="site-message-head">
-                    <strong>{message.title}</strong>
+                    <Link href={`/account/messages?read=${encodeURIComponent(message.id)}`}><strong>{message.title}</strong></Link>
                     <time dateTime={message.created_at}>{formatDateTime(message.created_at)}</time>
                   </div>
-                  <Link className="text-button" href={`/account/messages?read=${encodeURIComponent(message.id)}#message-${message.id}`}>查看内容</Link>
-                  <details id={`message-${message.id}`}>
-                    <summary>{message.title}</summary>
-                    <p>{message.content}</p>
-                  </details>
+                  {selectedId === message.id ? <p>{message.content}</p> : null}
                   <form action={`/api/account/messages/${encodeURIComponent(message.id)}`} method="post">
                     <input type="hidden" name="_method" value="DELETE" />
                     <button className="text-button" type="submit">删除</button>

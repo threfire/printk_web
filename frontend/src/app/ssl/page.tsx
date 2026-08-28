@@ -39,6 +39,7 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
   const application = await getApplication(account);
   const ok = firstParam(params.ok);
   const error = firstParam(params.error);
+  const showApplication = firstParam(params.show_application) === "true";
   const canApply = !application || application.status === "rejected";
 
   return (
@@ -105,7 +106,7 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
 
         {account ? (
           <div className="ssl-application-grid">
-            {application ? (
+            {showApplication && application ? (
               <article className={`ssl-status-card ${application.status}`}>
                 <div className="ssl-status-head">
                   <span className={`ssl-status-badge ${application.status}`}>{statusLabels[application.status]}</span>
