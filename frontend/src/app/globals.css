@@ -4352,7 +4352,7 @@ th {
   text-align: left;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: flex 300ms ease, background 300ms ease, border-color 300ms ease;
+  transition: background 180ms ease, border-color 180ms ease;
 }
 
 .home-event-panel:not(.is-active) {
@@ -4387,6 +4387,10 @@ th {
   gap: 0.65rem;
   max-width: 34rem;
   line-height: 1.75;
+}
+
+.home-event-panel:not(.is-active) .home-event-panel-content {
+  display: none;
 }
 
 .home-event-panel-content strong {
@@ -4444,7 +4448,7 @@ th {
   text-align: center;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  transition: flex 300ms ease, transform 300ms ease;
+  transition: transform 180ms ease;
 }
 
 .home-group-panel.is-active {
@@ -4474,6 +4478,10 @@ th {
   align-self: center;
   color: color-mix(in srgb, var(--text) 84%, var(--muted));
   line-height: 1.6;
+}
+
+.home-group-panel:not(.is-active) .home-group-panel-summary {
+  display: none;
 }
 
 .theme-root[data-theme="light"] .home-recruitment-block,
@@ -6339,11 +6347,26 @@ th {
   padding: 0 clamp(0.25rem, 2vw, 1rem);
   border: 0;
   background: transparent;
+  text-align: left;
 }
 
-.home-recruitment-question h2,
 .home-recruitment-faq h2 {
   margin: 0 0 1rem;
+}
+
+.home-recruitment-question {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.home-recruitment-question h2 {
+  margin: 0;
+  padding-top: 0.55rem;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .home-recruitment-question form {
@@ -6355,13 +6378,27 @@ th {
 
 .home-recruitment-question textarea {
   width: 100%;
-  resize: vertical;
+  min-height: 2.8rem;
+  overflow: hidden;
+  resize: none;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 0.8rem 0.9rem;
   background: color-mix(in srgb, var(--surface) 45%, transparent);
   color: var(--text);
 }
+
+.home-question-submit {
+  border: 0;
+  padding: 0.75rem 0.35rem;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.home-question-submit:disabled { opacity: 0.55; }
+.home-recruitment-question > p { grid-column: 2; margin: 0.55rem 0 0; }
 
 .home-recruitment-faq > div {
   display: grid;
@@ -6404,7 +6441,6 @@ th {
     flex-grow: 1;
   }
 
-  .home-recruitment-question form,
   .admin-recruitment-faq-list {
     grid-template-columns: 1fr;
   }

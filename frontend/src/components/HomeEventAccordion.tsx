@@ -48,11 +48,9 @@ export function HomeEventAccordion({ events: configuredEvents }: { events?: Home
               onClick={() => setActiveId(event.id)}
             >
               <span className="home-event-panel-label">{event.name}</span>
-              {isActive ? (
-                <span className="home-event-panel-content">
-                  <span>{event.description}</span>
-                </span>
-              ) : null}
+              <span className="home-event-panel-content" aria-hidden={!isActive}>
+                <span>{event.description}</span>
+              </span>
             </button>
           );
         })}

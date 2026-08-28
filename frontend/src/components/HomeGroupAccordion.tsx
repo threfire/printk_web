@@ -34,7 +34,7 @@ export function HomeGroupAccordion({ groups }: { groups: HomepageRecruitmentGrou
             >
               <Image src={icons[index % icons.length]} alt="" aria-hidden="true" width={112} height={112} />
               <span className="home-group-panel-name">{group.name}</span>
-              {isActive ? <span className="home-group-panel-summary">{group.summary}</span> : null}
+              <span className="home-group-panel-summary" aria-hidden={!isActive}>{group.summary}</span>
             </button>
           );
         })}

@@ -8,6 +8,11 @@ export function RecruitmentQuestions({ accountName, faqs }: { accountName: strin
   const [feedback, setFeedback] = useState("");
   const [busy, setBusy] = useState(false);
 
+  function fitQuestionHeight(element: HTMLTextAreaElement) {
+    element.style.height = "0";
+    element.style.height = `${element.scrollHeight}px`;
+  }
+
   async function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -26,6 +31,8 @@ export function RecruitmentQuestions({ accountName, faqs }: { accountName: strin
       return;
     }
     form.reset();
+    const textarea = form.elements.namedItem("content");
+    if (textarea instanceof HTMLTextAreaElement) fitQuestionHeight(textarea);
     setFeedback("问题已提交，管理员会在后台查看");
   }
 
@@ -35,15 +42,15 @@ export function RecruitmentQuestions({ accountName, faqs }: { accountName: strin
         <h2 id="recruitment-question-title">还有招新疑问？</h2>
         {accountName ? (
           <form onSubmit={submitQuestion}>
-            <textarea name="content" maxLength={500} rows={2} placeholder="写下你想了解的问题" required />
-            <button className="button" type="submit" disabled={busy}>{busy ? "提交中…" : "提交问题"}</button>
+            <textarea name="content" maxLength={500} rows={1} placeholder="写下你想了解的问题" onInput={(event) => fitQuestionHeight(event.currentTarget)} required />
+            <button className="home-question-submit" type="submit" disabled={busy}>{busy ? "提交中…" : "提交"}</button>
           </form>
         ) : <p>登录账号后即可向战队提交招新问题。</p>}
         {feedback ? <p role="status">{feedback}</p> : null}
       </HomeReveal>
 
       <HomeReveal className="home-recruitment-faq" aria-labelledby="recruitment-faq-title">
-        <h2 id="recruitment-faq-title">招新 QA</h2>
+        <h2 id="recruitment-faq-title">QA：</h2>
         <div>
           {faqs.map((faq) => (
             <article key={faq.id}>
