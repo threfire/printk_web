@@ -3,14 +3,16 @@ import { API_BASE } from "@/lib/api";
 
 export async function POST(request: Request) {
   const rawAccount = (await cookies()).get("printk-site-account")?.value ?? "";
-  let account = rawAccount;
+  const body = await request.json().catch(() => ({}));
+  let account = typeof body?.author_account === "string" && body.author_account.trim()
+    ? body.author_account.trim()
+    : rawAccount;
   try {
     account = decodeURIComponent(rawAccount);
   } catch {
     account = rawAccount;
   }
   if (!account) return Response.json({ detail: "请先登录账号" }, { status: 401 });
-  const body = await request.json().catch(() => ({}));
   const content = typeof body?.content === "string" ? body.content.trim() : "";
   if (!content) return Response.json({ detail: "请输入招新问题" }, { status: 400 });
   try {

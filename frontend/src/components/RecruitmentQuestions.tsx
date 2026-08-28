@@ -22,7 +22,7 @@ export function RecruitmentQuestions({ accountName, faqs }: { accountName: strin
     const response = await fetch("/api/homepage/recruitment-questions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ author_account: accountName, content }),
     });
     const body = await response.json().catch(() => ({}));
     setBusy(false);
