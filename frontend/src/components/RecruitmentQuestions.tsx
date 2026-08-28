@@ -27,7 +27,11 @@ export function RecruitmentQuestions({ accountName, faqs }: { accountName: strin
     const body = await response.json().catch(() => ({}));
     setBusy(false);
     if (!response.ok) {
-      setFeedback(String(body.detail ?? "提交失败"));
+      const detail = body?.detail;
+      const message = Array.isArray(detail)
+        ? detail.map((item) => typeof item === "string" ? item : item?.msg || item?.message || "请求参数无效").join("；")
+        : typeof detail === "string" ? detail : body?.error || "提交失败";
+      setFeedback(message);
       return;
     }
     form.reset();
