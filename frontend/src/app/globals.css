@@ -4239,6 +4239,8 @@ th {
   background: transparent;
   cursor: pointer;
   text-align: left;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
   transition: flex 300ms ease, background 300ms ease, border-color 300ms ease;
 }
 
@@ -4329,6 +4331,8 @@ th {
   background: transparent;
   cursor: pointer;
   text-align: center;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
   transition: flex 300ms ease, transform 300ms ease;
 }
 
