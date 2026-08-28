@@ -4200,7 +4200,7 @@ th {
 .home-recruitment-block {
   display: grid;
   gap: 0.7rem;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: var(--radius);
   padding: 0.72rem;
   background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
