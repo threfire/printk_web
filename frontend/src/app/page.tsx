@@ -322,13 +322,6 @@ export default async function Home() {
             <path d="M8 8h16M9 22l7-7 7 7" />
           </svg>
         </a>
-        <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
-          <span className="home-reward-mark" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </span>
-        </Link>
         <a className="home-contact-fab" href="#home-contact" aria-label="联系我们" title="联系我们">
           <svg aria-hidden="true" viewBox="0 0 32 32">
             <path d="M6 17v-2a10 10 0 0 1 20 0v2" />
