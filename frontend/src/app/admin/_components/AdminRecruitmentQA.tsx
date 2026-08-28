@@ -43,6 +43,7 @@ async function submit(form: HTMLFormElement, method: string) {
 
 export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: RecruitmentFaq[]; questions: RecruitmentQuestion[] }) {
   const [faqs, setFaqs] = useState(initialFaqs);
+  const [questionList, setQuestionList] = useState(questions);
   const [feedback, setFeedback] = useState("");
 
   async function saveFaq(event: FormEvent<HTMLFormElement>, faqId?: string) {
@@ -64,14 +65,21 @@ export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: Re
     setFeedback(response.ok ? "QA 已删除" : "删除失败");
   }
 
+  async function deleteQuestion(questionId: string) {
+    const response = await fetch(`/api/admin/homepage/recruitment-questions/${questionId}`, { method: "DELETE" });
+    if (response.ok) setQuestionList((current) => current.filter((item) => item.id !== questionId));
+    setFeedback(response.ok ? "提问已删除" : "删除失败");
+  }
+
   return (
     <section className="admin-recruitment-qa">
       <div className="section-heading"><h3>招新提问与 QA</h3></div>
       {feedback ? <p className="message">{feedback}</p> : null}
+      <div className="admin-recruitment-columns">
       <div className="admin-recruitment-question-list">
         <h4>访客提问</h4>
-        {questions.length ? questions.map((item) => (
-          <article key={item.id}><strong>{item.author_name}</strong><p>{item.content}</p><time>{new Date(item.created_at).toLocaleString("zh-CN")}</time></article>
+        {questionList.length ? questionList.map((item) => (
+          <article key={item.id}><strong>{item.author_name}</strong><p>{item.content}</p><time>{new Date(item.created_at).toLocaleString("zh-CN")}</time><button className="text-button" type="button" onClick={() => deleteQuestion(item.id)}>删除</button></article>
         )) : <p>暂时没有招新提问。</p>}
       </div>
       <form className="form" action="/api/admin/homepage/faqs" onSubmit={(event) => saveFaq(event)}>
@@ -82,6 +90,7 @@ export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: Re
         <label><input name="is_enabled" type="checkbox" value="true" defaultChecked /> 启用</label>
         <button className="button" type="submit">添加 QA</button>
       </form>
+      </div>
       <div className="admin-recruitment-faq-list">
         {faqs.map((faq) => (
           <form className="form" action={`/api/admin/homepage/faqs/${faq.id}`} key={faq.id} onSubmit={(event) => saveFaq(event, faq.id)}>

@@ -2305,6 +2305,14 @@ def delete_recruitment_faq(faq_id: str) -> dict[str, str]:
     return {"id": faq_id}
 
 
+def delete_recruitment_question(question_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        if not conn.execute("SELECT id FROM recruitment_question WHERE id = ?", (question_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="提问不存在")
+        conn.execute("DELETE FROM recruitment_question WHERE id = ?", (question_id,))
+    return {"id": question_id}
+
+
 def update_homepage_recruitment_banner(payload: "HomepageRecruitmentBannerUpdate") -> dict[str, Any]:
     text = normalize_limited_text(payload.text, "招新公告文案", 120)
     action_text = normalize_limited_text(payload.action_text, "栏尾文案", 32)
@@ -3256,6 +3264,11 @@ def update_recruitment_faq_route(faq_id: str, payload: RecruitmentFaqSave, _: st
 @app.delete("/api/admin/homepage/faqs/{faq_id}")
 def delete_recruitment_faq_route(faq_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
     return delete_recruitment_faq(faq_id)
+
+
+@app.delete("/api/admin/homepage/recruitment-questions/{question_id}")
+def delete_recruitment_question_route(question_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    return delete_recruitment_question(question_id)
 
 
 @app.put("/api/admin/homepage/recruitment-banner")

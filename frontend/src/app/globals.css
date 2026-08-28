@@ -6427,6 +6427,8 @@ th {
   display: grid;
   gap: 1rem;
 }
+.admin-recruitment-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+@media (max-width: 800px) { .admin-recruitment-columns { grid-template-columns: 1fr; } }
 
 .admin-recruitment-question-list article {
   border-bottom: 1px solid var(--line);
