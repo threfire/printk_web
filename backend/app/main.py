@@ -465,6 +465,24 @@ def init_db() -> None:
                 created_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS recruitment_question (
+                id TEXT PRIMARY KEY,
+                author_account TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (author_account) REFERENCES site_account(account)
+            );
+
+            CREATE TABLE IF NOT EXISTS recruitment_faq (
+                id TEXT PRIMARY KEY,
+                question TEXT NOT NULL,
+                answer TEXT NOT NULL,
+                display_order INTEGER NOT NULL DEFAULT 0,
+                is_enabled INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_season_plan_period
             ON season_plan (season_year, month, display_order);
 
@@ -584,6 +602,8 @@ def init_db() -> None:
             ON homepage_danmaku (status, created_at_ms DESC)
             """
         )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_recruitment_question_created ON recruitment_question (created_at DESC)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_recruitment_faq_order ON recruitment_faq (is_enabled, display_order, created_at)")
         seed_season_plan(conn)
         seed_homepage_content(conn)
 
@@ -2043,6 +2063,28 @@ def homepage_quote_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def recruitment_faq_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "question": row["question"],
+        "answer": row["answer"],
+        "display_order": row["display_order"],
+        "is_enabled": bool(row["is_enabled"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def recruitment_question_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "author_account": row["author_account"],
+        "author_name": row["author_name"] or row["author_account"],
+        "content": row["content"],
+        "created_at": row["created_at"],
+    }
+
+
 def homepage_recruitment_banner_response(row: sqlite3.Row) -> dict[str, Any]:
     return {
         "text": row["text"],
@@ -2169,6 +2211,17 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
             """
         ).fetchone()
         profile = conn.execute("SELECT * FROM homepage_profile WHERE id = 'profile'").fetchone()
+        faqs = conn.execute(
+            f"SELECT * FROM recruitment_faq WHERE 1 = 1 {enabled_clause} ORDER BY display_order ASC, created_at ASC"
+        ).fetchall()
+        questions = conn.execute(
+            """
+            SELECT question.*, account.full_name AS author_name
+            FROM recruitment_question AS question
+            LEFT JOIN site_account AS account ON account.account = question.author_account
+            ORDER BY question.created_at DESC
+            """
+        ).fetchall() if include_disabled else []
     video_items = [homepage_asset_response(row) for row in videos]
     return {
         "video": video_items[0] if video_items else None,
@@ -2182,7 +2235,67 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
         if campus_banner and (include_disabled or campus_banner["is_enabled"])
         else None,
         "profile": homepage_profile_response(profile),
+        "faqs": [recruitment_faq_response(row) for row in faqs],
+        "recruitment_questions": [recruitment_question_response(row) for row in questions],
     }
+
+
+def create_recruitment_question(payload: "RecruitmentQuestionCreate") -> dict[str, Any]:
+    account = normalize_limited_text(payload.author_account, "账号", 80)
+    content = normalize_limited_text(payload.content, "问题", 500)
+    if not content:
+        raise HTTPException(status_code=400, detail="请输入招新问题")
+    timestamp = now_iso()
+    question_id = uuid.uuid4().hex
+    with db_connection() as conn:
+        require_active_site_account(conn, account)
+        conn.execute(
+            "INSERT INTO recruitment_question (id, author_account, content, created_at) VALUES (?, ?, ?, ?)",
+            (question_id, account, content, timestamp),
+        )
+        row = conn.execute(
+            """
+            SELECT question.*, account.full_name AS author_name
+            FROM recruitment_question AS question
+            LEFT JOIN site_account AS account ON account.account = question.author_account
+            WHERE question.id = ?
+            """,
+            (question_id,),
+        ).fetchone()
+    return recruitment_question_response(row)
+
+
+def save_recruitment_faq(payload: "RecruitmentFaqSave", faq_id: str | None = None) -> dict[str, Any]:
+    question = normalize_limited_text(payload.question, "问题", 200)
+    answer = normalize_limited_text(payload.answer, "回答", 1000)
+    if not question or not answer:
+        raise HTTPException(status_code=400, detail="问题和回答不能为空")
+    item_id = faq_id or uuid.uuid4().hex
+    timestamp = now_iso()
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM recruitment_faq WHERE id = ?", (item_id,)).fetchone()
+        if faq_id and not existing:
+            raise HTTPException(status_code=404, detail="QA 不存在")
+        if existing:
+            conn.execute(
+                "UPDATE recruitment_faq SET question = ?, answer = ?, display_order = ?, is_enabled = ?, updated_at = ? WHERE id = ?",
+                (question, answer, payload.display_order, int(payload.is_enabled), timestamp, item_id),
+            )
+        else:
+            conn.execute(
+                "INSERT INTO recruitment_faq (id, question, answer, display_order, is_enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (item_id, question, answer, payload.display_order, int(payload.is_enabled), timestamp, timestamp),
+            )
+        row = conn.execute("SELECT * FROM recruitment_faq WHERE id = ?", (item_id,)).fetchone()
+    return recruitment_faq_response(row)
+
+
+def delete_recruitment_faq(faq_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        if not conn.execute("SELECT id FROM recruitment_faq WHERE id = ?", (faq_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="QA 不存在")
+        conn.execute("DELETE FROM recruitment_faq WHERE id = ?", (faq_id,))
+    return {"id": faq_id}
 
 
 def update_homepage_recruitment_banner(payload: "HomepageRecruitmentBannerUpdate") -> dict[str, Any]:
@@ -3003,6 +3116,18 @@ class HomepageDanmakuReview(BaseModel):
     status: str
 
 
+class RecruitmentQuestionCreate(BaseModel):
+    author_account: str
+    content: str
+
+
+class RecruitmentFaqSave(BaseModel):
+    question: str
+    answer: str
+    display_order: int = 0
+    is_enabled: bool = True
+
+
 class RowIdsRequest(BaseModel):
     row_ids: list[str]
     note: str = ""
@@ -3061,6 +3186,11 @@ def homepage_content() -> dict[str, Any]:
     return get_homepage_content(include_disabled=False)
 
 
+@app.post("/api/homepage/recruitment-questions", status_code=201)
+def create_recruitment_question_route(payload: RecruitmentQuestionCreate) -> dict[str, Any]:
+    return create_recruitment_question(payload)
+
+
 @app.get("/api/homepage/danmaku")
 def homepage_danmaku(image_key: str | None = Query(default=None)) -> dict[str, Any]:
     return list_homepage_danmaku(image_key)
@@ -3104,6 +3234,21 @@ def get_site_media(filename: str) -> FileResponse:
 @app.get("/api/admin/homepage")
 def admin_homepage_content(_: str = Depends(require_admin)) -> dict[str, Any]:
     return get_homepage_content(include_disabled=True)
+
+
+@app.post("/api/admin/homepage/faqs", status_code=201)
+def create_recruitment_faq_route(payload: RecruitmentFaqSave, _: str = Depends(require_admin)) -> dict[str, Any]:
+    return save_recruitment_faq(payload)
+
+
+@app.put("/api/admin/homepage/faqs/{faq_id}")
+def update_recruitment_faq_route(faq_id: str, payload: RecruitmentFaqSave, _: str = Depends(require_admin)) -> dict[str, Any]:
+    return save_recruitment_faq(payload, faq_id)
+
+
+@app.delete("/api/admin/homepage/faqs/{faq_id}")
+def delete_recruitment_faq_route(faq_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    return delete_recruitment_faq(faq_id)
 
 
 @app.put("/api/admin/homepage/recruitment-banner")

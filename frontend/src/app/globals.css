@@ -4361,7 +4361,7 @@ th {
 }
 
 .home-event-panel.is-active {
-  flex: 1 1 auto;
+  flex: 0 1 34rem;
   align-items: center;
   background: transparent;
 }
@@ -4451,7 +4451,7 @@ th {
   grid-template-columns: 4.2rem minmax(0, 1fr);
   grid-template-rows: auto auto;
   justify-items: start;
-  flex: 1 1 auto;
+  flex: 0 1 30rem;
   text-align: left;
 }
 
@@ -6325,6 +6325,89 @@ th {
   place-content: center;
   border-right: 1px solid rgba(57, 243, 242, 0.2);
   text-align: center;
+}
+
+.home-recruitment-heading.is-revealed { transition-delay: 100ms; }
+.home-recruitment-events.is-revealed { transition-delay: 220ms; }
+.home-recruitment-blocks .home-recruitment-block:last-child.is-revealed { transition-delay: 340ms; }
+.home-recruitment-qr.is-revealed { transition-delay: 460ms; }
+
+.home-recruitment-question,
+.home-recruitment-faq {
+  width: min(100%, 58rem);
+  margin: 2rem auto 0;
+  padding: 0 clamp(0.25rem, 2vw, 1rem);
+  border: 0;
+  background: transparent;
+}
+
+.home-recruitment-question h2,
+.home-recruitment-faq h2 {
+  margin: 0 0 1rem;
+}
+
+.home-recruitment-question form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.home-recruitment-question textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.8rem 0.9rem;
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+  color: var(--text);
+}
+
+.home-recruitment-faq > div {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.home-recruitment-faq article {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.home-recruitment-faq h3,
+.home-recruitment-faq p {
+  margin: 0;
+}
+
+.home-recruitment-faq p { margin-top: 0.35rem; }
+
+.admin-recruitment-qa,
+.admin-recruitment-question-list,
+.admin-recruitment-faq-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-recruitment-question-list article {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.8rem;
+}
+
+.admin-recruitment-question-list p { margin: 0.3rem 0; }
+.admin-recruitment-question-list time { color: var(--muted); font-size: 0.82rem; }
+.admin-recruitment-faq-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.admin-recruitment-faq-list form > div { display: flex; gap: 0.75rem; }
+
+@media (max-width: 720px) {
+  .home-event-panel.is-active,
+  .home-group-panel.is-active {
+    flex-grow: 1;
+  }
+
+  .home-recruitment-question form,
+  .admin-recruitment-faq-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ssl-capabilities article:last-child { border-right: 0; }

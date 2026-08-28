@@ -7,6 +7,7 @@ import { TeamEmblemPlayer } from "@/components/TeamEmblemPlayer";
 import { HomeEventAccordion } from "@/components/HomeEventAccordion";
 import { HomeGroupAccordion } from "@/components/HomeGroupAccordion";
 import { HomeReveal } from "@/components/HomeReveal";
+import { RecruitmentQuestions } from "@/components/RecruitmentQuestions";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
@@ -54,6 +55,7 @@ const carouselQuotes = [
 ];
 
 const fallbackHomepage: HomepageContentData = {
+  faqs: [],
   profile: {
     team_name: "PRINTK 机甲大师战队",
     team_intro: "PRINTK 机甲大师战队成立于 2024 年秋季，基地位于贵州大学明正楼科技园 1 楼报告厅，现有正式队员 30 余人。战队曾获 2025 赛季高校联盟赛广西站步兵对抗赛季军，并在 2026 赛季高校联盟赛重庆站首次完整出征步兵对抗赛、工程挑战赛与 3v3 对抗赛三个赛项。",
@@ -255,26 +257,30 @@ export default async function Home() {
         <HomeQuoteCarousel quotes={mottoItems} />
       </HomeReveal>
 
+      <HomeReveal className="home-recruitment-reveal">
       <section className="home-recruitment" id="home-recruitment" aria-labelledby="home-recruitment-title">
-        <div className="home-recruitment-heading">
+        <HomeReveal className="home-recruitment-heading">
           <span className="eyebrow">{recruitment.season_label}</span>
           <h2 id="home-recruitment-title">{recruitment.title}</h2>
           <p>{recruitment.intro}</p>
-        </div>
+        </HomeReveal>
         <div className="home-recruitment-blocks">
-          <article className="home-recruitment-block home-recruitment-events">
+          <HomeReveal className="home-recruitment-block home-recruitment-events">
             <HomeEventAccordion events={recruitment.events} />
-          </article>
-          <article className="home-recruitment-block">
+          </HomeReveal>
+          <HomeReveal className="home-recruitment-block">
             <h3>{recruitment.groups_title}</h3>
             <HomeGroupAccordion groups={recruitment.groups} />
-          </article>
+          </HomeReveal>
         </div>
-        <div className="home-recruitment-qr">
+        <HomeReveal className="home-recruitment-qr">
           <Image src="/recruitment-qr.png" alt="PRINTK 2028 赛季招新群二维码" width={820} height={820} />
           <p>{recruitment.qr_text}</p>
-        </div>
+        </HomeReveal>
       </section>
+      </HomeReveal>
+
+      <RecruitmentQuestions accountName={accountName} faqs={homepage.faqs ?? []} />
 
       <footer className="home-thanks" aria-labelledby="home-footer-title">
         <div className="home-footer-main">

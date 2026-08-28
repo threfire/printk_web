@@ -269,6 +269,26 @@ export type HomepageContentData = {
   recruitment_banner: HomepageRecruitmentBanner | null;
   campus_banner: HomepageRecruitmentBanner | null;
   profile: HomepageProfile;
+  faqs: RecruitmentFaq[];
+  recruitment_questions?: RecruitmentQuestion[];
+};
+
+export type RecruitmentFaq = {
+  id: string;
+  question: string;
+  answer: string;
+  display_order: number;
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RecruitmentQuestion = {
+  id: string;
+  author_account: string;
+  author_name: string;
+  content: string;
+  created_at: string;
 };
 
 export type HomepageDanmaku = {

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { type FormEvent, useState } from "react";
 import type { HomepageAsset, HomepageAward, HomepageContentData, HomepageProfile, HomepageQuote, HomepageRecruitmentBanner } from "@/lib/api";
+import { AdminRecruitmentQA } from "./AdminRecruitmentQA";
 
 type AdminHomepageContentProps = {
   initialData: HomepageContentData;
@@ -315,6 +316,8 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
       </div>
 
       {feedback ? <div className={`message admin-feedback${feedback.type === "error" ? " error" : ""}`}>{feedback.text}</div> : null}
+
+      <AdminRecruitmentQA initialFaqs={initialData.faqs ?? []} questions={initialData.recruitment_questions ?? []} />
 
       <form className="form admin-content-form admin-recruitment-banner-form" action="/api/admin/homepage/recruitment-banner" method="post" onSubmit={(event) => handleSubmit(event, "save-banner")}>
         <div className="section-heading">
