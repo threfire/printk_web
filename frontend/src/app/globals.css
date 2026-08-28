@@ -6702,6 +6702,8 @@ th {
   font-weight: 800;
 }
 
+.site-message-card > form { justify-self: end; margin-top: 0.15rem; }
+
 .ssl-review-actions {
   display: grid;
   gap: 0.65rem;
