@@ -44,7 +44,6 @@ function uniqueItems(items: string[]) {
 function toMember(member: PublicMember, index: number): Member {
   const group = member.group || "未分组";
   const role = member.role || "队员";
-  const cohort = member.cohort || "未填写届别";
   const grade = member.grade || member.member_status || "队员";
   const name = member.name || member.account;
   const id = member.id || member.account || String(index);
@@ -53,14 +52,14 @@ function toMember(member: PublicMember, index: number): Member {
     domId: memberDomId(id),
     name,
     status: member.membership_state,
-    cohort,
+    cohort: "",
     group,
     role,
     grade,
     photo: member.photo_url,
-    summary: uniqueItems([cohort, group, role]).join(" · "),
+    summary: uniqueItems([grade, group, role]).join(" · "),
     details: member.bio || `${name}在战队中负责${role}方向，当前归属${group}。`,
-    focus: uniqueItems([cohort, group, role]),
+    focus: uniqueItems([grade, group, role]),
   };
 }
 
@@ -74,7 +73,7 @@ async function fetchMembers(): Promise<Member[]> {
 }
 
 function statusText(member: Member) {
-  return member.status === "active" ? "" : `${member.cohort} 退役队员`;
+  return member.status === "active" ? "" : "退役队员";
 }
 
 function MemberPhoto({ member, className, detail = false }: { member: Member; className: string; detail?: boolean }) {
@@ -135,9 +134,6 @@ export default async function MembersPage() {
   const members = await fetchMembers();
   const activeMembers = members.filter((member) => member.status === "active");
   const retiredMembers = members.filter((member) => member.status === "retired");
-  const retirementYears = Array.from(new Set(retiredMembers.map((member) => member.cohort))).sort((a, b) =>
-    b.localeCompare(a, "zh-CN"),
-  );
 
   return (
     <div className="page">
@@ -157,20 +153,7 @@ export default async function MembersPage() {
           <h2>退役队员</h2>
         </div>
         {retiredMembers.length ? (
-          <div className="retired-year-list">
-            {retirementYears.map((year) => {
-              const yearMembers = retiredMembers.filter((member) => member.cohort === year);
-              return (
-                <section className="retired-year-group" id={`retired-${year}`} key={year}>
-                  <div className="retired-year-heading">
-                    <h3>{year} 退役队员</h3>
-                    <span>{yearMembers.length} 人</span>
-                  </div>
-                  <MemberWall members={yearMembers} sectionId={`retired-${year}`} />
-                </section>
-              );
-            })}
-          </div>
+          <MemberWall members={retiredMembers} sectionId="retired-members" />
         ) : (
           <p className="muted">当前没有退役队员资料。</p>
         )}

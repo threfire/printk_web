@@ -2,7 +2,8 @@ export const genderOptions = ["男", "女", "其他"] as const;
 export const gradeOptions = ["大一", "大二", "大三", "大四", "研究生"] as const;
 export const memberStatusOptions = ["非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"] as const;
 export const permissionLevelOptions = ["普通队员", "兵种组长", "部门组长", "队长", "管理"] as const;
-export const departmentOptions = ["队长", "项管", "机械组", "电控组", "硬件组", "算法组", "运营组", "电控", "机械", "算法", "运营"] as const;
+export const departmentOptions = ["电控", "机械", "算法", "运营"] as const;
+export const memberRoleOptions = ["步兵", "哨兵", "重装", "其他"] as const;
 
 export type SiteAccountProfile = {
   account: string;

@@ -1015,7 +1015,8 @@ PLAN_EDITOR_PERMISSION_OPTIONS = {"兵种组长", "部门组长", "队长", "管
 MEMBER_STATUS_OPTIONS = {"", "非战队队员", "梯队队员", "正式队员", "老队员", "退役队员", "老师"}
 PERMISSION_LEVEL_OPTIONS = {"", "普通队员", "兵种组长", "部门组长", "队长", "管理"}
 REWARD_STATUS_OPTIONS = {"正式队员", "老队员"}
-DEPARTMENT_OPTIONS = {"", "队长", "项管", "机械组", "电控组", "硬件组", "算法组", "运营组", "电控", "机械", "算法", "运营"}
+DEPARTMENT_OPTIONS = {"", "电控", "机械", "算法", "运营"}
+MEMBER_ROLE_OPTIONS = {"", "步兵", "哨兵", "重装", "其他"}
 SEASON_PLAN_ROBOT_TYPES = {"英雄兵种", "步兵兵种", "工程兵种", "哨兵兵种"}
 
 
@@ -1049,7 +1050,7 @@ def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
         "permission_level": normalize_choice(profile.permission_level, "权限", PERMISSION_LEVEL_OPTIONS),
         "department": normalize_choice(profile.department, "部门信息", DEPARTMENT_OPTIONS),
         "cohort": normalize_limited_text(profile.cohort, "届别", 32),
-        "role": normalize_limited_text(profile.role, "职责", 80),
+        "role": normalize_choice(profile.role, "兵种", MEMBER_ROLE_OPTIONS),
         "phone": normalize_limited_text(profile.phone, "联系电话", 32),
         "email": normalize_limited_text(profile.email, "邮箱", 80),
         "bio": normalize_limited_text(profile.bio, "个人说明", 200),

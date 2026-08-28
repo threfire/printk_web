@@ -16,6 +16,7 @@ import {
   departmentOptions,
   genderOptions,
   gradeOptions,
+  memberRoleOptions,
   memberStatusOptions,
   permissionLevelOptions,
   type SiteAccountProfile,
@@ -514,12 +515,10 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                           </select>
                         </div>
                         <div className="field">
-                          <label htmlFor={`${account.account}-cohort`}>届别</label>
-                          <input form={editFormId} id={`${account.account}-cohort`} name="cohort" defaultValue={account.cohort} placeholder="例：2026届" />
-                        </div>
-                        <div className="field">
-                          <label htmlFor={`${account.account}-role`}>职责</label>
-                          <input form={editFormId} id={`${account.account}-role`} name="role" defaultValue={account.role} placeholder="例：步兵电控" />
+                          <label htmlFor={`${account.account}-role`}>兵种</label>
+                          <select form={editFormId} id={`${account.account}-role`} name="role" defaultValue={account.role}>
+                            <OptionList options={memberRoleOptions} />
+                          </select>
                         </div>
                         <div className="field">
                           <label htmlFor={`${account.account}-photo-url`}>照片</label>

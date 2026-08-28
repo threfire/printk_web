@@ -5,6 +5,7 @@ import {
   departmentOptions,
   genderOptions,
   gradeOptions,
+  memberRoleOptions,
   type SiteAccountProfile,
 } from "@/lib/account-profile";
 import { API_BASE } from "@/lib/api";
@@ -137,6 +138,10 @@ export default async function AccountPage() {
               <dt>部门信息</dt>
               <dd>{profile.department || "未填写"}</dd>
             </div>
+            <div>
+              <dt>兵种</dt>
+              <dd>{profile.role || "未填写"}</dd>
+            </div>
           </dl>
         </article>
 
@@ -145,8 +150,6 @@ export default async function AccountPage() {
           <h2>编辑资料</h2>
           <form className="form profile-form" action="/account/profile" method="post">
             <input name="permission_level" type="hidden" value={profile.permission_level || "普通队员"} />
-            <input name="cohort" type="hidden" value={profile.cohort} />
-            <input name="role" type="hidden" value={profile.role} />
             <input name="photo_url" type="hidden" value={profile.photo_url} />
             <div className="form-grid">
               <div className="field">
@@ -169,6 +172,12 @@ export default async function AccountPage() {
                 <label htmlFor="profile-department">部门信息</label>
                 <select id="profile-department" name="department" defaultValue={profile.department}>
                   <OptionList options={departmentOptions} />
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="profile-role">兵种</label>
+                <select id="profile-role" name="role" defaultValue={profile.role}>
+                  <OptionList options={memberRoleOptions} />
                 </select>
               </div>
               <div className="field">
