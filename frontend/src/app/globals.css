@@ -1192,8 +1192,8 @@ p {
 }
 
 .quote-slide blockquote {
-  max-width: 30ch;
-  padding-right: min(28%, 12rem);
+  max-width: 36ch;
+  padding-right: min(24%, 10rem);
   margin: 0;
   color: var(--text);
   font-size: 1.75rem;
