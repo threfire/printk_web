@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminHomepageContent } from "./AdminHomepageContent";
+import { AdminRecruitmentQA } from "./AdminRecruitmentQA";
 import {
   API_BASE,
   type BatchDetailData,
@@ -26,7 +27,7 @@ type AdminPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export type AdminSection = "overview" | "home" | "accounts" | "rewards" | "forum" | "ssl" | "materials" | "danmaku" | "batch";
+export type AdminSection = "overview" | "home" | "qa" | "accounts" | "rewards" | "forum" | "ssl" | "materials" | "danmaku" | "batch";
 
 type AdminPageContentProps = AdminPageProps & {
   section: AdminSection;
@@ -37,6 +38,7 @@ type AdminPageContentProps = AdminPageProps & {
 const adminNavItems = [
   { href: "/admin", label: "总览", section: "overview" },
   { href: "/admin/homepage", label: "首页内容", section: "home" },
+  { href: "/admin/qa", label: "招新 QA", section: "qa" },
   { href: "/admin/accounts", label: "账号管理", section: "accounts" },
   { href: "/admin/rewards", label: "奖励分", section: "rewards" },
   { href: "/admin/forum", label: "论坛审核", section: "forum" },
@@ -48,6 +50,7 @@ const adminNavItems = [
 const adminSectionTitles: Record<AdminSection, string> = {
   overview: "状态总览",
   home: "首页内容管理",
+  qa: "招新提问与 QA",
   accounts: "账号管理",
   rewards: "奖励分管理",
   forum: "论坛审核",
@@ -60,6 +63,7 @@ const adminSectionTitles: Record<AdminSection, string> = {
 const adminSectionDescriptions: Record<AdminSection, string> = {
   overview: "查看关键数量和近期处理状态",
   home: "维护首页视频、轮播图片和文案",
+  qa: "查看招新提问并维护公开问答",
   accounts: "筛选账号、调整资料和工具权限",
   rewards: "管理正式队员和老队员账号的奖励分",
   forum: "审核帖子与回复内容",
@@ -72,6 +76,7 @@ const adminSectionDescriptions: Record<AdminSection, string> = {
 const adminReturnPaths: Record<AdminSection, string> = {
   overview: "/admin",
   home: "/admin/homepage",
+  qa: "/admin/qa",
   accounts: "/admin/accounts",
   rewards: "/admin/rewards",
   forum: "/admin/forum",
@@ -375,6 +380,8 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
         ) : null}
 
         {section === "home" ? <AdminHomepageContent initialData={homepageData} /> : null}
+
+        {section === "qa" ? <AdminRecruitmentQA initialFaqs={homepageData.faqs ?? []} questions={homepageData.recruitment_questions ?? []} /> : null}
 
         {section === "accounts" ? (
         <section className="section admin-section">
