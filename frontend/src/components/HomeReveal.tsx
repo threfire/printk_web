@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, type ComponentPropsWithoutRef } from "react";
 
-type HomeRevealProps = ComponentPropsWithoutRef<"section">;
+type HomeRevealProps = ComponentPropsWithoutRef<"div">;
 
 export function HomeReveal({ className = "", children, ...props }: HomeRevealProps) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -13,11 +13,11 @@ export function HomeReveal({ className = "", children, ...props }: HomeRevealPro
     if (!element) return undefined;
 
     const observer = new IntersectionObserver(([entry]) => {
-      setVisible(entry.isIntersecting && entry.intersectionRatio >= 0.58);
-    }, { threshold: [0, 0.58, 1] });
+      setVisible(entry.isIntersecting && entry.intersectionRatio >= 0.25);
+    }, { threshold: [0, 0.25, 1] });
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
 
-  return <section ref={ref} {...props} className={`${className}${visible ? " is-revealed" : ""}`}>{children}</section>;
+  return <div ref={ref} {...props} className={`home-reveal ${className}${visible ? " is-revealed" : ""}`}>{children}</div>;
 }

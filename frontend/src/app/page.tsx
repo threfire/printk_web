@@ -207,49 +207,49 @@ export default async function Home() {
           </section>
         ) : null}
 
-        <HomeReveal className="hero">
+        <section className="hero">
           <div className="hero-copy">
-            <h1 className="hero-title">
+            <HomeReveal className="hero-title"><h1>
               <span className="hero-title-line">
                 <span className="hero-title-primary">{teamBrand}</span>
                 {teamLabel ? <span className="hero-title-secondary">{teamLabel}</span> : null}
               </span>
               {teamDescriptor ? <span className="hero-title-secondary">{teamDescriptor}</span> : null}
-            </h1>
-            <p>{homepage.profile.team_intro}</p>
-            {ENABLE_INTERACTIVE ? <div className="hero-actions">
+            </h1></HomeReveal>
+            <HomeReveal className="hero-copy-intro"><p>{homepage.profile.team_intro}</p></HomeReveal>
+            {ENABLE_INTERACTIVE ? <HomeReveal className="hero-actions">
               <Link className="button" href="/invoices">
                 进入报销管理
               </Link>
               <Link className="ghost-button" href="/season-plan">
                 查看赛季规划
               </Link>
-            </div> : null}
-            <div className="hero-stats" aria-label="战队概览">
+            </HomeReveal> : null}
+            <HomeReveal className="hero-stats" aria-label="战队概览">
               {homepage.profile.stats.map((stat) => (
                 <div key={stat.label}>
                   <strong>{stat.value}</strong>
                   <span>{stat.label}</span>
                 </div>
               ))}
-            </div>
+            </HomeReveal>
           </div>
           <div className="hero-visual" aria-label="战队徽展示区">
             <div className="emblem-stage">
               <TeamEmblemPlayer />
             </div>
           </div>
-        </HomeReveal>
+        </section>
       </div>
 
       <HomeCarousel images={carouselImageItems} accountName={accountName} enableInteractive />
 
-      <HomeReveal className="home-awards" aria-labelledby="home-awards-title">
-        <div className="home-awards-heading">
+      <section className="home-awards" aria-labelledby="home-awards-title">
+        <HomeReveal className="home-awards-heading">
           <h2 id="home-awards-title">奖项与荣誉展示</h2>
-        </div>
-        <HomeAwardsCarousel awards={awardItems} />
-      </HomeReveal>
+        </HomeReveal>
+        <HomeReveal className="home-awards-carousel"><HomeAwardsCarousel awards={awardItems} /></HomeReveal>
+      </section>
 
       <section className="home-motto" aria-label="团队口号">
         <HomeQuoteCarousel quotes={mottoItems} />

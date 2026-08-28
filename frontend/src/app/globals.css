@@ -726,24 +726,22 @@ body:has(.home-intro-backdrop) .page {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.hero:not(.is-revealed) .hero-title,
-.hero:not(.is-revealed) .hero-copy > p,
-.hero:not(.is-revealed) .hero-actions,
-.hero:not(.is-revealed) .hero-stats {
+.home-reveal {
   opacity: 0;
+  transform: translateY(1rem);
+  transition: opacity 620ms ease, transform 620ms ease;
 }
 
-.hero.is-revealed .hero-title,
-.hero.is-revealed .hero-copy > p,
-.hero.is-revealed .hero-actions,
-.hero.is-revealed .hero-stats {
-  animation: home-copy-rise 620ms ease forwards;
+.home-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.hero.is-revealed .hero-title { animation-delay: 120ms; }
-.hero.is-revealed .hero-copy > p { animation-delay: 320ms; }
-.hero.is-revealed .hero-actions { animation-delay: 520ms; }
-.hero.is-revealed .hero-stats { animation-delay: 720ms; }
+.home-reveal:not(.is-revealed) { transition-delay: 0ms; }
+.hero-title.is-revealed { transition-delay: 120ms; }
+.hero-copy-intro.is-revealed { transition-delay: 320ms; }
+.hero-actions.is-revealed { transition-delay: 520ms; }
+.hero-stats.is-revealed { transition-delay: 720ms; }
 
 .hero-copy,
 .hero-visual {
@@ -3866,18 +3864,8 @@ th {
   max-width: 48rem;
 }
 
-.home-awards:not(.is-revealed) .home-awards-heading,
-.home-awards:not(.is-revealed) .home-awards-carousel {
-  opacity: 0;
-}
-
-.home-awards.is-revealed .home-awards-heading,
-.home-awards.is-revealed .home-awards-carousel {
-  animation: home-copy-rise 620ms ease forwards;
-}
-
-.home-awards.is-revealed .home-awards-heading { animation-delay: 120ms; }
-.home-awards.is-revealed .home-awards-carousel { animation-delay: 360ms; }
+.home-awards-heading.is-revealed { transition-delay: 120ms; }
+.home-awards-carousel.is-revealed { transition-delay: 360ms; }
 
 .home-awards-heading h2 {
   margin: 0;
@@ -4057,8 +4045,7 @@ th {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-title,
-  .hero-copy > p,
+  .home-reveal,
   .hero-actions,
   .hero-stats,
   .home-awards-heading,
