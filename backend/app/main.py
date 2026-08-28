@@ -3117,8 +3117,8 @@ class HomepageDanmakuReview(BaseModel):
 
 
 class RecruitmentQuestionCreate(BaseModel):
-    author_account: str
-    content: str
+    author_account: str = ""
+    content: str = ""
 
 
 class RecruitmentFaqSave(BaseModel):
