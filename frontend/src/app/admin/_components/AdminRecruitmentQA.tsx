@@ -82,6 +82,7 @@ export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: Re
           <article key={item.id}><strong>{item.author_name}</strong><p>{item.content}</p><time>{new Date(item.created_at).toLocaleString("zh-CN")}</time><button className="text-button" type="button" onClick={() => deleteQuestion(item.id)}>删除</button></article>
         )) : <p>暂时没有招新提问。</p>}
       </div>
+      <div className="admin-recruitment-faq-column">
       <form className="form" action="/api/admin/homepage/faqs" onSubmit={(event) => saveFaq(event)}>
         <h4>新增 QA</h4>
         <input name="question" placeholder="问题" maxLength={200} required />
@@ -90,7 +91,6 @@ export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: Re
         <label><input name="is_enabled" type="checkbox" value="true" defaultChecked /> 启用</label>
         <button className="button" type="submit">添加 QA</button>
       </form>
-      </div>
       <div className="admin-recruitment-faq-list">
         {faqs.map((faq) => (
           <form className="form" action={`/api/admin/homepage/faqs/${faq.id}`} key={faq.id} onSubmit={(event) => saveFaq(event, faq.id)}>
@@ -101,6 +101,8 @@ export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: Re
             <div><button className="button" type="submit">保存</button><button className="text-button" type="button" onClick={() => deleteFaq(faq.id)}>删除</button></div>
           </form>
         ))}
+      </div>
+      </div>
       </div>
     </section>
   );

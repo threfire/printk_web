@@ -6428,6 +6428,7 @@ th {
   gap: 1rem;
 }
 .admin-recruitment-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.admin-recruitment-faq-column { display: grid; gap: 1rem; min-width: 0; }
 @media (max-width: 800px) { .admin-recruitment-columns { grid-template-columns: 1fr; } }
 
 .admin-recruitment-question-list article {
