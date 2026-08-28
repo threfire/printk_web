@@ -114,7 +114,7 @@ export function TeamEmblemPlayer() {
         aria-label="上一首"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path d="M15.5 5.5 9 12l6.5 6.5M7 6v12" />
+          <path d="M8 6.5c0-1 1.1-1.6 2-1l9 5.5c.8.5.8 1.5 0 2l-9 5.5c-.9.6-2-.1-2-1V6.5Z" />
         </svg>
       </button>
 
@@ -148,7 +148,7 @@ export function TeamEmblemPlayer() {
         aria-label="下一首"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24">
-          <path d="m8.5 5.5 6.5 6.5-6.5 6.5M17 6v12" />
+          <path d="M8 6.5c0-1 1.1-1.6 2-1l9 5.5c.8.5.8 1.5 0 2l-9 5.5c-.9.6-2-.1-2-1V6.5Z" />
         </svg>
       </button>
 

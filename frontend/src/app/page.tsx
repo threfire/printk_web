@@ -266,7 +266,6 @@ export default async function Home() {
             <HomeEventAccordion events={recruitment.events} />
           </article>
           <article className="home-recruitment-block">
-            <span className="home-recruitment-kicker">{recruitment.groups_kicker}</span>
             <h3>{recruitment.groups_title}</h3>
             <HomeGroupAccordion groups={recruitment.groups} />
           </article>

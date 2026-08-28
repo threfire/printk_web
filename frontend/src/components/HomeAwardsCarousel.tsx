@@ -40,6 +40,14 @@ function getAwardSlot(index: number, activeIndex: number, direction: 1 | -1, tot
     return "far-right";
   }
 
+  if (backward === 3) {
+    return "farther-left";
+  }
+
+  if (forward === 3) {
+    return "farther-right";
+  }
+
   if (direction === 1 && forward === 3) {
     return "enter-right";
   }
@@ -133,7 +141,6 @@ export function HomeAwardsCarousel({ awards }: HomeAwardsCarouselProps) {
             )}
             <div className="home-award-copy">
               <h3>{award.title}</h3>
-              <p>{award.meta}</p>
             </div>
           </article>
         ))}

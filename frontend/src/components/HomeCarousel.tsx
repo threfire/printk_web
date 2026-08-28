@@ -153,6 +153,7 @@ export function HomeQuoteCarousel({ quotes }: { quotes: CarouselQuote[] }) {
 
   return (
     <section className="quote-carousel" aria-label="RoboMaster 赛事文案" aria-live="polite" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <Image className="quote-wordmark" src="/robomaster-wordmark.png" alt="RoboMaster" width={820} height={90} />
       <div className="quote-carousel-track">
         {quotes.map((quote, index) => (
           <figure className="quote-slide" data-active={index === activeIndex ? "true" : "false"} key={quote.text}>
