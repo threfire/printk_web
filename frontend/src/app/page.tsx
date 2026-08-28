@@ -6,6 +6,7 @@ import { HomeCarousel, HomeQuoteCarousel } from "@/components/HomeCarousel";
 import { TeamEmblemPlayer } from "@/components/TeamEmblemPlayer";
 import { HomeEventAccordion } from "@/components/HomeEventAccordion";
 import { HomeGroupAccordion } from "@/components/HomeGroupAccordion";
+import { HomeReveal } from "@/components/HomeReveal";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
@@ -206,7 +207,7 @@ export default async function Home() {
           </section>
         ) : null}
 
-        <section className="hero">
+        <HomeReveal className="hero">
           <div className="hero-copy">
             <h1 className="hero-title">
               <span className="hero-title-line">
@@ -238,17 +239,17 @@ export default async function Home() {
               <TeamEmblemPlayer />
             </div>
           </div>
-        </section>
+        </HomeReveal>
       </div>
 
       <HomeCarousel images={carouselImageItems} accountName={accountName} enableInteractive />
 
-      <section className="home-awards" aria-labelledby="home-awards-title">
+      <HomeReveal className="home-awards" aria-labelledby="home-awards-title">
         <div className="home-awards-heading">
           <h2 id="home-awards-title">奖项与荣誉展示</h2>
         </div>
         <HomeAwardsCarousel awards={awardItems} />
-      </section>
+      </HomeReveal>
 
       <section className="home-motto" aria-label="团队口号">
         <HomeQuoteCarousel quotes={mottoItems} />
