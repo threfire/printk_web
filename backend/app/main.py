@@ -2900,9 +2900,9 @@ def create_homepage_danmaku(payload: "HomepageDanmakuCreate") -> dict[str, Any]:
         conn.execute(
             """
             INSERT INTO homepage_danmaku (
-                id, image_key, image_src, author_account, author_name, text, track, color, created_at_ms, duration, delay, created_at
+                id, image_key, image_src, author_account, author_name, text, track, color, status, created_at_ms, duration, delay, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
             """,
             (
                 danmaku_id,
