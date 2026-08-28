@@ -955,7 +955,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                               </form>
                             </>
                           ) : null}
-                          {message.status === "approved" ? (
+                          {message.status === "approved" || message.status === "rejected" ? (
                             <form action={`/api/admin/danmaku/${encodeURIComponent(message.id)}`} method="post">
                               <input name="intent" type="hidden" value="delete" />
                               <button className="ghost-button" type="submit">删除</button>

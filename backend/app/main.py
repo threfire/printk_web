@@ -2863,8 +2863,8 @@ def delete_approved_homepage_danmaku(danmaku_id: str) -> dict[str, str]:
         existing = conn.execute("SELECT status FROM homepage_danmaku WHERE id = ?", (danmaku_id,)).fetchone()
         if existing is None:
             raise HTTPException(status_code=404, detail="弹幕不存在")
-        if existing["status"] != "approved":
-            raise HTTPException(status_code=400, detail="仅已通过弹幕支持删除")
+        if existing["status"] not in {"approved", "rejected"}:
+            raise HTTPException(status_code=400, detail="待审核弹幕请先完成审核")
         conn.execute("DELETE FROM homepage_danmaku WHERE id = ?", (danmaku_id,))
     return {"id": danmaku_id}
 
