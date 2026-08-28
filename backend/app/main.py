@@ -17,7 +17,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -816,6 +816,11 @@ def make_token(role: str) -> str:
 
 def normalize_account(value: str) -> str:
     account = value.strip()
+    for _ in range(3):
+        decoded = unquote(account)
+        if decoded == account:
+            break
+        account = decoded
     if not account or len(account) > 32:
         raise HTTPException(status_code=400, detail="账号长度需为 1 到 32 个字符")
     return account
