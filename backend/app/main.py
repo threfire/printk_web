@@ -3402,6 +3402,19 @@ def register_site_account(payload: SiteAccountRegisterRequest) -> dict[str, str]
                 timestamp,
             ),
         )
+        conn.execute(
+            """
+            INSERT INTO site_message (id, recipient_account, category, title, content, related_id, created_at)
+            VALUES (?, ?, 'welcome', ?, ?, '', ?)
+            """,
+            (
+                uuid.uuid4().hex,
+                account,
+                "欢迎加入 PRINTK",
+                "欢迎来到 PRINTK 战队官网！这里记录着我们的赛事历程、技术探索与团队成长。欢迎了解 PRINTK、加入 PRINTK，和志同道合的伙伴一起热血逐梦，充实大学生活，不负韶华。",
+                timestamp,
+            ),
+        )
     return {"account": account}
 
 
