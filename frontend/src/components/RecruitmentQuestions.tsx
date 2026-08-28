@@ -37,7 +37,7 @@ export function RecruitmentQuestions({ accountName, faqs }: { accountName: strin
     form.reset();
     const textarea = form.elements.namedItem("content");
     if (textarea instanceof HTMLTextAreaElement) fitQuestionHeight(textarea);
-    setFeedback("问题已提交，管理员会在后台查看");
+    setFeedback("提交成功，精选后的提问会在下方展示");
   }
 
   return (
