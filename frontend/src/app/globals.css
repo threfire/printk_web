@@ -4253,6 +4253,10 @@ th {
   background: transparent;
 }
 
+.home-event-panel.is-active .home-event-panel-label {
+  display: none;
+}
+
 .home-event-panel-label {
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -4302,6 +4306,66 @@ th {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
+}
+
+.home-group-panels {
+  display: flex;
+  gap: 0.55rem;
+  min-height: 11rem;
+  overflow-x: auto;
+}
+
+.home-group-panel {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: start;
+  justify-items: center;
+  gap: 0.45rem;
+  flex: 0 0 4.2rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+  padding: 0.4rem;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: flex 300ms ease, transform 300ms ease;
+}
+
+.home-group-panel.is-active {
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  justify-items: start;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.home-group-panel img {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.home-group-panel-name {
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.home-group-panel-summary {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: color-mix(in srgb, var(--text) 84%, var(--muted));
+  line-height: 1.6;
+}
+
+.theme-root[data-theme="light"] .home-recruitment-block,
+.theme-root[data-theme="light"] .home-group-panel-name,
+.theme-root[data-theme="light"] .home-group-panel-summary {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.95);
 }
 
 .home-recruitment-groups div {

@@ -5,6 +5,7 @@ import { HomeAwardsCarousel, type HomeAwardItem } from "@/components/HomeAwardsC
 import { HomeCarousel, HomeQuoteCarousel } from "@/components/HomeCarousel";
 import { TeamEmblemPlayer } from "@/components/TeamEmblemPlayer";
 import { HomeEventAccordion } from "@/components/HomeEventAccordion";
+import { HomeGroupAccordion } from "@/components/HomeGroupAccordion";
 import { API_BASE, type HomepageContentData } from "@/lib/api";
 import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
@@ -267,14 +268,7 @@ export default async function Home() {
           <article className="home-recruitment-block">
             <span className="home-recruitment-kicker">{recruitment.groups_kicker}</span>
             <h3>{recruitment.groups_title}</h3>
-            <div className="home-recruitment-groups">
-              {recruitment.groups.map((group) => (
-                <div key={group.name}>
-                  <strong>{group.name}</strong>
-                  <p>{group.summary}</p>
-                </div>
-              ))}
-            </div>
+            <HomeGroupAccordion groups={recruitment.groups} />
           </article>
         </div>
         <div className="home-recruitment-qr">
