@@ -3686,6 +3686,8 @@ def review_ssl_interview_application(
         ).fetchone()
         if existing is None:
             raise HTTPException(status_code=404, detail="面试申请不存在")
+        if existing["status"] != "pending":
+            raise HTTPException(status_code=409, detail="该申请已审核")
         conn.execute(
             """
             UPDATE ssl_interview_application

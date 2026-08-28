@@ -891,7 +891,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                         {application.rejection_reason ? <div>{application.rejection_reason}</div> : null}
                       </td>
                       <td>
-                        <div className="ssl-review-actions">
+                        {application.status === "pending" ? <div className="ssl-review-actions">
                           <form action={`/api/admin/ssl/applications/${encodeURIComponent(application.id)}`} method="post">
                             <input name="status" type="hidden" value="approved" />
                             <input name="interview_location" placeholder="面试地点" maxLength={120} required />
@@ -902,7 +902,7 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                             <input name="rejection_reason" placeholder="未通过原因" maxLength={500} required />
                             <button className="ghost-button" type="submit">拒绝并发送消息</button>
                           </form>
-                        </div>
+                        </div> : <span className="badge">已审核</span>}
                       </td>
                     </tr>
                   ))}
