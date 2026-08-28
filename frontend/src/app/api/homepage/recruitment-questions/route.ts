@@ -2,7 +2,13 @@ import { cookies } from "next/headers";
 import { API_BASE } from "@/lib/api";
 
 export async function POST(request: Request) {
-  const account = (await cookies()).get("printk-site-account")?.value ?? "";
+  const rawAccount = (await cookies()).get("printk-site-account")?.value ?? "";
+  let account = rawAccount;
+  try {
+    account = decodeURIComponent(rawAccount);
+  } catch {
+    account = rawAccount;
+  }
   if (!account) return Response.json({ detail: "请先登录账号" }, { status: 401 });
   const body = await request.json().catch(() => ({}));
   const content = typeof body?.content === "string" ? body.content.trim() : "";
