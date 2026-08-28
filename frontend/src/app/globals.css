@@ -4140,6 +4140,22 @@ th {
     color-mix(in srgb, var(--surface-strong) 76%, transparent);
 }
 
+.home-recruitment:has(.home-event-panel[data-event="robocon"][aria-selected="true"]) {
+  background:
+    linear-gradient(90deg, rgba(3, 9, 20, 0.94) 0%, rgba(3, 9, 20, 0.72) 48%, rgba(3, 9, 20, 0.16) 100%),
+    linear-gradient(180deg, rgba(3, 9, 20, 0.08) 0%, rgba(3, 9, 20, 0.84) 78%, rgba(3, 9, 20, 0.96) 100%),
+    url("/robocon.jpg") center / cover no-repeat,
+    color-mix(in srgb, var(--surface-strong) 76%, transparent);
+}
+
+.home-recruitment:has(.home-event-panel[data-event="robocup"][aria-selected="true"]) {
+  background:
+    linear-gradient(90deg, rgba(3, 9, 20, 0.94) 0%, rgba(3, 9, 20, 0.72) 48%, rgba(3, 9, 20, 0.16) 100%),
+    linear-gradient(180deg, rgba(3, 9, 20, 0.08) 0%, rgba(3, 9, 20, 0.84) 78%, rgba(3, 9, 20, 0.96) 100%),
+    url("/robocup.jpg") center / cover no-repeat,
+    color-mix(in srgb, var(--surface-strong) 76%, transparent);
+}
+
 .home-recruitment-heading {
   display: grid;
   grid-column: 1 / -1;
@@ -4197,21 +4213,16 @@ th {
 }
 
 .home-event-accordion {
-  min-height: 22rem;
   padding: 0.72rem;
   border-radius: calc(var(--radius) - 1px);
-  background:
-    linear-gradient(90deg, rgba(3, 9, 20, 0.94) 0%, rgba(3, 9, 20, 0.62) 58%, rgba(3, 9, 20, 0.18) 100%),
-    linear-gradient(180deg, rgba(3, 9, 20, 0.08), rgba(3, 9, 20, 0.82)),
-    var(--event-background) center / cover no-repeat;
-  transition: background-image 420ms ease;
+  background: color-mix(in srgb, var(--surface-strong) 46%, transparent);
 }
 
 .home-event-panels {
   display: flex;
   gap: 0.55rem;
   height: 100%;
-  min-height: 20.5rem;
+  min-height: 12.5rem;
 }
 
 .home-event-panel {
@@ -4734,7 +4745,7 @@ th {
   }
 
   .home-event-panels {
-    min-height: 18rem;
+    min-height: 13.5rem;
   }
 
   .home-event-panel:not(.is-active) {
