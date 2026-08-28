@@ -4327,9 +4327,11 @@ def create_flea_market_item(payload: FleaMarketItemCreateRequest) -> dict[str, A
     with db_connection() as conn:
         author_account = ensure_market_author(conn, payload.author_account)
         account = conn.execute(
-            "SELECT full_name, department FROM site_account WHERE account = ?",
+            "SELECT full_name, department, member_status FROM site_account WHERE account = ?",
             (author_account,),
         ).fetchone()
+        if account and account["member_status"] == "非战队队员":
+            raise HTTPException(status_code=403, detail="当前身份暂不支持发布闲置物品")
         team = account["department"] if account else ""
         conn.execute(
             """
