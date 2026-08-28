@@ -17,7 +17,7 @@ from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote, unquote
+from urllib.parse import parse_qs, quote, unquote
 
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -3497,7 +3497,11 @@ async def upload_site_account_photo(account: str, file: UploadFile = File(...)) 
 @app.post("/api/ssl/applications", status_code=201)
 async def submit_ssl_interview_application(request: Request) -> dict[str, Any]:
     content_type = request.headers.get("content-type", "")
-    data = await request.json() if "application/json" in content_type else dict(await request.form())
+    if "application/json" in content_type:
+        data = await request.json()
+    else:
+        encoded = (await request.body()).decode("utf-8", errors="replace")
+        data = {key: values[-1] for key, values in parse_qs(encoded).items()}
     payload = SSLInterviewApplicationRequest.parse_obj(data)
     self_intro = normalize_limited_text(payload.self_intro, "自我简介", 1000)
     if not self_intro:
