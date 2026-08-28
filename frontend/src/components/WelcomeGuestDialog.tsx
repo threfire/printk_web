@@ -1,22 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function WelcomeGuestDialog() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [dismissedPath, setDismissedPath] = useState<string | null>(null);
+  const pathname = usePathname();
+  const isOpen = dismissedPath !== pathname;
 
   useEffect(() => {
-    const closeDialog = () => setIsOpen(false);
+    const closeDialog = () => setDismissedPath(pathname);
 
     window.addEventListener("keydown", closeDialog);
     return () => window.removeEventListener("keydown", closeDialog);
-  }, []);
+  }, [pathname]);
 
   if (!isOpen) {
     return null;
   }
 
-  const closeDialog = () => setIsOpen(false);
+  const closeDialog = () => setDismissedPath(pathname);
 
   return (
     <div className="guest-welcome-backdrop" role="presentation" onClick={closeDialog}>
