@@ -3,10 +3,23 @@
 import { useState, type FormEvent } from "react";
 import type { RecruitmentFaq, RecruitmentQuestion } from "@/lib/api";
 
+function readableError(value: unknown, fallback: string) {
+  if (typeof value === "string" && value) return value;
+  if (Array.isArray(value)) {
+    const messages = value.map((item) => {
+      if (item && typeof item === "object" && "msg" in item) return String(item.msg);
+      return typeof item === "string" ? item : "";
+    }).filter(Boolean);
+    if (messages.length) return messages.join("；");
+  }
+  if (value && typeof value === "object" && "msg" in value) return String(value.msg);
+  return fallback;
+}
+
 async function submit(form: HTMLFormElement, method: string) {
   const response = await fetch(form.action, { method, body: new FormData(form) });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(String(body.detail ?? "保存失败"));
+  if (!response.ok) throw new Error(readableError(body.detail, "保存失败"));
   return body as RecruitmentFaq;
 }
 
