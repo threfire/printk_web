@@ -123,7 +123,7 @@ export default async function SSLPage({ searchParams }: SSLPageProps) {
             ) : null}
 
             {canApply ? (
-              <form className="form ssl-form" action="/api/ssl/applications" method="post">
+              <form className="form ssl-form" action="/ssl/applications" method="post">
                 <input type="hidden" name="applicant_account" value={account} />
                 <div className="field">
                   <label htmlFor="ssl-self-intro">自我简介</label>
