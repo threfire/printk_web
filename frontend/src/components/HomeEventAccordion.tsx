@@ -50,8 +50,6 @@ export function HomeEventAccordion({ events: configuredEvents }: { events?: Home
               <span className="home-event-panel-label">{event.name}</span>
               {isActive ? (
                 <span className="home-event-panel-content">
-                  <span className="home-recruitment-kicker">{event.kicker}</span>
-                  <strong>{event.title}</strong>
                   <span>{event.description}</span>
                 </span>
               ) : null}

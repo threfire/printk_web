@@ -4232,7 +4232,7 @@ th {
   align-items: center;
   gap: 0.8rem;
   min-width: 3.2rem;
-  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border: 0;
   border-radius: calc(var(--radius) - 3px);
   padding: 0.7rem;
   color: var(--text);
@@ -4250,7 +4250,6 @@ th {
 .home-event-panel.is-active {
   flex: 1 1 auto;
   align-items: flex-start;
-  border-color: color-mix(in srgb, var(--accent) 76%, white);
   background: transparent;
 }
 
@@ -4279,6 +4278,12 @@ th {
 
 .home-event-panel-content > span:last-child {
   color: color-mix(in srgb, var(--text) 84%, var(--muted));
+}
+
+.theme-root[data-theme="light"] .home-event-panel-label,
+.theme-root[data-theme="light"] .home-event-panel-content > span {
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.95);
 }
 
 .home-recruitment-block h3 {
