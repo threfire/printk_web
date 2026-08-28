@@ -3723,6 +3723,17 @@ def review_ssl_interview_application(
     return ssl_application_response(row)
 
 
+@app.delete("/api/admin/ssl/applications/{application_id}")
+def delete_ssl_interview_application(application_id: str, _: str = Depends(require_admin)) -> dict[str, str]:
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM ssl_interview_application WHERE id = ?", (application_id,)).fetchone()
+        if existing is None:
+            raise HTTPException(status_code=404, detail="面试申请不存在")
+        conn.execute("DELETE FROM site_message WHERE category = 'ssl_interview' AND related_id = ?", (application_id,))
+        conn.execute("DELETE FROM ssl_interview_application WHERE id = ?", (application_id,))
+    return {"id": application_id}
+
+
 @app.get("/api/admin/ssl/applications/export.csv")
 def export_ssl_interview_applications(_: str = Depends(require_admin)) -> StreamingResponse:
     with db_connection() as conn:

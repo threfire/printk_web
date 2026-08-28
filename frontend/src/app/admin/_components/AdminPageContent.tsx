@@ -903,6 +903,10 @@ export async function AdminPageContent({ searchParams, section }: AdminPageConte
                             <button className="ghost-button" type="submit">拒绝并发送消息</button>
                           </form>
                         </div> : <span className="badge">已审核</span>}
+                        <form action={`/api/admin/ssl/applications/${encodeURIComponent(application.id)}`} method="post">
+                          <input name="intent" type="hidden" value="delete" />
+                          <button className="text-button" type="submit">删除申请</button>
+                        </form>
                       </td>
                     </tr>
                   ))}

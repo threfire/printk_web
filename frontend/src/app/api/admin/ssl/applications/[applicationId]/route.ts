@@ -10,6 +10,11 @@ export async function POST(request: Request, { params }: RouteContext) {
   const token = cookieStore.get("printk-admin-token")?.value ?? "";
   if (!token) redirect(feedbackPath("/admin/ssl", "error", "请先登录管理员后台"));
 
+  if (String(form.get("intent") ?? "") === "delete") {
+    const response = await fetch(`${API_BASE}/api/admin/ssl/applications/${encodeURIComponent(applicationId)}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    if (!response.ok) redirect(feedbackPath("/admin/ssl", "error", await responseError(response, "删除失败")));
+    redirect(feedbackPath("/admin/ssl", "ok", "申请已删除"));
+  }
   const response = await fetch(`${API_BASE}/api/admin/ssl/applications/${encodeURIComponent(applicationId)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
