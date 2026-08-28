@@ -200,11 +200,11 @@ export default async function Home() {
           </Link>
         ) : null}
         {video ? (
-          <section className="season-video" aria-label={video.alt || "赛季宣传视频"}>
+          <HomeReveal className="season-video" aria-label={video.alt || "赛季宣传视频"}>
             <video className="season-video-player" controls playsInline preload="metadata">
               <source src={video.url} type={video.mime_type || "video/mp4"} />
             </video>
-          </section>
+          </HomeReveal>
         ) : null}
 
         <section className="hero">
@@ -242,7 +242,7 @@ export default async function Home() {
         </section>
       </div>
 
-      <HomeCarousel images={carouselImageItems} accountName={accountName} enableInteractive />
+      <HomeReveal className="home-carousel-reveal"><HomeCarousel images={carouselImageItems} accountName={accountName} enableInteractive /></HomeReveal>
 
       <section className="home-awards" aria-labelledby="home-awards-title">
         <HomeReveal className="home-awards-heading">
@@ -251,9 +251,9 @@ export default async function Home() {
         <HomeReveal className="home-awards-carousel"><HomeAwardsCarousel awards={awardItems} /></HomeReveal>
       </section>
 
-      <section className="home-motto" aria-label="团队口号">
+      <HomeReveal className="home-motto" aria-label="团队口号">
         <HomeQuoteCarousel quotes={mottoItems} />
-      </section>
+      </HomeReveal>
 
       <section className="home-recruitment" id="home-recruitment" aria-labelledby="home-recruitment-title">
         <div className="home-recruitment-heading">
