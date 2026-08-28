@@ -4203,7 +4203,7 @@ th {
   border: 0;
   border-radius: var(--radius);
   padding: 0.72rem;
-  background: color-mix(in srgb, var(--surface-strong) 74%, transparent);
+  background: transparent;
 }
 
 .home-recruitment-events {
@@ -4215,7 +4215,7 @@ th {
 .home-event-accordion {
   padding: 0.72rem;
   border-radius: calc(var(--radius) - 1px);
-  background: color-mix(in srgb, var(--surface-strong) 46%, transparent);
+  background: transparent;
 }
 
 .home-event-panels {
@@ -4234,7 +4234,7 @@ th {
   border-radius: calc(var(--radius) - 3px);
   padding: 0.7rem;
   color: var(--text);
-  background: color-mix(in srgb, var(--surface-strong) 54%, transparent);
+  background: transparent;
   cursor: pointer;
   text-align: left;
   transition: flex 300ms ease, background 300ms ease, border-color 300ms ease;
@@ -4249,7 +4249,7 @@ th {
   flex: 1 1 auto;
   align-items: flex-start;
   border-color: color-mix(in srgb, var(--accent) 76%, white);
-  background: color-mix(in srgb, var(--surface-strong) 34%, transparent);
+  background: transparent;
 }
 
 .home-event-panel-label {
