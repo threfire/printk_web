@@ -1132,7 +1132,9 @@ def site_message_response(row: sqlite3.Row) -> dict[str, Any]:
 
 
 def require_active_site_account(conn: sqlite3.Connection, account: str) -> sqlite3.Row:
-    normalized_account = normalize_account(account)
+    normalized_account = account.strip()
+    if not normalized_account:
+        raise HTTPException(status_code=401, detail="请先登录账号")
     row = conn.execute(
         "SELECT account, full_name, grade, is_disabled FROM site_account WHERE account = ?",
         (normalized_account,),
@@ -2246,7 +2248,7 @@ def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
 
 
 def create_recruitment_question(payload: "RecruitmentQuestionCreate") -> dict[str, Any]:
-    account = normalize_limited_text(payload.author_account, "账号", 80)
+    account = payload.author_account.strip()
     content = normalize_limited_text(payload.content, "问题", 500)
     if not content:
         raise HTTPException(status_code=400, detail="请输入招新问题")
