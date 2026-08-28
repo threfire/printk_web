@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 type TeamTrack = {
   title: string;
@@ -17,7 +17,16 @@ const tracks: TeamTrack[] = [
   { title: "过场音乐", src: "/team-music/robomaster-transition-3.mp4" },
 ];
 
-export function TeamEmblemPlayer() {
+type TeamMusicContextValue = {
+  currentTrack: TeamTrack | undefined;
+  isPlaying: boolean;
+  changeTrack: (offset: number) => void;
+  togglePlayback: () => void;
+};
+
+const TeamMusicContext = createContext<TeamMusicContextValue | null>(null);
+
+export function TeamMusicProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const continuePlayingRef = useRef(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -67,6 +76,31 @@ export function TeamEmblemPlayer() {
     continuePlayingRef.current = isPlaying || continuePlayingRef.current;
     setCurrentIndex((index) => (index + offset + tracks.length) % tracks.length);
   }
+
+  return (
+    <TeamMusicContext.Provider value={{ currentTrack, isPlaying, changeTrack, togglePlayback }}>
+      {children}
+      {currentTrack ? (
+        <audio
+          ref={audioRef}
+          src={currentTrack.src}
+          autoPlay
+          preload="metadata"
+          loop
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onError={() => setIsPlaying(false)}
+        />
+      ) : null}
+    </TeamMusicContext.Provider>
+  );
+}
+
+export function TeamEmblemPlayer() {
+  const music = useContext(TeamMusicContext);
+  if (!music) return null;
+
+  const { currentTrack, isPlaying, changeTrack, togglePlayback } = music;
 
   const playbackLabel = currentTrack ? `《${currentTrack.title}》` : "《你》";
 
@@ -120,18 +154,6 @@ export function TeamEmblemPlayer() {
 
       <p className="record-track-label" title={playbackLabel}>{playbackLabel}</p>
 
-      {currentTrack ? (
-        <audio
-          ref={audioRef}
-          src={currentTrack.src}
-          autoPlay
-          preload="metadata"
-          loop
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onError={() => setIsPlaying(false)}
-        />
-      ) : null}
     </div>
   );
 }

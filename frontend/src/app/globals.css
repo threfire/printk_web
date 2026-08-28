@@ -4041,13 +4041,15 @@ th {
   grid-column: 1 / -1;
 }
 
-.admin-home-recruitment-groups {
+.admin-home-recruitment-groups,
+.admin-home-recruitment-events {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
 }
 
-.admin-home-recruitment-groups strong {
+.admin-home-recruitment-groups strong,
+.admin-home-recruitment-events strong {
   color: var(--muted);
   font-size: 0.82rem;
 }
@@ -4566,7 +4568,8 @@ th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-home-recruitment-groups {
+  .admin-home-recruitment-groups,
+  .admin-home-recruitment-events {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -4677,7 +4680,8 @@ th {
 
   .admin-home-stat-grid,
   .admin-home-awards-grid,
-  .admin-home-recruitment-groups {
+  .admin-home-recruitment-groups,
+  .admin-home-recruitment-events {
     grid-template-columns: 1fr;
   }
 

@@ -230,6 +230,14 @@ export type HomepageRecruitmentGroup = {
   summary: string;
 };
 
+export type HomepageRecruitmentEvent = {
+  id: string;
+  name: string;
+  kicker: string;
+  title: string;
+  description: string;
+};
+
 export type HomepageRecruitmentContent = {
   season_label: string;
   title: string;
@@ -237,6 +245,7 @@ export type HomepageRecruitmentContent = {
   event_kicker: string;
   event_title: string;
   event_description: string;
+  events: HomepageRecruitmentEvent[];
   groups_kicker: string;
   groups_title: string;
   groups: HomepageRecruitmentGroup[];

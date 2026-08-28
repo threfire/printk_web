@@ -426,19 +426,31 @@ export function AdminHomepageContent({ initialData }: AdminHomepageContentProps)
               <label htmlFor="home-recruitment-intro">引导文案</label>
               <textarea id="home-recruitment-intro" name="recruitment_intro" defaultValue={profile.recruitment.intro} rows={3} maxLength={500} required />
             </div>
-            <div className="form-grid">
-              <div className="field">
-                <label htmlFor="home-recruitment-event-kicker">赛事栏目标签</label>
-                <input id="home-recruitment-event-kicker" name="recruitment_event_kicker" defaultValue={profile.recruitment.event_kicker} maxLength={60} required />
-              </div>
-              <div className="field">
-                <label htmlFor="home-recruitment-event-title">赛事介绍标题</label>
-                <input id="home-recruitment-event-title" name="recruitment_event_title" defaultValue={profile.recruitment.event_title} maxLength={100} required />
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="home-recruitment-event-description">赛事介绍正文</label>
-              <textarea id="home-recruitment-event-description" name="recruitment_event_description" defaultValue={profile.recruitment.event_description} rows={5} maxLength={1000} required />
+            <div className="admin-home-recruitment-events">
+              {profile.recruitment.events.map((event, index) => (
+                <article className="admin-home-stat-editor" key={event.id}>
+                  <strong>赛事 {index + 1} · {event.name}</strong>
+                  <input type="hidden" name="recruitment_event_id" value={event.id} />
+                  <div className="form-grid">
+                    <div className="field">
+                      <label htmlFor={`home-recruitment-event-name-${index}`}>折叠名称</label>
+                      <input id={`home-recruitment-event-name-${index}`} name="recruitment_event_name" defaultValue={event.name} maxLength={40} required />
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`home-recruitment-event-kicker-${index}`}>栏目标签</label>
+                      <input id={`home-recruitment-event-kicker-${index}`} name="recruitment_event_kicker" defaultValue={event.kicker} maxLength={60} required />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-recruitment-event-title-${index}`}>介绍标题</label>
+                    <input id={`home-recruitment-event-title-${index}`} name="recruitment_event_title" defaultValue={event.title} maxLength={100} required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`home-recruitment-event-description-${index}`}>介绍正文</label>
+                    <textarea id={`home-recruitment-event-description-${index}`} name="recruitment_event_description" defaultValue={event.description} rows={4} maxLength={1000} required />
+                  </div>
+                </article>
+              ))}
             </div>
             <div className="form-grid">
               <div className="field">

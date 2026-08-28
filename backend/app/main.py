@@ -673,6 +673,29 @@ HOME_RECRUITMENT_CONTENT = {
     "event_kicker": "01 / ABOUT THE EVENT",
     "event_title": "RoboMaster 机甲大师赛事介绍",
     "event_description": "RoboMaster 机甲大师赛是国内顶尖大学生工科竞技赛事，被誉为青年工程师的培养摇篮。赛事主要分为机甲对抗赛、人工智能挑战赛、单项技能赛等多个赛道，综合考验机械结构设计、电控编程、机器视觉算法与团队运营能力。",
+    "events": [
+        {
+            "id": "robomaster",
+            "name": "RoboMaster",
+            "kicker": "01 / 机甲大师",
+            "title": "RoboMaster 赛事介绍",
+            "description": "RoboMaster 机甲大师赛聚焦大学生机器人对抗，综合考验机械结构、电控编程、机器视觉与团队协作能力。",
+        },
+        {
+            "id": "robocon",
+            "name": "Robocon",
+            "kicker": "02 / 亚太大学生机器人大赛",
+            "title": "Robocon 赛事介绍",
+            "description": "Robocon 鼓励大学生围绕年度主题自主设计和制作机器人，在限定场地完成任务挑战，强调创意、工程实现与现场协作。",
+        },
+        {
+            "id": "robocup",
+            "name": "RoboCup",
+            "kicker": "03 / 世界机器人足球赛",
+            "title": "RoboCup 赛事介绍",
+            "description": "RoboCup 以全自主机器人足球为核心，训练感知、定位、路径规划和多机协同，让算法决策在真实赛场中持续进化。",
+        },
+    ],
     "groups_kicker": "02 / JOIN PRINTK",
     "groups_title": "PRINTK 五大组别",
     "groups": [
@@ -2055,11 +2078,23 @@ def homepage_profile_response(row: sqlite3.Row) -> dict[str, Any]:
         awards = ordered_homepage_awards(json.loads(row["awards_json"] or "[]"))
     except json.JSONDecodeError:
         awards = HOME_PROFILE_AWARDS
+    saved_recruitment: dict[str, Any] = {}
     try:
         saved_recruitment = json.loads(row["recruitment_json"] or "{}")
         recruitment = {**HOME_RECRUITMENT_CONTENT, **saved_recruitment} if isinstance(saved_recruitment, dict) else HOME_RECRUITMENT_CONTENT
     except json.JSONDecodeError:
         recruitment = HOME_RECRUITMENT_CONTENT
+    saved_events = saved_recruitment.get("events") if isinstance(saved_recruitment, dict) else None
+    if not isinstance(saved_events, list) or len(saved_events) != 3:
+        recruitment["events"] = [
+            {
+                **HOME_RECRUITMENT_CONTENT["events"][0],
+                "kicker": recruitment["event_kicker"],
+                "title": recruitment["event_title"],
+                "description": recruitment["event_description"],
+            },
+            *[dict(event) for event in HOME_RECRUITMENT_CONTENT["events"][1:]],
+        ]
     return {
         "team_name": row["team_name"],
         "team_intro": row["team_intro"],
@@ -2243,11 +2278,27 @@ def update_homepage_profile(payload: "HomepageProfileUpdate") -> dict[str, Any]:
         "event_kicker": normalize_limited_text(payload.recruitment.event_kicker, "赛事栏目标签", 60),
         "event_title": normalize_limited_text(payload.recruitment.event_title, "赛事介绍标题", 100),
         "event_description": normalize_limited_text(payload.recruitment.event_description, "赛事介绍", 1000),
+        "events": [],
         "groups_kicker": normalize_limited_text(payload.recruitment.groups_kicker, "组别栏目标签", 60),
         "groups_title": normalize_limited_text(payload.recruitment.groups_title, "组别标题", 100),
         "groups": [],
         "qr_text": normalize_limited_text(payload.recruitment.qr_text, "二维码提示", 100),
     }
+    if len(payload.recruitment.events) not in (0, 3):
+        raise HTTPException(status_code=400, detail="赛事介绍需要配置 3 项")
+    source_events = payload.recruitment.events or [
+        HomepageRecruitmentEventItem(id="robomaster", name="RoboMaster", kicker=recruitment["event_kicker"], title=recruitment["event_title"], description=recruitment["event_description"]),
+        HomepageRecruitmentEventItem(**HOME_RECRUITMENT_CONTENT["events"][1]),
+        HomepageRecruitmentEventItem(**HOME_RECRUITMENT_CONTENT["events"][2]),
+    ]
+    for item in source_events:
+        recruitment["events"].append({
+            "id": normalize_limited_text(item.id, "赛事标识", 40),
+            "name": normalize_limited_text(item.name, "赛事名称", 40),
+            "kicker": normalize_limited_text(item.kicker, "赛事栏目标签", 60),
+            "title": normalize_limited_text(item.title, "赛事介绍标题", 100),
+            "description": normalize_limited_text(item.description, "赛事介绍", 1000),
+        })
     required_recruitment_values = [value for key, value in recruitment.items() if key != "groups"]
     if not all(required_recruitment_values):
         raise HTTPException(status_code=400, detail="招新栏目文案不能留空")
@@ -2900,6 +2951,14 @@ class HomepageRecruitmentGroupItem(BaseModel):
     summary: str
 
 
+class HomepageRecruitmentEventItem(BaseModel):
+    id: str
+    name: str
+    kicker: str
+    title: str
+    description: str
+
+
 class HomepageRecruitmentContent(BaseModel):
     season_label: str
     title: str
@@ -2907,6 +2966,7 @@ class HomepageRecruitmentContent(BaseModel):
     event_kicker: str
     event_title: str
     event_description: str
+    events: list[HomepageRecruitmentEventItem] = []
     groups_kicker: str
     groups_title: str
     groups: list[HomepageRecruitmentGroupItem]

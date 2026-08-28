@@ -22,6 +22,18 @@ export async function POST(request: Request) {
   const awardDisplayOrders = form.getAll("award_display_order");
   const recruitmentGroupNames = form.getAll("recruitment_group_name");
   const recruitmentGroupSummaries = form.getAll("recruitment_group_summary");
+  const recruitmentEventIds = form.getAll("recruitment_event_id");
+  const recruitmentEventNames = form.getAll("recruitment_event_name");
+  const recruitmentEventKickers = form.getAll("recruitment_event_kicker");
+  const recruitmentEventTitles = form.getAll("recruitment_event_title");
+  const recruitmentEventDescriptions = form.getAll("recruitment_event_description");
+  const recruitmentEvents = recruitmentEventIds.map((id, index) => ({
+    id: String(id),
+    name: String(recruitmentEventNames[index] ?? ""),
+    kicker: String(recruitmentEventKickers[index] ?? ""),
+    title: String(recruitmentEventTitles[index] ?? ""),
+    description: String(recruitmentEventDescriptions[index] ?? ""),
+  }));
   const awards = awardTitles.map((title, index) => ({
     title: String(title),
     meta: String(awardMetas[index] ?? ""),
@@ -42,9 +54,10 @@ export async function POST(request: Request) {
         season_label: String(form.get("recruitment_season_label") ?? ""),
         title: String(form.get("recruitment_title") ?? ""),
         intro: String(form.get("recruitment_intro") ?? ""),
-        event_kicker: String(form.get("recruitment_event_kicker") ?? ""),
-        event_title: String(form.get("recruitment_event_title") ?? ""),
-        event_description: String(form.get("recruitment_event_description") ?? ""),
+        event_kicker: recruitmentEvents[0]?.kicker ?? "",
+        event_title: recruitmentEvents[0]?.title ?? "",
+        event_description: recruitmentEvents[0]?.description ?? "",
+        events: recruitmentEvents,
         groups_kicker: String(form.get("recruitment_groups_kicker") ?? ""),
         groups_title: String(form.get("recruitment_groups_title") ?? ""),
         groups: recruitmentGroupNames.map((name, index) => ({

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { AccountDialog, AccountModals } from "@/components/AccountDialog";
 import { ThemeRoot, ThemeSwitcher } from "@/components/ThemeRoot";
+import { TeamMusicProvider } from "@/components/TeamEmblemPlayer";
 import { WelcomeGuestDialog } from "@/components/WelcomeGuestDialog";
 import { API_BASE } from "@/lib/api";
 import { robotRoles } from "@/lib/robots";
@@ -48,7 +49,8 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeRoot>
-      <div className="site-frame">
+      <TeamMusicProvider>
+        <div className="site-frame">
         <header className="site-header">
           <Link className="brand" href="/">
             <span className="brand-copy">
@@ -131,7 +133,8 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
         <ThemeSwitcher />
-      </div>
+        </div>
+      </TeamMusicProvider>
     </ThemeRoot>
   );
 }
