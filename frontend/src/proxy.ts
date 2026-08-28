@@ -12,7 +12,11 @@ function writeApiEnabled() {
   if (isTestMode()) {
     return false;
   }
-  return ["1", "true", "yes", "on"].includes((process.env.ENABLE_WRITE_API || "").trim().toLowerCase());
+  const configured = process.env.ENABLE_WRITE_API;
+  if (configured === undefined) {
+    return true;
+  }
+  return ["1", "true", "yes", "on"].includes(configured.trim().toLowerCase());
 }
 
 function featureEnabled(value: string | undefined) {
