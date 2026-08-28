@@ -721,6 +721,24 @@ body:has(.home-intro-backdrop) .page {
   padding: clamp(1rem, 2.2vw, 1.7rem);
 }
 
+@keyframes home-copy-rise {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-title,
+.hero-copy > p,
+.hero-actions,
+.hero-stats {
+  opacity: 0;
+  animation: home-copy-rise 620ms ease forwards;
+}
+
+.hero-title { animation-delay: 120ms; }
+.hero-copy > p { animation-delay: 320ms; }
+.hero-actions { animation-delay: 520ms; }
+.hero-stats { animation-delay: 720ms; }
+
 .hero-copy,
 .hero-visual {
   border: 0;
@@ -830,7 +848,7 @@ body:has(.home-intro-backdrop) .page {
   z-index: 4;
   top: 50%;
   display: grid;
-  width: 2.75rem;
+  width: 3.2rem;
   aspect-ratio: 1;
   place-items: center;
   border: 0;
@@ -852,7 +870,7 @@ body:has(.home-intro-backdrop) .page {
 }
 
 .record-skip svg {
-  width: 1.3rem;
+  width: 1.55rem;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -1288,6 +1306,8 @@ p {
   inset: 0;
   z-index: 6;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
   pointer-events: none;
 }
 
@@ -1298,7 +1318,7 @@ p {
 .danmaku-item {
   position: absolute;
   right: 0;
-  max-width: min(68%, 34rem);
+  max-width: min(52%, 30rem);
   overflow: hidden;
   border-radius: 999px;
   padding: 0.25rem 0.55rem;
@@ -3840,6 +3860,15 @@ th {
   max-width: 48rem;
 }
 
+.home-awards-heading,
+.home-awards-carousel {
+  opacity: 0;
+  animation: home-copy-rise 620ms ease forwards;
+}
+
+.home-awards-heading { animation-delay: 120ms; }
+.home-awards-carousel { animation-delay: 360ms; }
+
 .home-awards-heading h2 {
   margin: 0;
   font-size: clamp(1.8rem, 4vw, 3rem);
@@ -3876,7 +3905,7 @@ th {
   top: 50%;
   left: 50%;
   display: grid;
-  gap: 0.75rem;
+  gap: 1.35rem;
   width: min(54vw, 24rem);
   overflow: hidden;
   border: 0;
@@ -4017,6 +4046,18 @@ th {
   line-height: 1.5;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .hero-title,
+  .hero-copy > p,
+  .hero-actions,
+  .hero-stats,
+  .home-awards-heading,
+  .home-awards-carousel {
+    opacity: 1;
+    animation: none;
+  }
+}
+
 .home-motto {
   display: grid;
   gap: 1.15rem;
@@ -4071,6 +4112,10 @@ th {
   border-radius: var(--radius);
   padding: 0.9rem;
   background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+}
+
+.home-award-card:not([data-slot="center"]) .home-award-copy {
+  visibility: hidden;
 }
 
 .admin-home-editor-card legend {

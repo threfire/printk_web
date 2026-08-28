@@ -246,7 +246,6 @@ export default async function Home() {
       <section className="home-awards" aria-labelledby="home-awards-title">
         <div className="home-awards-heading">
           <h2 id="home-awards-title">奖项与荣誉展示</h2>
-          <p>记录 PRINTK 在赛场、工程实践与团队建设中的阶段成果。</p>
         </div>
         <HomeAwardsCarousel awards={awardItems} />
       </section>
