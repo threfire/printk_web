@@ -1050,7 +1050,7 @@ def normalize_site_profile(profile: "SiteAccountProfile") -> dict[str, str]:
         "permission_level": normalize_choice(profile.permission_level, "权限", PERMISSION_LEVEL_OPTIONS),
         "department": normalize_choice(profile.department, "部门信息", DEPARTMENT_OPTIONS),
         "cohort": normalize_limited_text(profile.cohort, "届别", 32),
-        "role": normalize_choice(profile.role, "兵种", MEMBER_ROLE_OPTIONS),
+        "role": profile.role.strip() if profile.role.strip() in MEMBER_ROLE_OPTIONS else ("其他" if profile.role.strip() else ""),
         "phone": normalize_limited_text(profile.phone, "联系电话", 32),
         "email": normalize_limited_text(profile.email, "邮箱", 80),
         "bio": normalize_limited_text(profile.bio, "个人说明", 200),
