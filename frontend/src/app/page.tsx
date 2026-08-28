@@ -184,7 +184,7 @@ export default async function Home() {
   const teamDescriptor = teamLabel ? rawTeamDescriptor.slice(0, -teamLabel.length).trim() : rawTeamDescriptor;
 
   return (
-    <div className="page">
+    <div className="page" id="top">
       <div className="home-intro-backdrop">
         {homepage.recruitment_banner ? (
           <a className="home-recruitment-banner" href="#home-recruitment">
@@ -312,6 +312,11 @@ export default async function Home() {
       </footer>
 
       <div className="home-floating-actions">
+        <a className="home-top-fab" href="#top" aria-label="回到顶部" title="回到顶部">
+          <svg aria-hidden="true" viewBox="0 0 32 32">
+            <path d="M16 25V7M9 14l7-7 7 7" />
+          </svg>
+        </a>
         <Link className="home-reward-fab" href="/rewards" aria-label="奖励分排行" title="奖励分排行">
           <span className="home-reward-mark" aria-hidden="true">
             <span />

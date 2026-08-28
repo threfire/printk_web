@@ -934,6 +934,11 @@ h1 {
   line-height: 0.9;
 }
 
+.hero-stats div {
+  border: 0;
+  background: transparent;
+}
+
 .hero-title-line {
   display: flex;
   align-items: baseline;
@@ -3025,7 +3030,8 @@ p {
 }
 
 .home-contact-fab,
-.home-reward-fab {
+.home-reward-fab,
+.home-top-fab {
   position: relative;
   display: grid;
   width: 3.1rem;
@@ -3046,6 +3052,15 @@ p {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
+}
+
+.home-top-fab svg {
+  width: 1.55rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
 }
 
 .home-reward-mark {
@@ -3080,14 +3095,17 @@ p {
 .home-contact-fab:hover,
 .home-contact-fab:focus-visible,
 .home-reward-fab:hover,
-.home-reward-fab:focus-visible {
+.home-reward-fab:focus-visible,
+.home-top-fab:hover,
+.home-top-fab:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 70%, transparent);
   background: color-mix(in srgb, var(--accent-soft) 42%, var(--surface-strong));
   transform: translateY(-2px);
 }
 
 .home-contact-fab:focus-visible,
-.home-reward-fab:focus-visible {
+.home-reward-fab:focus-visible,
+.home-top-fab:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent);
   outline-offset: 3px;
 }
@@ -6608,7 +6626,8 @@ th {
   }
 
   .home-contact-fab,
-  .home-reward-fab {
+  .home-reward-fab,
+  .home-top-fab {
     width: 2.75rem;
   }
 
