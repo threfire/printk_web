@@ -47,10 +47,11 @@ export function AdminRecruitmentQA({ initialFaqs, questions }: { initialFaqs: Re
 
   async function saveFaq(event: FormEvent<HTMLFormElement>, faqId?: string) {
     event.preventDefault();
+    const form = event.currentTarget;
     try {
-      const item = await submit(event.currentTarget, faqId ? "PUT" : "POST");
+      const item = await submit(form, faqId ? "PUT" : "POST");
       setFaqs((current) => [...current.filter((faq) => faq.id !== item.id), item].sort((a, b) => a.display_order - b.display_order));
-      if (!faqId) event.currentTarget.reset();
+      if (!faqId) form.reset();
       setFeedback("QA 已保存");
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : "保存失败");
