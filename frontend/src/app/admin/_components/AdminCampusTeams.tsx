@@ -8,15 +8,16 @@ export function AdminCampusTeams({ teams }: { teams: CampusCompetitionTeam[] }) 
         <h2>对抗赛参赛队</h2>
       </div>
 
-      <form className="form admin-content-form" action="/api/admin/campus-competition/teams" method="post">
+      <form className="form admin-content-form" action="/api/admin/campus-competition/teams" method="post" encType="multipart/form-data">
         <div className="form-grid">
           <div className="field">
             <label htmlFor="campus-team-name">队伍名称</label>
             <input id="campus-team-name" name="name" maxLength={80} required />
           </div>
           <div className="field">
-            <label htmlFor="campus-team-logo">队徽链接</label>
-            <input id="campus-team-logo" name="logo_url" maxLength={500} placeholder="https://... 或 /site-media/..." />
+            <label htmlFor="campus-team-logo">队徽图片</label>
+            <input id="campus-team-logo" name="logo" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" />
+            <small>支持 JPG、JPEG、PNG、WEBP、GIF，单张不超过 8MB。</small>
           </div>
           <div className="field">
             <label htmlFor="campus-team-order">显示顺序</label>
@@ -42,10 +43,18 @@ export function AdminCampusTeams({ teams }: { teams: CampusCompetitionTeam[] }) 
               return (
                 <tr key={team.id}>
                   <td>
-                    <form id={formId} action={`/api/admin/campus-competition/teams/${encodeURIComponent(team.id)}`} method="post" />
+                    <form id={formId} action={`/api/admin/campus-competition/teams/${encodeURIComponent(team.id)}`} method="post" encType="multipart/form-data" />
                     <input form={formId} name="name" defaultValue={team.name} maxLength={80} required />
                   </td>
-                  <td><input form={formId} name="logo_url" defaultValue={team.logo_url} maxLength={500} /></td>
+                  <td>
+                    {team.logo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img className="admin-campus-team-logo" src={team.logo_url} alt={`${team.name}队徽`} />
+                    ) : null}
+                    <input form={formId} name="logo" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" />
+                    <input form={formId} name="logo_url" type="hidden" value={team.logo_url} readOnly />
+                    <small>支持 JPG、JPEG、PNG、WEBP、GIF，单张不超过 8MB。</small>
+                  </td>
                   <td><input form={formId} name="display_order" type="number" min={0} max={9999} defaultValue={team.display_order} /></td>
                   <td>
                     <div className="row-actions">

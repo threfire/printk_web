@@ -2050,6 +2050,15 @@ p {
   transform: translateY(-2px);
 }
 
+.campus-github-link {
+  display: inline-flex;
+  margin-top: 1.2rem;
+  color: var(--accent);
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
+}
+
 .campus-team-empty {
   display: grid;
   min-height: 15rem;
@@ -2104,6 +2113,15 @@ p {
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.08em;
+}
+
+.admin-campus-team-logo {
+  display: block;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
 }
 
 .campus-registration-panel {

@@ -13,8 +13,7 @@ const resources = [
   {
     code: "DOCS",
     title: "对抗赛技术资料",
-    status: "Printk_smallmaster 开源项目资料",
-    href: "https://github.com/threfire/Printk_smallmaster",
+    status: "技术规范与培训资料待发布",
   },
   { code: "MODEL", title: "开源模型", status: "机器人结构模型待发布" },
   { code: "CODE", title: "开源代码", status: "基础控制与裁判系统代码待发布" },
@@ -89,22 +88,17 @@ export default async function CampusVersusPage() {
           <h2 id="versus-resource-title">规则与技术资料</h2>
         </header>
         <div className="campus-resource-grid">
-          {resources.map((resource) =>
-            resource.href ? (
-              <a className="campus-resource-card" href={resource.href} target="_blank" rel="noreferrer" key={resource.code}>
-                <small>{resource.code}</small>
-                <h3>{resource.title}</h3>
-                <p>{resource.status}</p>
-              </a>
-            ) : (
-              <article key={resource.code}>
-                <small>{resource.code}</small>
-                <h3>{resource.title}</h3>
-                <p>{resource.status}</p>
-              </article>
-            ),
-          )}
+          {resources.map((resource) => (
+            <article key={resource.code}>
+              <small>{resource.code}</small>
+              <h3>{resource.title}</h3>
+              <p>{resource.status}</p>
+            </article>
+          ))}
         </div>
+        <a className="campus-github-link" href="https://github.com/threfire/Printk_smallmaster" target="_blank" rel="noreferrer">
+          GitHub 链接，点击跳转
+        </a>
       </section>
 
       <section className="campus-team-section" aria-labelledby="registered-team-title">

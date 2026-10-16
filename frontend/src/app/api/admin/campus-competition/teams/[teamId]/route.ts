@@ -12,16 +12,18 @@ export async function POST(request: Request, { params }: TeamRouteContext) {
 
   const intent = String(form.get("intent") ?? "save");
   const endpoint = `${API_BASE}/api/admin/campus-competition/teams/${encodeURIComponent(teamId)}`;
+  const body = new FormData();
+  body.set("name", String(form.get("name") ?? ""));
+  body.set("logo_url", String(form.get("logo_url") ?? ""));
+  body.set("display_order", String(form.get("display_order") ?? 0));
+  const logo = form.get("logo");
+  if (logo instanceof File && logo.size > 0) body.set("logo", logo);
   const response = intent === "delete"
     ? await fetch(endpoint, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
     : await fetch(endpoint, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: String(form.get("name") ?? ""),
-          logo_url: String(form.get("logo_url") ?? ""),
-          display_order: Number(form.get("display_order") ?? 0),
-        }),
+        headers: { Authorization: `Bearer ${token}` },
+        body,
       });
 
   if (!response.ok) {

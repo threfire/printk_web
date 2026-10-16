@@ -163,22 +163,22 @@ class SSLInterviewFlowTest(unittest.TestCase):
 
     def test_campus_competition_team_crud(self) -> None:
         main = self.main
-        created = main.create_campus_competition_team(
+        created = asyncio.run(main.create_campus_competition_team(
             main.CampusCompetitionTeamSave(
                 name="测试参赛队",
                 logo_url="https://example.com/team.png",
                 display_order=2,
             )
-        )
+        ))
         self.assertEqual(created["name"], "测试参赛队")
         self.assertEqual(main.list_campus_competition_teams()["teams"][0]["id"], created["id"])
 
-        updated = main.update_campus_competition_team(
+        updated = asyncio.run(main.update_campus_competition_team(
             created["id"],
             main.CampusCompetitionTeamSave(name="更新后的参赛队", display_order=1),
-        )
+        ))
         self.assertEqual(updated["name"], "更新后的参赛队")
-        self.assertEqual(updated["logo_url"], "")
+        self.assertEqual(updated["logo_url"], "https://example.com/team.png")
 
         main.delete_campus_competition_team(created["id"])
         self.assertEqual(main.list_campus_competition_teams()["teams"], [])

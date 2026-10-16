@@ -50,6 +50,7 @@ SITE_MEDIA_DIR = STORAGE_DIR / "site_media"
 MAX_CONTENT_LENGTH = 60 * 1024 * 1024
 MAX_VIDEO_CONTENT_LENGTH = 70 * 1024 * 1024
 MAX_MEMBER_PHOTO_LENGTH = 8 * 1024 * 1024
+MAX_CAMPUS_TEAM_LOGO_LENGTH = 8 * 1024 * 1024
 AGENT_INTERVAL_SECONDS = int(os.getenv("AGENT_INTERVAL_SECONDS", "300"))
 SECRET_KEY = os.getenv("SECRET_KEY", "material-agent-secret")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "wrprintk")
@@ -2217,8 +2218,31 @@ def normalize_campus_team(payload: "CampusCompetitionTeamSave") -> tuple[str, st
     return name, logo_url, display_order
 
 
-def create_campus_competition_team(payload: "CampusCompetitionTeamSave") -> dict[str, Any]:
+async def save_campus_team_logo(upload: UploadFile | None) -> str:
+    if upload is None or not upload.filename:
+        return ""
+    suffix = Path(upload.filename).suffix.lower()
+    mime_type = upload.content_type or ""
+    if mime_type not in HOME_IMAGE_MIME_TYPES or suffix not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+        raise HTTPException(status_code=400, detail="队徽仅支持 JPG、JPEG、PNG、WEBP、GIF 格式")
+    content = await upload.read(MAX_CAMPUS_TEAM_LOGO_LENGTH + 1)
+    if not content:
+        raise HTTPException(status_code=400, detail="队徽文件为空")
+    if len(content) > MAX_CAMPUS_TEAM_LOGO_LENGTH:
+        raise HTTPException(status_code=413, detail="队徽图片不能超过 8MB")
+    filename = f"campus-team-{uuid.uuid4().hex}{suffix}"
+    (SITE_MEDIA_DIR / filename).write_bytes(content)
+    return media_url(filename)
+
+
+async def create_campus_competition_team(
+    payload: "CampusCompetitionTeamSave",
+    logo_upload: UploadFile | None = None,
+) -> dict[str, Any]:
     name, logo_url, display_order = normalize_campus_team(payload)
+    uploaded_logo_url = await save_campus_team_logo(logo_upload)
+    if uploaded_logo_url:
+        logo_url = uploaded_logo_url
     team_id = uuid.uuid4().hex
     timestamp = now_iso()
     with db_connection() as conn:
@@ -2233,12 +2257,21 @@ def create_campus_competition_team(payload: "CampusCompetitionTeamSave") -> dict
     return campus_competition_team_response(row)
 
 
-def update_campus_competition_team(team_id: str, payload: "CampusCompetitionTeamSave") -> dict[str, Any]:
+async def update_campus_competition_team(
+    team_id: str,
+    payload: "CampusCompetitionTeamSave",
+    logo_upload: UploadFile | None = None,
+) -> dict[str, Any]:
     name, logo_url, display_order = normalize_campus_team(payload)
+    uploaded_logo_url = await save_campus_team_logo(logo_upload)
     with db_connection() as conn:
-        existing = conn.execute("SELECT id FROM campus_competition_team WHERE id = ?", (team_id,)).fetchone()
+        existing = conn.execute("SELECT * FROM campus_competition_team WHERE id = ?", (team_id,)).fetchone()
         if not existing:
             raise HTTPException(status_code=404, detail="参赛队不存在")
+        if not uploaded_logo_url:
+            logo_url = existing["logo_url"] or logo_url
+        else:
+            logo_url = uploaded_logo_url
         conn.execute(
             """
             UPDATE campus_competition_team
@@ -3295,20 +3328,31 @@ def admin_campus_competition_teams(_: str = Depends(require_admin)) -> dict[str,
 
 
 @app.post("/api/admin/campus-competition/teams", status_code=201)
-def create_campus_competition_team_route(
-    payload: CampusCompetitionTeamSave,
+async def create_campus_competition_team_route(
+    name: str = Form(...),
+    display_order: int = Form(0),
+    logo: UploadFile | None = File(None),
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
-    return create_campus_competition_team(payload)
+    return await create_campus_competition_team(
+        CampusCompetitionTeamSave(name=name, display_order=display_order), logo
+    )
 
 
 @app.put("/api/admin/campus-competition/teams/{team_id}")
-def update_campus_competition_team_route(
+async def update_campus_competition_team_route(
     team_id: str,
-    payload: CampusCompetitionTeamSave,
+    name: str = Form(...),
+    logo_url: str = Form(""),
+    display_order: int = Form(0),
+    logo: UploadFile | None = File(None),
     _: str = Depends(require_admin),
 ) -> dict[str, Any]:
-    return update_campus_competition_team(team_id, payload)
+    return await update_campus_competition_team(
+        team_id,
+        CampusCompetitionTeamSave(name=name, logo_url=logo_url, display_order=display_order),
+        logo,
+    )
 
 
 @app.delete("/api/admin/campus-competition/teams/{team_id}")
