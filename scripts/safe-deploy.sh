@@ -119,7 +119,7 @@ echo "最近日志："
 "${DOCKER_CMD[@]}" compose logs --tail "$LOG_TAIL"
 
 echo
-echo "Cleaning unused Docker build cache and images..."
-"${DOCKER_CMD[@]}" builder prune -af || echo "Build cache cleanup failed; deployment remains complete"
-"${DOCKER_CMD[@]}" image prune -af || echo "Image cleanup failed; deployment remains complete"
+echo "Cleaning Docker build cache and images older than 7 days..."
+"${DOCKER_CMD[@]}" builder prune -af --filter "until=168h" --keep-storage 2GB || echo "Build cache cleanup failed; deployment remains complete"
+"${DOCKER_CMD[@]}" image prune -af --filter "until=168h" || echo "Image cleanup failed; deployment remains complete"
 "${DOCKER_CMD[@]}" system df || true
