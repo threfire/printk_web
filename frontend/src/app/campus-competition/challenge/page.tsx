@@ -62,7 +62,12 @@ export default function CampusChallengePage() {
           <h2 id="challenge-registration-title">挑战赛报名</h2>
           <p>报名信息与开放时间将在校内赛公告栏持续更新，赛事负责人将协助完成参赛登记。</p>
         </div>
-        <Link className="button campus-primary-action" href="/#home-contact">联系负责人报名</Link>
+        <a className="button campus-primary-action" href="#official-group">加入赛事官方群填表报名</a>
+        <div className="campus-group-qr" id="official-group">
+          <p>加入赛事官方群后填写报名表</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/campus-competition-group-qrcode.jpg" alt="赛事官方群二维码" />
+        </div>
       </section>
     </div>
   );

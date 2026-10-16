@@ -134,7 +134,12 @@ export default async function CampusVersusPage() {
           <h2 id="versus-registration-title">组队参加对抗赛</h2>
           <p>完成报名后进入培训与制作阶段，赛事负责人将同步规范、考核要求和赛程通知。</p>
         </div>
-        <Link className="button campus-primary-action" href="/#home-contact">联系负责人报名</Link>
+        <a className="button campus-primary-action" href="#official-group">加入赛事官方群填表报名</a>
+        <div className="campus-group-qr" id="official-group">
+          <p>加入赛事官方群后填写报名表</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/campus-competition-group-qrcode.jpg" alt="赛事官方群二维码" />
+        </div>
       </section>
     </div>
   );

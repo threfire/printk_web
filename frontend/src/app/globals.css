@@ -2138,6 +2138,26 @@ p {
     color-mix(in srgb, var(--surface-strong) 64%, transparent);
 }
 
+.campus-group-qr {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  scroll-margin-top: 7rem;
+}
+
+.campus-group-qr p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.campus-group-qr img {
+  width: clamp(8rem, 18vw, 11rem);
+  height: auto;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
 .campus-registration-panel h2,
 .campus-registration-panel p {
   margin-bottom: 0;
