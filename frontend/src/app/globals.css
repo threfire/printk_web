@@ -2090,9 +2090,7 @@ p {
   display: grid;
   justify-items: center;
   gap: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1.4rem;
+  padding: 0.5rem;
 }
 
 .campus-team-grid img {
