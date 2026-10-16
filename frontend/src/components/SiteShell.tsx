@@ -10,6 +10,7 @@ import { ENABLE_FORUM, ENABLE_INTERACTIVE } from "@/lib/site-mode";
 
 const navItems = [
   { href: "/", label: "首页" },
+  { href: "/campus-competition", label: "校内赛" },
   { href: "/ssl", label: "SSL 部" },
   { href: "/season-plan", label: "赛季规划" },
 ];

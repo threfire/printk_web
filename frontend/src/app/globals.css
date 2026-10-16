@@ -2030,12 +2030,24 @@ p {
   max-width: 54rem;
 }
 
-.campus-resource-grid article {
+.campus-resource-grid article,
+.campus-resource-card {
   min-height: 11rem;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1.4rem;
   background: color-mix(in srgb, var(--surface-strong) 42%, transparent);
+}
+
+.campus-resource-card {
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.campus-resource-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
 }
 
 .campus-team-empty {

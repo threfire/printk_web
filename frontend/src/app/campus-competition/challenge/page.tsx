@@ -29,6 +29,25 @@ export default function CampusChallengePage() {
         </div>
       </section>
 
+      <section className="campus-resource-section" aria-labelledby="challenge-resource-title">
+        <header>
+          <span className="eyebrow">TECHNICAL RESOURCES</span>
+          <h2 id="challenge-resource-title">技术资料</h2>
+        </header>
+        <div className="campus-resource-grid">
+          <a
+            className="campus-resource-card"
+            href="https://github.com/threfire/Printk_smallmaster"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <small>CODE</small>
+            <h3>挑战赛技术资料</h3>
+            <p>Printk_smallmaster 开源项目资料</p>
+          </a>
+        </div>
+      </section>
+
       <section className="campus-registration-panel" id="registration" aria-labelledby="challenge-registration-title">
         <div>
           <span className="eyebrow">REGISTRATION</span>
