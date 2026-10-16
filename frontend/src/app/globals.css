@@ -2093,6 +2093,19 @@ p {
   object-fit: cover;
 }
 
+.campus-team-logo-placeholder {
+  display: grid;
+  width: 6rem;
+  height: 6rem;
+  place-items: center;
+  border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
 .campus-registration-panel {
   display: flex;
   align-items: center;

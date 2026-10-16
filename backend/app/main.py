@@ -483,6 +483,15 @@ def init_db() -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS campus_competition_team (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                logo_url TEXT DEFAULT '',
+                display_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_season_plan_period
             ON season_plan (season_year, month, display_order);
 
@@ -604,6 +613,7 @@ def init_db() -> None:
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_recruitment_question_created ON recruitment_question (created_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_recruitment_faq_order ON recruitment_faq (is_enabled, display_order, created_at)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_campus_competition_team_order ON campus_competition_team (display_order, created_at)")
         seed_season_plan(conn)
         seed_homepage_content(conn)
 
@@ -2179,6 +2189,77 @@ def homepage_danmaku_response(row: sqlite3.Row) -> dict[str, Any]:
     }
 
 
+def campus_competition_team_response(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "logo_url": row["logo_url"] or "",
+        "display_order": row["display_order"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def list_campus_competition_teams() -> dict[str, Any]:
+    with db_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM campus_competition_team ORDER BY display_order ASC, created_at ASC"
+        ).fetchall()
+    return {"teams": [campus_competition_team_response(row) for row in rows]}
+
+
+def normalize_campus_team(payload: "CampusCompetitionTeamSave") -> tuple[str, str, int]:
+    name = normalize_limited_text(payload.name, "队伍名称", 80)
+    logo_url = normalize_limited_text(payload.logo_url, "队徽链接", 500)
+    if not name:
+        raise HTTPException(status_code=400, detail="请输入队伍名称")
+    display_order = max(0, min(payload.display_order, 9999))
+    return name, logo_url, display_order
+
+
+def create_campus_competition_team(payload: "CampusCompetitionTeamSave") -> dict[str, Any]:
+    name, logo_url, display_order = normalize_campus_team(payload)
+    team_id = uuid.uuid4().hex
+    timestamp = now_iso()
+    with db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO campus_competition_team (id, name, logo_url, display_order, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (team_id, name, logo_url, display_order, timestamp, timestamp),
+        )
+        row = conn.execute("SELECT * FROM campus_competition_team WHERE id = ?", (team_id,)).fetchone()
+    return campus_competition_team_response(row)
+
+
+def update_campus_competition_team(team_id: str, payload: "CampusCompetitionTeamSave") -> dict[str, Any]:
+    name, logo_url, display_order = normalize_campus_team(payload)
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM campus_competition_team WHERE id = ?", (team_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="参赛队不存在")
+        conn.execute(
+            """
+            UPDATE campus_competition_team
+            SET name = ?, logo_url = ?, display_order = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (name, logo_url, display_order, now_iso(), team_id),
+        )
+        row = conn.execute("SELECT * FROM campus_competition_team WHERE id = ?", (team_id,)).fetchone()
+    return campus_competition_team_response(row)
+
+
+def delete_campus_competition_team(team_id: str) -> dict[str, str]:
+    with db_connection() as conn:
+        existing = conn.execute("SELECT id FROM campus_competition_team WHERE id = ?", (team_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="参赛队不存在")
+        conn.execute("DELETE FROM campus_competition_team WHERE id = ?", (team_id,))
+    return {"status": "deleted"}
+
+
 def get_homepage_content(include_disabled: bool = False) -> dict[str, Any]:
     enabled_clause = "" if include_disabled else "AND is_enabled = 1"
     with db_connection() as conn:
@@ -3144,6 +3225,12 @@ class RecruitmentFaqSave(BaseModel):
     is_enabled: bool = True
 
 
+class CampusCompetitionTeamSave(BaseModel):
+    name: str
+    logo_url: str = ""
+    display_order: int = 0
+
+
 class RowIdsRequest(BaseModel):
     row_ids: list[str]
     note: str = ""
@@ -3195,6 +3282,41 @@ async def write_api_gate(request: Request, call_next):
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "time": now_iso()}
+
+
+@app.get("/api/campus-competition/teams")
+def campus_competition_teams() -> dict[str, Any]:
+    return list_campus_competition_teams()
+
+
+@app.get("/api/admin/campus-competition/teams")
+def admin_campus_competition_teams(_: str = Depends(require_admin)) -> dict[str, Any]:
+    return list_campus_competition_teams()
+
+
+@app.post("/api/admin/campus-competition/teams", status_code=201)
+def create_campus_competition_team_route(
+    payload: CampusCompetitionTeamSave,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return create_campus_competition_team(payload)
+
+
+@app.put("/api/admin/campus-competition/teams/{team_id}")
+def update_campus_competition_team_route(
+    team_id: str,
+    payload: CampusCompetitionTeamSave,
+    _: str = Depends(require_admin),
+) -> dict[str, Any]:
+    return update_campus_competition_team(team_id, payload)
+
+
+@app.delete("/api/admin/campus-competition/teams/{team_id}")
+def delete_campus_competition_team_route(
+    team_id: str,
+    _: str = Depends(require_admin),
+) -> dict[str, str]:
+    return delete_campus_competition_team(team_id)
 
 
 @app.get("/api/homepage")

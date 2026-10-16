@@ -313,6 +313,19 @@ export type HomepageDanmakuManagementData = {
   };
 };
 
+export type CampusCompetitionTeam = {
+  id: string;
+  name: string;
+  logo_url: string;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CampusCompetitionTeamData = {
+  teams: CampusCompetitionTeam[];
+};
+
 export type RewardRankingItem = {
   rank: number;
   account: string;

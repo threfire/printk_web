@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { API_BASE, type CampusCompetitionTeamData } from "@/lib/api";
 
 const competitionStages = [
   ["01", "前期报名", "完成队伍组建与参赛信息登记。"],
@@ -8,15 +9,26 @@ const competitionStages = [
 ];
 
 const resources = [
-  ["RULES", "对抗赛规则介绍视频", "规则讲解视频待发布"],
-  ["DOCS", "对抗赛技术资料", "技术规范与培训资料待发布"],
-  ["MODEL", "开源模型", "机器人结构模型待发布"],
-  ["CODE", "开源代码", "基础控制与裁判系统代码待发布"],
+  { code: "RULES", title: "对抗赛规则介绍视频", status: "规则讲解视频待发布" },
+  {
+    code: "DOCS",
+    title: "对抗赛技术资料",
+    status: "Printk_smallmaster 开源项目资料",
+    href: "https://github.com/threfire/Printk_smallmaster",
+  },
+  { code: "MODEL", title: "开源模型", status: "机器人结构模型待发布" },
+  { code: "CODE", title: "开源代码", status: "基础控制与裁判系统代码待发布" },
 ];
 
-const registeredTeams: { name: string; logo: string }[] = [];
+async function getRegisteredTeams() {
+  const response = await fetch(`${API_BASE}/api/campus-competition/teams`, { cache: "no-store" });
+  if (!response.ok) return [];
+  const data = (await response.json()) as CampusCompetitionTeamData;
+  return data.teams;
+}
 
-export default function CampusVersusPage() {
+export default async function CampusVersusPage() {
+  const registeredTeams = await getRegisteredTeams();
   return (
     <div className="page campus-event-page">
       <section className="campus-event-hero" aria-labelledby="versus-title">
@@ -77,13 +89,21 @@ export default function CampusVersusPage() {
           <h2 id="versus-resource-title">规则与技术资料</h2>
         </header>
         <div className="campus-resource-grid">
-          {resources.map(([code, title, status]) => (
-            <article key={code}>
-              <small>{code}</small>
-              <h3>{title}</h3>
-              <p>{status}</p>
-            </article>
-          ))}
+          {resources.map((resource) =>
+            resource.href ? (
+              <a className="campus-resource-card" href={resource.href} target="_blank" rel="noreferrer" key={resource.code}>
+                <small>{resource.code}</small>
+                <h3>{resource.title}</h3>
+                <p>{resource.status}</p>
+              </a>
+            ) : (
+              <article key={resource.code}>
+                <small>{resource.code}</small>
+                <h3>{resource.title}</h3>
+                <p>{resource.status}</p>
+              </article>
+            ),
+          )}
         </div>
       </section>
 
@@ -96,8 +116,12 @@ export default function CampusVersusPage() {
           <div className="campus-team-grid">
             {registeredTeams.map((team) => (
               <article key={team.name}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={team.logo} alt={`${team.name}队徽`} />
+                {team.logo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={team.logo_url} alt={`${team.name}队徽`} />
+                ) : (
+                  <span className="campus-team-logo-placeholder" aria-hidden="true">TEAM</span>
+                )}
                 <strong>{team.name}</strong>
               </article>
             ))}
