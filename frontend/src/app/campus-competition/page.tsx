@@ -5,14 +5,14 @@ const competitionTracks = [
     href: "/campus-competition/challenge",
     index: "01",
     title: "挑战赛",
-    subtitle: "REAL ROBOT 1V1",
+    subtitle: "体验赛",
     description: "操作真正的 RoboMaster 步兵机器人，在标准对抗环境中完成 1v1 竞技。",
   },
   {
     href: "/campus-competition/versus",
     index: "02",
     title: "对抗赛",
-    subtitle: "MINI ROBOT 1V1",
+    subtitle: "实物赛",
     description: "自主制作微缩版步兵机器人，搭载小型裁判系统装甲板，在缩小版场地中展开 1v1 对抗。",
   },
 ];
